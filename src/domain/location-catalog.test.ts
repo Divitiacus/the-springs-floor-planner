@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { getHallBySlug, getLocationBySlug, SPRINGS_LOCATIONS } from "@/domain/location-catalog";
+import {
+  getHallBySlug,
+  getLocationBySlug,
+  MAGNOLIA_INVENTORY,
+  resolveInventoryConfiguration,
+  SPRINGS_LOCATIONS,
+} from "@/domain/location-catalog";
 
 describe("location catalog", () => {
   it("defines Magnolia with exactly its two confirmed halls", () => {
@@ -22,20 +28,66 @@ describe("location catalog", () => {
     expect(getHallBySlug(undefined, "pinehaven-terrace")).toBeUndefined();
   });
 
-  it("marks Magnolia's working dimensions and inventory as unconfirmed", () => {
+  it("keeps Pinehaven's working dimensions provisional", () => {
     const configuration = SPRINGS_LOCATIONS[0].halls[0].configuration;
     expect(configuration).toMatchObject({
       physicalWidthInches: 960,
       physicalHeightInches: 720,
       physicalDimensionStatus: "provisional",
-      inventory: {
-        "round-table-60": null,
-        "rectangle-table-6": null,
-        "rectangle-table-8": null,
-        "sweetheart-table": null,
-        chairs: null,
-      },
     });
+  });
+
+  it("shares the source-confirmed Magnolia inventory across both halls", () => {
+    const magnolia = SPRINGS_LOCATIONS[0];
+    const expected = {
+      "round-table-60": 32,
+      "rectangle-table-6": 4,
+      "rectangle-table-8": 6,
+      "sweetheart-table": 1,
+      chairs: null,
+    };
+
+    expect(MAGNOLIA_INVENTORY).toMatchObject({
+      scope: "location-shared",
+      limits: expected,
+      source: { fileName: "the_springs_table_chair_inventory_from_powerpoints.xlsx" },
+    });
+    for (const hall of magnolia.halls) {
+      expect(hall.configuration.inventory).toBeUndefined();
+      expect(resolveInventoryConfiguration(magnolia, hall)).toEqual(expected);
+    }
+  });
+
+  it("preserves unsupported Magnolia inventory rows with provenance", () => {
+    expect(MAGNOLIA_INVENTORY.additionalItems).toEqual([
+      expect.objectContaining({ sourceItemKey: "parson-table-7", quantity: 6 }),
+      expect.objectContaining({ sourceItemKey: "cocktail-table-32", quantity: 6 }),
+    ]);
+  });
+
+  it("allows a future hall inventory to override only its confirmed values", () => {
+    const magnolia = SPRINGS_LOCATIONS[0];
+    const baseHall = magnolia.halls[0];
+    const hallWithOverride = {
+      ...baseHall,
+      configuration: {
+        ...baseHall.configuration,
+        inventory: {
+          scope: "hall" as const,
+          limits: { "round-table-60": 12 },
+          source: { fileName: "future-source.xlsx", note: "Confirmed for this hall." },
+        },
+      },
+    };
+
+    expect(resolveInventoryConfiguration(magnolia, hallWithOverride)).toEqual({
+      "round-table-60": 12,
+      "rectangle-table-6": 4,
+      "rectangle-table-8": 6,
+      "sweetheart-table": 1,
+      chairs: null,
+    });
+    expect(resolveInventoryConfiguration(magnolia, baseHall)["round-table-60"]).toBe(32);
   });
 
   it("keeps the source-traced Hidden Magnolia geometry isolated from Pinehaven", () => {

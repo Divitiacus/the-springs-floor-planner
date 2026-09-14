@@ -14,6 +14,21 @@ export type InventoryLimit = number | null;
 export type InventoryConfiguration = Partial<Record<InventoryItemType, InventoryLimit>>;
 export type InventoryUsage = Record<InventoryItemType, number>;
 
+export type InventoryCatalog = {
+  scope: "location-shared" | "hall";
+  limits: InventoryConfiguration;
+  source: {
+    fileName: string;
+    note: string;
+  };
+  additionalItems?: readonly {
+    sourceItemKey: string;
+    name: string;
+    quantity: number;
+    note?: string;
+  }[];
+};
+
 export type InventoryValidationResult =
   | { valid: true }
   | { valid: false; code: "table-limit" | "chair-limit" | "seat-limit"; message: string };

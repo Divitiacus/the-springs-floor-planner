@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { addObject, createEmptyLayout, createEventObject, duplicateObject, updateObject } from "@/domain/layout-operations";
 import { getInventoryUsage, validateLayoutInventory, type InventoryConfiguration } from "@/domain/inventory";
+import { getHallBySlug, getLocationBySlug, resolveInventoryConfiguration } from "@/domain/location-catalog";
 import { deserializeFloorplan, serializeFloorplan } from "@/domain/persistence";
 import { feetToInches, inchesToFeet } from "@/domain/physical-units";
 
@@ -11,6 +12,19 @@ const noLimits: InventoryConfiguration = {
   "sweetheart-table": null,
   chairs: null,
 };
+
+const magnolia = getLocationBySlug("magnolia")!;
+const hiddenMagnolia = getHallBySlug(magnolia, "the-hidden-magnolia")!;
+const magnoliaInventory = resolveInventoryConfiguration(magnolia, hiddenMagnolia);
+
+function createLayoutWith(type: Parameters<typeof createEventObject>[0], count: number) {
+  let layout = createEmptyLayout();
+  for (let index = 0; index < count; index += 1) {
+    const object = createEventObject(type, { x: index * 12, y: 0 }, layout.objects, `${type}-${index}`);
+    layout = addObject(layout, object);
+  }
+  return layout;
+}
 
 describe("physical units", () => {
   it("converts feet and inches without changing the canonical value", () => {
@@ -37,6 +51,16 @@ describe("inventory validation", () => {
     const duplicated = duplicateObject(addObject(createEmptyLayout(), table), table.id, "two");
 
     expect(validateLayoutInventory(duplicated, { "rectangle-table-6": 1 })).toMatchObject({
+      valid: false,
+      code: "table-limit",
+    });
+  });
+
+  it("does not allow duplication beyond Magnolia's shared inventory", () => {
+    const layout = createLayoutWith("round-table-60", 32);
+    const duplicated = duplicateObject(layout, layout.objects[0].id, "over-limit-copy");
+
+    expect(validateLayoutInventory(duplicated, magnoliaInventory, "Magnolia")).toMatchObject({
       valid: false,
       code: "table-limit",
     });
@@ -86,11 +110,27 @@ describe("inventory validation", () => {
     });
   });
 
+  it("rejects imported JSON beyond Magnolia's shared inventory", () => {
+    const imported = deserializeFloorplan(serializeFloorplan(createLayoutWith("rectangle-table-6", 5)));
+
+    expect(validateLayoutInventory(imported, magnoliaInventory, "Magnolia")).toMatchObject({
+      valid: false,
+      code: "table-limit",
+    });
+  });
+
   it("treats null and omitted inventory limits as unconfigured", () => {
     const table = createEventObject("round-table-60", { x: 0, y: 0 }, [], "table");
     const layout = duplicateObject(addObject(createEmptyLayout(), table), table.id, "copy");
 
     expect(validateLayoutInventory(layout, noLimits)).toEqual({ valid: true });
     expect(validateLayoutInventory(layout, {})).toEqual({ valid: true });
+  });
+
+  it("leaves Magnolia chairs unrestricted when the source quantity is unresolved", () => {
+    const chairHeavyLayout = createLayoutWith("chair", 400);
+
+    expect(magnoliaInventory.chairs).toBeNull();
+    expect(validateLayoutInventory(chairHeavyLayout, magnoliaInventory, "Magnolia")).toEqual({ valid: true });
   });
 });

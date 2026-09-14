@@ -3,7 +3,7 @@ import type {
   FixedArchitectureElement,
   ReferenceFloorplanAsset,
 } from "@/domain/floorplan";
-import type { InventoryConfiguration } from "@/domain/inventory";
+import type { InventoryCatalog, InventoryConfiguration } from "@/domain/inventory";
 import { feetToInches } from "@/domain/physical-units";
 import { createHiddenMagnoliaConfiguration } from "@/domain/venues/hidden-magnolia";
 
@@ -14,7 +14,7 @@ export type HallConfiguration = {
   physicalDimensionNote?: string;
   fixedArchitecturalElements: readonly FixedArchitectureElement[];
   floorplanAsset: ReferenceFloorplanAsset | null;
-  inventory: InventoryConfiguration;
+  inventory?: InventoryCatalog;
   sampleLayoutIds?: readonly string[];
 };
 
@@ -29,15 +29,37 @@ export type LocationCatalogEntry = {
   id: string;
   slug: string;
   name: string;
+  inventory?: InventoryCatalog;
   halls: readonly HallCatalogEntry[];
 };
 
-const MAGNOLIA_INVENTORY: InventoryConfiguration = {
-  "round-table-60": null,
-  "rectangle-table-6": null,
-  "rectangle-table-8": null,
-  "sweetheart-table": null,
-  chairs: null,
+export const MAGNOLIA_INVENTORY: InventoryCatalog = {
+  scope: "location-shared",
+  limits: {
+    "round-table-60": 32,
+    "rectangle-table-6": 4,
+    "rectangle-table-8": 6,
+    "sweetheart-table": 1,
+    chairs: null,
+  },
+  source: {
+    fileName: "the_springs_table_chair_inventory_from_powerpoints.xlsx",
+    note: "The source identifies Magnolia inventory but does not assign it by hall; shared at the location level pending confirmation.",
+  },
+  additionalItems: [
+    {
+      sourceItemKey: "parson-table-7",
+      name: "7-foot Parson Table",
+      quantity: 6,
+      note: "Indoors only; decor purposes only; no liquids or hot foods.",
+    },
+    {
+      sourceItemKey: "cocktail-table-32",
+      name: "32-inch Round Cocktail Table",
+      quantity: 6,
+      note: "Standing only.",
+    },
+  ],
 };
 
 export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
@@ -45,6 +67,7 @@ export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
     id: "location_magnolia",
     slug: "magnolia",
     name: "Magnolia",
+    inventory: MAGNOLIA_INVENTORY,
     halls: [
       {
         id: "hall_pinehaven_terrace",
@@ -56,7 +79,7 @@ export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
         id: "hall_hidden_magnolia",
         slug: "the-hidden-magnolia",
         name: "The Hidden Magnolia",
-        configuration: createHiddenMagnoliaConfiguration(MAGNOLIA_INVENTORY),
+        configuration: createHiddenMagnoliaConfiguration(),
       },
     ],
   },
@@ -82,7 +105,16 @@ function createProvisionalMagnoliaConfiguration(): HallConfiguration {
       },
     ],
     floorplanAsset: null,
-    inventory: MAGNOLIA_INVENTORY,
+  };
+}
+
+export function resolveInventoryConfiguration(
+  location: LocationCatalogEntry,
+  hall: HallCatalogEntry,
+): InventoryConfiguration {
+  return {
+    ...(location.inventory?.limits ?? {}),
+    ...(hall.configuration.inventory?.limits ?? {}),
   };
 }
 

@@ -1,5 +1,4 @@
 import type { FixedArchitectureElement } from "@/domain/floorplan";
-import type { InventoryConfiguration } from "@/domain/inventory";
 import type { HallConfiguration } from "@/domain/location-catalog";
 
 /**
@@ -7,7 +6,7 @@ import type { HallConfiguration } from "@/domain/location-catalog";
  * is the only confirmed dimensional anchor. Surrounding geometry is proportional
  * to that anchor and remains provisional until field measurements are available.
  */
-export function createHiddenMagnoliaConfiguration(inventory: InventoryConfiguration): HallConfiguration {
+export function createHiddenMagnoliaConfiguration(): HallConfiguration {
   const common = {
     fixed: true as const,
     measurementStatus: "source-traced" as const,
@@ -149,7 +148,6 @@ export function createHiddenMagnoliaConfiguration(inventory: InventoryConfigurat
       interactive: false,
       measurementStatus: "source-traced",
     },
-    inventory,
   };
 }
 
