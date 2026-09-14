@@ -22,21 +22,27 @@ export function FloorPlanStart() {
   useEffect(() => {
     const syncRestoredLocation = () => {
       const restoredSlug = locationSelectRef.current?.value;
-      if (restoredSlug && SPRINGS_LOCATIONS.some((location) => location.slug === restoredSlug)) {
-        setLocationSlug(restoredSlug);
+      if (
+        restoredSlug &&
+        restoredSlug !== locationSlug &&
+        SPRINGS_LOCATIONS.some((location) => location.slug === restoredSlug)
+      ) {
+        selectLocation(restoredSlug);
       }
     };
 
     syncRestoredLocation();
     const frame = window.requestAnimationFrame(syncRestoredLocation);
+    const restoreMonitor = window.setInterval(syncRestoredLocation, 500);
     window.addEventListener("pageshow", syncRestoredLocation);
     window.addEventListener("focus", syncRestoredLocation);
     return () => {
       window.cancelAnimationFrame(frame);
+      window.clearInterval(restoreMonitor);
       window.removeEventListener("pageshow", syncRestoredLocation);
       window.removeEventListener("focus", syncRestoredLocation);
     };
-  }, []);
+  }, [locationSlug, selectLocation]);
 
   const openFloorPlan = () => {
     if (!canOpen) return;
@@ -93,8 +99,8 @@ export function FloorPlanStart() {
               <select
                 ref={locationSelectRef}
                 id="location-select"
+                autoComplete="off"
                 value={locationSlug}
-                onInput={(event) => selectLocation(event.currentTarget.value)}
                 onChange={(event) => selectLocation(event.target.value)}
               >
                 <option value="">Select a location</option>
