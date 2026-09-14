@@ -9,6 +9,7 @@ import {
   getLayoutStats,
 } from "@/domain/layout-operations";
 import { deserializeFloorplan, serializeFloorplan } from "@/domain/persistence";
+import { OBJECT_CATALOG, OBJECT_DEFINITIONS } from "@/domain/object-catalog";
 
 describe("floorplan object operations", () => {
   it("creates a catalog object with sensible table defaults", () => {
@@ -25,8 +26,14 @@ describe("floorplan object operations", () => {
 
   it("increments table numbers based on existing guest tables", () => {
     const first = createEventObject("round-table-60", { x: 0, y: 0 }, [], "one");
-    const second = createEventObject("round-table-72", { x: 0, y: 0 }, [first], "two");
+    const second = createEventObject("rectangle-table-8", { x: 0, y: 0 }, [first], "two");
     expect(second.tableNumber).toBe(2);
+  });
+
+  it("offers distinct 6-foot and 8-foot rectangle tables without a 72-inch round", () => {
+    expect(OBJECT_CATALOG.map((definition) => definition.name)).not.toContain("72-inch Round Table");
+    expect(OBJECT_DEFINITIONS["rectangle-table-8"].width).toBeGreaterThan(OBJECT_DEFINITIONS["rectangle-table-6"].width);
+    expect(OBJECT_DEFINITIONS["rectangle-table-8"].height).toBe(OBJECT_DEFINITIONS["rectangle-table-6"].height);
   });
 
   it("duplicates and offsets an object without mutating the source", () => {
