@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Building2, ChevronDown, MapPin } from "lucide-react";
@@ -8,10 +8,18 @@ import { SPRINGS_LOCATIONS } from "@/domain/location-catalog";
 
 export function FloorPlanStart() {
   const router = useRouter();
+  const locationSelectRef = useRef<HTMLSelectElement>(null);
   const [locationSlug, setLocationSlug] = useState("");
   const [hallSlug, setHallSlug] = useState("");
   const selectedLocation = SPRINGS_LOCATIONS.find((location) => location.slug === locationSlug);
   const canOpen = Boolean(selectedLocation && hallSlug);
+
+  useEffect(() => {
+    const restoredLocationSlug = locationSelectRef.current?.value;
+    if (restoredLocationSlug && SPRINGS_LOCATIONS.some((location) => location.slug === restoredLocationSlug)) {
+      setLocationSlug(restoredLocationSlug);
+    }
+  }, []);
 
   const openFloorPlan = () => {
     if (!canOpen) return;
@@ -66,6 +74,7 @@ export function FloorPlanStart() {
           <div className="space-y-5">
             <SelectField icon={<MapPin size={16} />} label="Location" htmlFor="location-select">
               <select
+                ref={locationSelectRef}
                 id="location-select"
                 value={locationSlug}
                 onChange={(event) => {
