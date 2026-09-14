@@ -29,8 +29,8 @@ export function FloorplanCanvas({ layout, venue, selectedId, mode, zoom, onSelec
   const [stagePosition, setStagePosition] = useState<{ x: number; y: number } | null>(null);
 
   const fitScale = useMemo(
-    () => Math.min(size.width / venue.canvasWidth, size.height / venue.canvasHeight) * 0.93,
-    [size, venue.canvasHeight, venue.canvasWidth],
+    () => Math.min(size.width / venue.physicalWidthInches, size.height / venue.physicalHeightInches) * 0.93,
+    [size, venue.physicalHeightInches, venue.physicalWidthInches],
   );
   const scale = fitScale * zoom;
 
@@ -55,8 +55,8 @@ export function FloorplanCanvas({ layout, venue, selectedId, mode, zoom, onSelec
   const selected = layout.objects.find((object) => object.id === selectedId);
   const resizable = selected ? OBJECT_DEFINITIONS[selected.type].resizable : false;
   const position = stagePosition ?? {
-    x: (size.width - venue.canvasWidth * fitScale) / 2,
-    y: (size.height - venue.canvasHeight * fitScale) / 2,
+    x: (size.width - venue.physicalWidthInches * fitScale) / 2,
+    y: (size.height - venue.physicalHeightInches * fitScale) / 2,
   };
 
   const handleWheel = (event: Konva.KonvaEventObject<WheelEvent>) => {
@@ -107,7 +107,7 @@ export function FloorplanCanvas({ layout, venue, selectedId, mode, zoom, onSelec
         }}
       >
         <Layer listening={false}>
-          <Rect x={0} y={0} width={venue.canvasWidth} height={venue.canvasHeight} fill="#eef0ed" cornerRadius={18} shadowColor="#506058" shadowBlur={28} shadowOpacity={0.13} shadowOffsetY={8} />
+          <Rect x={0} y={0} width={venue.physicalWidthInches} height={venue.physicalHeightInches} fill="#eef0ed" cornerRadius={18} shadowColor="#506058" shadowBlur={28} shadowOpacity={0.13} shadowOffsetY={8} />
           <VenueLayer venue={venue} />
         </Layer>
 
@@ -151,10 +151,10 @@ export function FloorplanCanvas({ layout, venue, selectedId, mode, zoom, onSelec
 
 function VenueLayer({ venue }: { venue: VenueTemplate }) {
   const grid = [];
-  for (let x = venue.hall.x + 20; x < venue.hall.x + venue.hall.width; x += 40) {
+  for (let x = venue.hall.x + 60; x < venue.hall.x + venue.hall.width; x += 60) {
     grid.push(<Line key={`x-${x}`} points={[x, venue.hall.y, x, venue.hall.y + venue.hall.height]} stroke="#e7e9e5" strokeWidth={1} />);
   }
-  for (let y = venue.hall.y + 20; y < venue.hall.y + venue.hall.height; y += 40) {
+  for (let y = venue.hall.y + 60; y < venue.hall.y + venue.hall.height; y += 60) {
     grid.push(<Line key={`y-${y}`} points={[venue.hall.x, y, venue.hall.x + venue.hall.width, y]} stroke="#e7e9e5" strokeWidth={1} />);
   }
 
@@ -164,6 +164,7 @@ function VenueLayer({ venue }: { venue: VenueTemplate }) {
       {grid}
       {venue.elements.map((element) => <VenueElementNode key={element.id} element={element} />)}
       <Text x={venue.hall.x + 18} y={venue.hall.y + 16} text={venue.name.toUpperCase()} fontSize={11} fontStyle="bold" letterSpacing={1.8} fill="#8b968f" />
+      <Text x={venue.hall.x + 18} y={venue.hall.y + 34} text={`${venue.physicalWidthInches / 12}' × ${venue.physicalHeightInches / 12}' · ${venue.physicalDimensionStatus.toUpperCase()}`} fontSize={9} fontStyle="bold" letterSpacing={1.1} fill="#9aa49e" />
       <Text x={venue.hall.x + venue.hall.width - 84} y={venue.hall.y + venue.hall.height - 29} text="N ↑" fontSize={12} fontStyle="bold" fill="#7d8981" />
     </>
   );

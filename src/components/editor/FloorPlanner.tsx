@@ -3,16 +3,24 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Download, Upload } from "lucide-react";
 import type { EventObjectType } from "@/domain/floorplan";
+import type { VenueTemplate } from "@/domain/floorplan";
+import type { InventoryConfiguration } from "@/domain/inventory";
+import { getInventoryUsage } from "@/domain/inventory";
 import { deserializeFloorplan, serializeFloorplan } from "@/domain/persistence";
-import { SAMPLE_VENUE } from "@/domain/sample-venue";
 import { useFloorplanEditor } from "@/hooks/useFloorplanEditor";
 import { EditorCanvas } from "@/components/editor/EditorCanvas";
 import { ObjectLibrary } from "@/components/editor/ObjectLibrary";
 import { PropertiesPanel } from "@/components/editor/PropertiesPanel";
 import { EditorToolbar, type EditorMode } from "@/components/editor/EditorToolbar";
 
-export function FloorPlanner() {
-  const editor = useFloorplanEditor();
+type Props = {
+  venue: VenueTemplate;
+  locationName: string;
+  inventory: InventoryConfiguration;
+};
+
+export function FloorPlanner({ venue, locationName, inventory }: Props) {
+  const editor = useFloorplanEditor({ venueTemplateId: venue.id, inventory, inventoryOwner: locationName });
   const [mode, setMode] = useState<EditorMode>("select");
   const [zoom, setZoom] = useState(1);
   const [resetViewKey, setResetViewKey] = useState(0);
@@ -24,14 +32,18 @@ export function FloorPlanner() {
   const duplicateObject = editor.duplicate;
   const redo = editor.redo;
   const undo = editor.undo;
+  const inventoryUsage = getInventoryUsage(editor.layout);
 
   const addCentered = useCallback(
     (type: EventObjectType) => {
       const column = objectCount % 6;
       const row = Math.floor(objectCount / 6) % 4;
-      addObject(type, { x: 330 + column * 140, y: 280 + row * 130 });
+      addObject(type, {
+        x: venue.physicalWidthInches * 0.3 + column * 72,
+        y: venue.physicalHeightInches * 0.3 + row * 72,
+      });
     },
-    [addObject, objectCount],
+    [addObject, objectCount, venue.physicalHeightInches, venue.physicalWidthInches],
   );
 
   useEffect(() => {
@@ -94,7 +106,7 @@ export function FloorPlanner() {
               <h1 className="font-serif text-[19px] font-semibold tracking-[-0.01em] text-[#1d2923]">The Springs Floor Planner</h1>
               <span className="rounded-full bg-[#eaf0ec] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-[#54705f]">Prototype</span>
             </div>
-            <p className="mt-0.5 text-xs text-[#748078]">{editor.layout.name} · {SAMPLE_VENUE.name}</p>
+            <p className="mt-0.5 text-xs text-[#748078]">{editor.layout.name} · {venue.name}</p>
           </div>
         </div>
 
@@ -112,7 +124,7 @@ export function FloorPlanner() {
       </header>
 
       <div className="grid min-h-0 flex-1 grid-cols-[258px_minmax(520px,1fr)_292px]">
-        <ObjectLibrary onAdd={addCentered} />
+        <ObjectLibrary onAdd={addCentered} inventory={inventory} usage={inventoryUsage} />
 
         <section className="flex min-w-0 flex-col border-x border-[#dce2dd]">
           <EditorToolbar
@@ -131,7 +143,7 @@ export function FloorPlanner() {
           />
           <EditorCanvas
             layout={editor.layout}
-            venue={SAMPLE_VENUE}
+            venue={venue}
             selectedId={editor.selectedId}
             mode={mode}
             zoom={zoom}
@@ -147,6 +159,7 @@ export function FloorPlanner() {
               <span>{editor.stats.objectCount} objects</span>
               <span>{editor.stats.guestTables} guest tables</span>
               <span>{editor.stats.seats} seats</span>
+              <span>{venue.physicalDimensionStatus === "provisional" ? "Provisional scale" : "Confirmed scale"}</span>
             </div>
           </div>
         </section>

@@ -1,8 +1,10 @@
-import type { VenueTemplate } from "@/domain/floorplan";
+import type { LegacyVenueTemplate } from "@/domain/floorplan";
 
-export const SAMPLE_VENUE: VenueTemplate = {
+/** Preserved POC template. It is intentionally not used as Magnolia geometry. */
+export const SAMPLE_VENUE: LegacyVenueTemplate = {
   id: "cedar-springs-hall-v1",
   name: "Cedar Springs Hall",
+  coordinateUnit: "legacy-pixels",
   canvasWidth: 1320,
   canvasHeight: 820,
   hall: { x: 70, y: 70, width: 1180, height: 680 },

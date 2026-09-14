@@ -1,14 +1,14 @@
 import type { EventObject, EventObjectType, FloorplanLayout } from "@/domain/floorplan";
 import { isGuestTable, OBJECT_DEFINITIONS } from "@/domain/object-catalog";
-import { SAMPLE_VENUE } from "@/domain/sample-venue";
 
 const now = () => new Date().toISOString();
 
-export function createEmptyLayout(): FloorplanLayout {
+export function createEmptyLayout(venueTemplateId = "unconfigured-physical-venue"): FloorplanLayout {
   return {
     id: "local-floorplan",
     name: "Miller–Reed Wedding",
-    venueTemplateId: SAMPLE_VENUE.id,
+    venueTemplateId,
+    coordinateUnit: "inches",
     objects: [],
     updatedAt: now(),
   };
@@ -32,6 +32,7 @@ export function createEventObject(
     y: position.y,
     width: definition.width,
     height: definition.height,
+    physicalDimensions: definition.physicalDimensions,
     rotation: 0,
     label: isGuestTable(type) ? `Table ${tableNumber}` : definition.shortLabel,
     tableNumber,

@@ -16,8 +16,9 @@ describe("floorplan object operations", () => {
     const object = createEventObject("round-table-60", { x: 240, y: 320 }, [], "table-1");
     expect(object).toMatchObject({
       id: "table-1",
-      width: 92,
-      height: 92,
+      width: 60,
+      height: 60,
+      physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: 60 },
       tableNumber: 1,
       label: "Table 1",
       seats: 8,
@@ -32,6 +33,8 @@ describe("floorplan object operations", () => {
 
   it("offers distinct 6-foot and 8-foot rectangle tables without a 72-inch round", () => {
     expect(OBJECT_CATALOG.map((definition) => definition.name)).not.toContain("72-inch Round Table");
+    expect(OBJECT_DEFINITIONS["rectangle-table-6"].physicalDimensions).toMatchObject({ lengthInches: 72, depthInches: null });
+    expect(OBJECT_DEFINITIONS["rectangle-table-8"].physicalDimensions).toMatchObject({ lengthInches: 96, depthInches: null });
     expect(OBJECT_DEFINITIONS["rectangle-table-8"].width).toBeGreaterThan(OBJECT_DEFINITIONS["rectangle-table-6"].width);
     expect(OBJECT_DEFINITIONS["rectangle-table-8"].height).toBe(OBJECT_DEFINITIONS["rectangle-table-6"].height);
   });
@@ -75,7 +78,7 @@ describe("persistence", () => {
   });
 
   it("rejects malformed JSON data", () => {
-    expect(() => deserializeFloorplan('{"schemaVersion":1,"layout":{}}')).toThrow(/valid Springs floorplan/);
+    expect(() => deserializeFloorplan('{"schemaVersion":2,"layout":{}}')).toThrow(/valid Springs floorplan/);
   });
 });
 

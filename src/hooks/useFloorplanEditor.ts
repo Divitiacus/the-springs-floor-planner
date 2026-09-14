@@ -14,9 +14,18 @@ import {
   updateObject,
 } from "@/domain/layout-operations";
 import { deserializeFloorplan, serializeFloorplan, STORAGE_KEY } from "@/domain/persistence";
+import type { InventoryConfiguration } from "@/domain/inventory";
+import { validateLayoutInventory } from "@/domain/inventory";
 
-export function useFloorplanEditor() {
-  const [history, setHistory] = useState(() => createHistory(createEmptyLayout()));
+type EditorConfiguration = {
+  venueTemplateId: string;
+  inventory: InventoryConfiguration;
+  inventoryOwner: string;
+};
+
+export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner }: EditorConfiguration) {
+  const storageKey = `${STORAGE_KEY}:${venueTemplateId}`;
+  const [history, setHistory] = useState(() => createHistory(createEmptyLayout(venueTemplateId)));
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -25,8 +34,13 @@ export function useFloorplanEditor() {
   useEffect(() => {
     const timeout = window.setTimeout(() => {
       try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) setHistory(createHistory(deserializeFloorplan(stored)));
+        const stored = localStorage.getItem(storageKey);
+        if (stored) {
+          const savedLayout = deserializeFloorplan(stored);
+          const validation = validateLayoutInventory(savedLayout, inventory, inventoryOwner);
+          if (!validation.valid) throw new Error(validation.message);
+          setHistory(createHistory(savedLayout));
+        }
       } catch {
         setNotice("Saved plan could not be read; opened a fresh plan.");
       } finally {
@@ -34,7 +48,7 @@ export function useFloorplanEditor() {
       }
     }, 0);
     return () => window.clearTimeout(timeout);
-  }, []);
+  }, [inventory, inventoryOwner, storageKey]);
 
   useEffect(() => {
     if (!notice) return;
@@ -46,18 +60,29 @@ export function useFloorplanEditor() {
     setHistory((current) => commitHistory(current, next));
   }, []);
 
+  const commitValidated = useCallback((next: FloorplanLayout) => {
+    const validation = validateLayoutInventory(next, inventory, inventoryOwner);
+    if (!validation.valid) {
+      setNotice(validation.message);
+      return false;
+    }
+    commit(next);
+    return true;
+  }, [commit, inventory, inventoryOwner]);
+
   const add = useCallback(
     (type: EventObjectType, position: { x: number; y: number }) => {
       const object = createEventObject(type, position, layout.objects);
-      commit(addObject(layout, object));
-      setSelectedId(object.id);
+      if (commitValidated(addObject(layout, object))) setSelectedId(object.id);
     },
-    [commit, layout],
+    [commitValidated, layout],
   );
 
   const update = useCallback(
-    (id: string, patch: Partial<EventObject>) => commit(updateObject(layout, id, patch)),
-    [commit, layout],
+    (id: string, patch: Partial<EventObject>) => {
+      commitValidated(updateObject(layout, id, patch));
+    },
+    [commitValidated, layout],
   );
 
   const remove = useCallback(
@@ -73,10 +98,9 @@ export function useFloorplanEditor() {
     (id = selectedId) => {
       if (!id) return;
       const next = duplicateObject(layout, id);
-      commit(next);
-      setSelectedId(next.objects.at(-1)?.id ?? null);
+      if (commitValidated(next)) setSelectedId(next.objects.at(-1)?.id ?? null);
     },
-    [commit, layout, selectedId],
+    [commitValidated, layout, selectedId],
   );
 
   const reorder = useCallback(
@@ -90,24 +114,30 @@ export function useFloorplanEditor() {
   const redo = useCallback(() => setHistory((current) => redoHistory(current)), []);
 
   const save = useCallback(() => {
-    localStorage.setItem(STORAGE_KEY, serializeFloorplan(layout));
+    localStorage.setItem(storageKey, serializeFloorplan(layout));
     setNotice("Floorplan saved locally");
-  }, [layout]);
+  }, [layout, storageKey]);
 
   const reset = useCallback(() => {
     if (!window.confirm("Reset this layout? All event objects will be removed.")) return;
-    const fresh = createEmptyLayout();
-    localStorage.removeItem(STORAGE_KEY);
+    const fresh = createEmptyLayout(venueTemplateId);
+    localStorage.removeItem(storageKey);
     setHistory(createHistory(fresh));
     setSelectedId(null);
     setNotice("Reset to the venue template");
-  }, []);
+  }, [storageKey, venueTemplateId]);
 
   const importLayout = useCallback((imported: FloorplanLayout) => {
+    const validation = validateLayoutInventory(imported, inventory, inventoryOwner);
+    if (!validation.valid) {
+      setNotice(validation.message);
+      return false;
+    }
     setHistory(createHistory(imported));
     setSelectedId(null);
     setNotice("Floorplan JSON imported");
-  }, []);
+    return true;
+  }, [inventory, inventoryOwner]);
 
   return {
     layout,

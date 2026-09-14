@@ -2,7 +2,7 @@
 
 import { ArrowDown, ArrowUp, Copy, MousePointer2, Trash2 } from "lucide-react";
 import type { EventObject } from "@/domain/floorplan";
-import { OBJECT_DEFINITIONS, TABLE_TYPES } from "@/domain/object-catalog";
+import { describePhysicalDimensions, OBJECT_DEFINITIONS, TABLE_TYPES } from "@/domain/object-catalog";
 
 type Props = {
   object: EventObject | null;
@@ -13,6 +13,7 @@ type Props = {
 };
 
 export function PropertiesPanel({ object, onChange, onDuplicate, onDelete, onReorder }: Props) {
+  const definition = object ? OBJECT_DEFINITIONS[object.type] : null;
   return (
     <aside className="subtle-scrollbar min-h-0 overflow-y-auto bg-[#fffefa] px-4 py-5">
       <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8a958e]">Properties</p>
@@ -40,24 +41,35 @@ export function PropertiesPanel({ object, onChange, onDuplicate, onDelete, onReo
             </Field>
 
             {TABLE_TYPES.has(object.type) ? (
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Table number">
-                  <input type="number" min={1} value={object.tableNumber ?? ""} onChange={(event) => onChange(object.id, { tableNumber: numberOrZero(event.target.value) })} />
-                </Field>
-                <Field label="Seats">
-                  <input type="number" min={0} max={30} value={object.seats ?? 0} onChange={(event) => onChange(object.id, { seats: numberOrZero(event.target.value) })} />
-                </Field>
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Table number">
+                    <input type="number" min={1} value={object.tableNumber ?? ""} onChange={(event) => onChange(object.id, { tableNumber: numberOrZero(event.target.value) })} />
+                  </Field>
+                  <Field label={`Seats (max ${definition?.maximumSeats ?? "—"})`}>
+                    <input type="number" min={0} max={definition?.maximumSeats} value={object.seats ?? 0} onChange={(event) => onChange(object.id, { seats: numberOrZero(event.target.value) })} />
+                  </Field>
+                </div>
+                <div className="rounded-lg border border-[#e0e5e1] bg-[#f8f9f7] px-3 py-2.5">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#87928c]">Physical size</p>
+                  <p className="mt-1 text-xs font-semibold text-[#536158]">{definition ? describePhysicalDimensions(definition) : "Not configured"}</p>
+                </div>
               </div>
             ) : null}
 
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Width">
-                <NumberInput value={Math.round(object.width)} disabled={!OBJECT_DEFINITIONS[object.type].resizable} onValue={(width) => onChange(object.id, { width: Math.max(20, width) })} />
-              </Field>
-              <Field label="Height">
-                <NumberInput value={Math.round(object.height)} disabled={!OBJECT_DEFINITIONS[object.type].resizable} onValue={(height) => onChange(object.id, { height: Math.max(20, height) })} />
-              </Field>
-            </div>
+            {definition?.resizable ? (
+              <div>
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Planning width">
+                    <NumberInput value={Math.round(object.width)} onValue={(width) => onChange(object.id, { width: Math.max(20, width) })} />
+                  </Field>
+                  <Field label="Planning height">
+                    <NumberInput value={Math.round(object.height)} onValue={(height) => onChange(object.id, { height: Math.max(20, height) })} />
+                  </Field>
+                </div>
+                <p className="mt-1.5 text-[10px] leading-4 text-[#8a958e]">Display footprint only; physical measurements are not configured.</p>
+              </div>
+            ) : null}
 
             <Field label="Rotation">
               <div className="relative">

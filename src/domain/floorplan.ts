@@ -12,6 +12,11 @@ export type EventObjectType =
   | "dance-floor"
   | "chair";
 
+export type PhysicalObjectDimensions =
+  | { status: "confirmed"; shape: "circle"; diameterInches: number }
+  | { status: "partial"; shape: "rectangle"; lengthInches: number; depthInches: null }
+  | { status: "unconfigured"; shape: "circle" | "rectangle" | "area"; widthInches: null; depthInches: null };
+
 export type EventObject = {
   id: string;
   type: EventObjectType;
@@ -19,6 +24,7 @@ export type EventObject = {
   y: number;
   width: number;
   height: number;
+  physicalDimensions: PhysicalObjectDimensions;
   rotation: number;
   label: string;
   tableNumber?: number;
@@ -30,6 +36,7 @@ export type FloorplanLayout = {
   id: string;
   name: string;
   venueTemplateId: string;
+  coordinateUnit: "inches";
   objects: EventObject[];
   updatedAt: string;
 };
@@ -57,6 +64,18 @@ export type VenueElement =
 export type VenueTemplate = {
   id: string;
   name: string;
+  coordinateUnit: "inches";
+  physicalWidthInches: number;
+  physicalHeightInches: number;
+  physicalDimensionStatus: "confirmed" | "provisional";
+  hall: { x: number; y: number; width: number; height: number };
+  elements: VenueElement[];
+};
+
+export type LegacyVenueTemplate = {
+  id: string;
+  name: string;
+  coordinateUnit: "legacy-pixels";
   canvasWidth: number;
   canvasHeight: number;
   hall: { x: number; y: number; width: number; height: number };
@@ -64,6 +83,6 @@ export type VenueTemplate = {
 };
 
 export type StoredFloorplan = {
-  schemaVersion: 1;
+  schemaVersion: 2;
   layout: FloorplanLayout;
 };

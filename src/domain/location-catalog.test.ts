@@ -21,4 +21,20 @@ describe("location catalog", () => {
   it("does not resolve a hall outside the selected location", () => {
     expect(getHallBySlug(undefined, "pinehaven-terrace")).toBeUndefined();
   });
+
+  it("marks Magnolia's working dimensions and inventory as unconfirmed", () => {
+    const configuration = SPRINGS_LOCATIONS[0].halls[0].configuration;
+    expect(configuration).toMatchObject({
+      physicalWidthInches: 960,
+      physicalHeightInches: 720,
+      physicalDimensionStatus: "provisional",
+      inventory: {
+        "round-table-60": null,
+        "rectangle-table-6": null,
+        "rectangle-table-8": null,
+        "sweetheart-table": null,
+        chairs: null,
+      },
+    });
+  });
 });

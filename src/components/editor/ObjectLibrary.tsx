@@ -2,7 +2,8 @@
 
 import { Armchair, Camera, Circle, Heart, LayoutGrid, Martini, Music2, RectangleHorizontal, Utensils } from "lucide-react";
 import type { EventObjectType } from "@/domain/floorplan";
-import { OBJECT_CATALOG, type ObjectDefinition } from "@/domain/object-catalog";
+import { describePhysicalDimensions, OBJECT_CATALOG, type ObjectDefinition } from "@/domain/object-catalog";
+import type { InventoryConfiguration, InventoryUsage } from "@/domain/inventory";
 
 const categories: ObjectDefinition["category"][] = ["Tables", "Production", "Event essentials"];
 
@@ -18,7 +19,13 @@ const icons = {
   chair: Armchair,
 };
 
-export function ObjectLibrary({ onAdd }: { onAdd: (type: EventObjectType) => void }) {
+type Props = {
+  onAdd: (type: EventObjectType) => void;
+  inventory: InventoryConfiguration;
+  usage: InventoryUsage;
+};
+
+export function ObjectLibrary({ onAdd, inventory, usage }: Props) {
   return (
     <aside className="subtle-scrollbar min-h-0 overflow-y-auto bg-[#fffefa] px-4 py-5">
       <div className="mb-4">
@@ -27,7 +34,9 @@ export function ObjectLibrary({ onAdd }: { onAdd: (type: EventObjectType) => voi
         <p className="mt-1 text-[11px] leading-4 text-[#7b877f]">Click or drag an item onto the hall.</p>
       </div>
 
-      <div className="space-y-5">
+      <InventorySummary inventory={inventory} usage={usage} />
+
+      <div className="mt-5 space-y-5">
         {categories.map((category) => (
           <section key={category}>
             <h3 className="mb-2 text-[10px] font-bold uppercase tracking-[0.13em] text-[#7b877f]">{category}</h3>
@@ -50,7 +59,9 @@ export function ObjectLibrary({ onAdd }: { onAdd: (type: EventObjectType) => voi
                     </span>
                     <span className="min-w-0">
                       <span className="block truncate text-xs font-semibold text-[#35463c]">{item.name}</span>
-                      <span className="mt-0.5 block text-[10px] text-[#8a958e]">{item.defaultSeats ? `${item.defaultSeats} seats` : item.resizable ? "Resizable" : "Standard size"}</span>
+                      <span className="mt-0.5 block text-[10px] text-[#8a958e]">
+                        {item.defaultSeats ? `${item.defaultSeats} seats · ${describePhysicalDimensions(item)}` : item.resizable ? "Resizable planning footprint" : describePhysicalDimensions(item)}
+                      </span>
                     </span>
                   </button>
                 );
@@ -60,5 +71,31 @@ export function ObjectLibrary({ onAdd }: { onAdd: (type: EventObjectType) => voi
         ))}
       </div>
     </aside>
+  );
+}
+
+function InventorySummary({ inventory, usage }: Pick<Props, "inventory" | "usage">) {
+  const rows = [
+    { type: "round-table-60" as const, label: '60" Round' },
+    { type: "rectangle-table-6" as const, label: "6' Rectangle" },
+    { type: "rectangle-table-8" as const, label: "8' Rectangle" },
+    { type: "sweetheart-table" as const, label: "Sweetheart" },
+    { type: "chairs" as const, label: "Chairs" },
+  ];
+
+  return (
+    <section className="rounded-xl border border-[#dfe5e0] bg-[#f6f8f6] p-3" aria-labelledby="inventory-heading">
+      <h3 id="inventory-heading" className="text-[10px] font-bold uppercase tracking-[0.13em] text-[#718078]">Inventory use</h3>
+      <dl className="mt-2 space-y-1.5">
+        {rows.map((row) => (
+          <div key={row.type} className="flex items-center justify-between gap-2 text-[10px]">
+            <dt className="font-semibold text-[#536158]">{row.label}</dt>
+            <dd className="tabular-nums text-[#75827b]">
+              {usage[row.type]} / {inventory[row.type] ?? "not configured"}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
   );
 }
