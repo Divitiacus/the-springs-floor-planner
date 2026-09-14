@@ -7,6 +7,8 @@ import {
   deleteObject,
   duplicateObject,
   getLayoutStats,
+  normalizePhysicalFootprints,
+  updateObject,
 } from "@/domain/layout-operations";
 import { deserializeFloorplan, serializeFloorplan } from "@/domain/persistence";
 import { OBJECT_CATALOG, OBJECT_DEFINITIONS } from "@/domain/object-catalog";
@@ -37,6 +39,58 @@ describe("floorplan object operations", () => {
     expect(OBJECT_DEFINITIONS["rectangle-table-8"].physicalDimensions).toMatchObject({ lengthInches: 96, depthInches: null });
     expect(OBJECT_DEFINITIONS["rectangle-table-8"].width).toBeGreaterThan(OBJECT_DEFINITIONS["rectangle-table-6"].width);
     expect(OBJECT_DEFINITIONS["rectangle-table-8"].height).toBe(OBJECT_DEFINITIONS["rectangle-table-6"].height);
+  });
+
+  it("uses the confirmed DJ and Photo Booth footprints", () => {
+    const dj = createEventObject("dj", { x: 0, y: 0 }, [], "dj");
+    const photoBooth = createEventObject("photo-booth", { x: 0, y: 0 }, [], "photo-booth");
+
+    expect(dj).toMatchObject({ width: 72, height: 72, physicalDimensions: { status: "confirmed", widthInches: 72, depthInches: 72 } });
+    expect(photoBooth).toMatchObject({ width: 120, height: 120, physicalDimensions: { status: "confirmed", widthInches: 120, depthInches: 120 } });
+    expect(OBJECT_DEFINITIONS.dj.resizable).toBe(false);
+    expect(OBJECT_DEFINITIONS["photo-booth"]).toMatchObject({ resizable: false, regionalStyleKey: "photo-booth" });
+  });
+
+  it.each([
+    ["12x12" as const, 144],
+    ["16x16" as const, 192],
+    ["20x20" as const, 240],
+  ])("creates the approved %s Dance Floor at %d inches square", (variant, size) => {
+    const danceFloor = createEventObject("dance-floor", { x: 0, y: 0 }, [], variant, variant);
+
+    expect(danceFloor).toMatchObject({
+      variant,
+      width: size,
+      height: size,
+      physicalDimensions: { status: "confirmed", shape: "area", widthInches: size, depthInches: size },
+    });
+  });
+
+  it("does not permit arbitrary resizing of an approved Dance Floor variant", () => {
+    const danceFloor = createEventObject("dance-floor", { x: 0, y: 0 }, [], "dance-floor", "12x12");
+    const layout = addObject(createEmptyLayout(), danceFloor);
+    const attemptedResize = updateObject(layout, danceFloor.id, { width: 175, height: 181 });
+
+    expect(attemptedResize.objects[0]).toMatchObject({ variant: "12x12", width: 144, height: 144 });
+    expect(OBJECT_DEFINITIONS["dance-floor"].resizable).toBe(false);
+  });
+
+  it("normalizes legacy saved production footprints to confirmed catalog sizes", () => {
+    const legacyDanceFloor = {
+      ...createEventObject("dance-floor", { x: 0, y: 0 }, [], "legacy"),
+      variant: undefined,
+      width: 260,
+      height: 220,
+      physicalDimensions: { status: "unconfigured", shape: "area", widthInches: null, depthInches: null } as const,
+    };
+    const normalized = normalizePhysicalFootprints(addObject(createEmptyLayout(), legacyDanceFloor));
+
+    expect(normalized.objects[0]).toMatchObject({
+      variant: "16x16",
+      width: 192,
+      height: 192,
+      physicalDimensions: { status: "confirmed", widthInches: 192, depthInches: 192 },
+    });
   });
 
   it("duplicates and offsets an object without mutating the source", () => {

@@ -2,7 +2,7 @@
 
 import { ArrowDown, ArrowUp, Copy, MousePointer2, Trash2 } from "lucide-react";
 import type { EventObject } from "@/domain/floorplan";
-import { describePhysicalDimensions, OBJECT_DEFINITIONS, TABLE_TYPES } from "@/domain/object-catalog";
+import { describePhysicalDimensions, getObjectDisplayName, OBJECT_DEFINITIONS, TABLE_TYPES } from "@/domain/object-catalog";
 
 type Props = {
   object: EventObject | null;
@@ -32,7 +32,7 @@ export function PropertiesPanel({ object, onChange, onDuplicate, onDelete, onReo
         <div className="mt-4">
           <div className="mb-5 rounded-xl border border-[#dfe5e0] bg-[#f4f7f4] p-3">
             <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7b877f]">Selected object</p>
-            <p className="mt-1 text-sm font-bold text-[#294f3d]">{OBJECT_DEFINITIONS[object.type].name}</p>
+            <p className="mt-1 text-sm font-bold text-[#294f3d]">{getObjectDisplayName(object.type, object.variant)}</p>
           </div>
 
           <div className="space-y-4">
@@ -50,12 +50,13 @@ export function PropertiesPanel({ object, onChange, onDuplicate, onDelete, onReo
                     <input type="number" min={0} max={definition?.maximumSeats} value={object.seats ?? 0} onChange={(event) => onChange(object.id, { seats: numberOrZero(event.target.value) })} />
                   </Field>
                 </div>
-                <div className="rounded-lg border border-[#e0e5e1] bg-[#f8f9f7] px-3 py-2.5">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#87928c]">Physical size</p>
-                  <p className="mt-1 text-xs font-semibold text-[#536158]">{definition ? describePhysicalDimensions(definition) : "Not configured"}</p>
-                </div>
               </div>
             ) : null}
+
+            <div className="rounded-lg border border-[#e0e5e1] bg-[#f8f9f7] px-3 py-2.5">
+              <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#87928c]">Physical size</p>
+              <p className="mt-1 text-xs font-semibold text-[#536158]">{describePhysicalDimensions(object.physicalDimensions)}</p>
+            </div>
 
             {definition?.resizable ? (
               <div>

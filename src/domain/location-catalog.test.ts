@@ -92,4 +92,18 @@ describe("location catalog", () => {
     expect(stairs).toHaveLength(2);
     expect(stairs.every((stair) => stair.treadCount > 1 && stair.placementBehavior === "blocked")).toBe(true);
   });
+
+  it("matches the source-traced exterior door hinges and outward bottom swings", () => {
+    const doors = SPRINGS_LOCATIONS[0].halls[1].configuration.fixedArchitecturalElements.filter(
+      (element) => element.kind === "door",
+    );
+    const bottomDoors = doors.filter((door) => door.y === 780);
+
+    expect(bottomDoors).toMatchObject([
+      { x: 180, width: 55, rotation: 0, swingDirection: "clockwise", swingAngle: 32 },
+      { x: 617, width: 44, rotation: 0, swingDirection: "clockwise", swingAngle: 42 },
+      { x: 705, width: 44, rotation: 180, swingDirection: "counterclockwise", swingAngle: 42 },
+      { x: 1210, width: 58, rotation: 0, swingDirection: "clockwise", swingAngle: 32 },
+    ]);
+  });
 });

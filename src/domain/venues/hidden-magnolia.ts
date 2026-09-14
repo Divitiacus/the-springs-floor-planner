@@ -189,6 +189,7 @@ function createDoors(
     width: number,
     rotation: number,
     swingDirection: "clockwise" | "counterclockwise",
+    swingAngle?: number,
   ): FixedArchitectureElement => ({
     ...common,
     id,
@@ -200,17 +201,18 @@ function createDoors(
     width,
     rotation,
     swingDirection,
+    swingAngle,
   });
 
   return [
-    door("hidden-magnolia-northwest-door", 180, 60, 55, 0, "counterclockwise"),
-    door("hidden-magnolia-north-center-door-a", 617, 60, 44, 0, "clockwise"),
-    door("hidden-magnolia-north-center-door-b", 705, 60, 44, 180, "counterclockwise"),
-    door("hidden-magnolia-northeast-door", 1208, 60, 42, 0, "clockwise"),
-    door("hidden-magnolia-southwest-door", 235, 780, 55, 180, "clockwise"),
-    door("hidden-magnolia-south-center-door-a", 617, 780, 44, 180, "counterclockwise"),
-    door("hidden-magnolia-south-center-door-b", 705, 780, 44, 0, "clockwise"),
-    door("hidden-magnolia-southeast-door", 1250, 780, 42, 180, "counterclockwise"),
+    door("hidden-magnolia-northwest-door", 180, 60, 55, 0, "counterclockwise", 32),
+    door("hidden-magnolia-north-center-door-a", 617, 60, 44, 0, "counterclockwise", 42),
+    door("hidden-magnolia-north-center-door-b", 705, 60, 44, 180, "clockwise", 42),
+    door("hidden-magnolia-northeast-door", 1210, 60, 58, 0, "counterclockwise", 32),
+    door("hidden-magnolia-southwest-door", 180, 780, 55, 0, "clockwise", 32),
+    door("hidden-magnolia-south-center-door-a", 617, 780, 44, 0, "clockwise", 42),
+    door("hidden-magnolia-south-center-door-b", 705, 780, 44, 180, "counterclockwise", 42),
+    door("hidden-magnolia-southeast-door", 1210, 780, 58, 0, "clockwise", 32),
     door("hidden-magnolia-upper-closet-door", 180, 131, 46, 90, "clockwise"),
     door("hidden-magnolia-lower-closet-door", 180, 673, 46, 90, "counterclockwise"),
   ];

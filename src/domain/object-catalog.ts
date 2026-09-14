@@ -1,4 +1,13 @@
-import type { EventObjectType, PhysicalObjectDimensions } from "@/domain/floorplan";
+import type { DanceFloorVariant, EventObjectType, PhysicalObjectDimensions } from "@/domain/floorplan";
+
+export type ObjectVariantDefinition = {
+  id: DanceFloorVariant;
+  name: string;
+  shortLabel: string;
+  width: number;
+  height: number;
+  physicalDimensions: { status: "confirmed"; shape: "area"; widthInches: number; depthInches: number };
+};
 
 export type ObjectDefinition = {
   type: EventObjectType;
@@ -13,6 +22,8 @@ export type ObjectDefinition = {
   inventoryLabel: string;
   physicalDimensions: PhysicalObjectDimensions;
   resizable: boolean;
+  variants?: readonly ObjectVariantDefinition[];
+  regionalStyleKey?: "photo-booth";
   icon: "round" | "rectangle" | "heart" | "music" | "bar" | "buffet" | "camera" | "dance" | "chair";
 };
 
@@ -23,11 +34,27 @@ export const OBJECT_CATALOG: ObjectDefinition[] = [
   { type: "sweetheart-table", name: "Sweetheart Table", shortLabel: "Sweetheart", category: "Tables", width: 72, height: 36, defaultSeats: 2, maximumSeats: 2, inventoryLabel: "sweetheart tables", physicalDimensions: { status: "unconfigured", shape: "rectangle", widthInches: null, depthInches: null }, resizable: false, icon: "heart" },
   { type: "cake-table", name: "Cake Table", shortLabel: "Cake", category: "Event essentials", width: 62, height: 62, inventoryLabel: "cake tables", physicalDimensions: { status: "unconfigured", shape: "circle", widthInches: null, depthInches: null }, resizable: false, icon: "round" },
   { type: "gift-table", name: "Gift Table", shortLabel: "Gifts", category: "Event essentials", width: 88, height: 48, inventoryLabel: "gift tables", physicalDimensions: { status: "unconfigured", shape: "rectangle", widthInches: null, depthInches: null }, resizable: true, icon: "rectangle" },
-  { type: "dj", name: "DJ", shortLabel: "DJ", category: "Production", width: 100, height: 58, inventoryLabel: "DJ areas", physicalDimensions: { status: "unconfigured", shape: "area", widthInches: null, depthInches: null }, resizable: true, icon: "music" },
+  { type: "dj", name: "DJ", shortLabel: "DJ", category: "Production", width: 72, height: 72, inventoryLabel: "DJ areas", physicalDimensions: { status: "confirmed", shape: "area", widthInches: 72, depthInches: 72 }, resizable: false, icon: "music" },
   { type: "portable-bar", name: "Bar", shortLabel: "Bar", category: "Event essentials", width: 118, height: 52, inventoryLabel: "bars", physicalDimensions: { status: "unconfigured", shape: "rectangle", widthInches: null, depthInches: null }, resizable: true, icon: "bar" },
   { type: "buffet", name: "Buffet", shortLabel: "Buffet", category: "Event essentials", width: 140, height: 48, inventoryLabel: "buffets", physicalDimensions: { status: "unconfigured", shape: "rectangle", widthInches: null, depthInches: null }, resizable: true, icon: "buffet" },
-  { type: "photo-booth", name: "Photo Booth", shortLabel: "Photo Booth", category: "Production", width: 92, height: 76, inventoryLabel: "photo booths", physicalDimensions: { status: "unconfigured", shape: "area", widthInches: null, depthInches: null }, resizable: true, icon: "camera" },
-  { type: "dance-floor", name: "Dance Floor", shortLabel: "Dance Floor", category: "Production", width: 260, height: 220, inventoryLabel: "dance floors", physicalDimensions: { status: "unconfigured", shape: "area", widthInches: null, depthInches: null }, resizable: true, icon: "dance" },
+  { type: "photo-booth", name: "Photo Booth", shortLabel: "Photo Booth", category: "Production", width: 120, height: 120, inventoryLabel: "photo booths", physicalDimensions: { status: "confirmed", shape: "area", widthInches: 120, depthInches: 120 }, resizable: false, regionalStyleKey: "photo-booth", icon: "camera" },
+  {
+    type: "dance-floor",
+    name: "Dance Floor",
+    shortLabel: "Dance Floor",
+    category: "Production",
+    width: 192,
+    height: 192,
+    inventoryLabel: "dance floors",
+    physicalDimensions: { status: "confirmed", shape: "area", widthInches: 192, depthInches: 192 },
+    resizable: false,
+    icon: "dance",
+    variants: [
+      { id: "12x12", name: "12' × 12' Dance Floor", shortLabel: "Dance Floor 12' × 12'", width: 144, height: 144, physicalDimensions: { status: "confirmed", shape: "area", widthInches: 144, depthInches: 144 } },
+      { id: "16x16", name: "16' × 16' Dance Floor", shortLabel: "Dance Floor 16' × 16'", width: 192, height: 192, physicalDimensions: { status: "confirmed", shape: "area", widthInches: 192, depthInches: 192 } },
+      { id: "20x20", name: "20' × 20' Dance Floor", shortLabel: "Dance Floor 20' × 20'", width: 240, height: 240, physicalDimensions: { status: "confirmed", shape: "area", widthInches: 240, depthInches: 240 } },
+    ],
+  },
   { type: "chair", name: "Generic Chair", shortLabel: "Chair", category: "Event essentials", width: 30, height: 34, inventoryLabel: "chairs", physicalDimensions: { status: "unconfigured", shape: "rectangle", widthInches: null, depthInches: null }, resizable: false, icon: "chair" },
 ];
 
@@ -46,9 +73,20 @@ export function isGuestTable(type: EventObjectType) {
   return type === "round-table-60" || type === "rectangle-table-6" || type === "rectangle-table-8";
 }
 
-export function describePhysicalDimensions(definition: ObjectDefinition) {
-  const dimensions = definition.physicalDimensions;
-  if (dimensions.status === "confirmed") return `${dimensions.diameterInches} in diameter`;
+export function getObjectVariant(type: EventObjectType, variant?: DanceFloorVariant) {
+  const variants = OBJECT_DEFINITIONS[type].variants;
+  if (!variants) return undefined;
+  return variants.find((candidate) => candidate.id === (variant ?? "16x16"));
+}
+
+export function getObjectDisplayName(type: EventObjectType, variant?: DanceFloorVariant) {
+  return getObjectVariant(type, variant)?.name ?? OBJECT_DEFINITIONS[type].name;
+}
+
+export function describePhysicalDimensions(source: ObjectDefinition | PhysicalObjectDimensions) {
+  const dimensions = "physicalDimensions" in source ? source.physicalDimensions : source;
+  if (dimensions.status === "confirmed" && dimensions.shape === "circle") return `${dimensions.diameterInches} in diameter`;
+  if (dimensions.status === "confirmed") return `${dimensions.widthInches} × ${dimensions.depthInches} in`;
   if (dimensions.status === "partial") return `${dimensions.lengthInches} in long · depth not configured`;
   return "Not configured";
 }

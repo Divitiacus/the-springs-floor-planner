@@ -1,7 +1,7 @@
 "use client";
 
 import { Armchair, Camera, Circle, Heart, LayoutGrid, Martini, Music2, RectangleHorizontal, Utensils } from "lucide-react";
-import type { EventObjectType } from "@/domain/floorplan";
+import type { EventObjectSelection, PhysicalObjectDimensions } from "@/domain/floorplan";
 import { describePhysicalDimensions, OBJECT_CATALOG, type ObjectDefinition } from "@/domain/object-catalog";
 import type { InventoryConfiguration, InventoryUsage } from "@/domain/inventory";
 
@@ -20,7 +20,7 @@ const icons = {
 };
 
 type Props = {
-  onAdd: (type: EventObjectType) => void;
+  onAdd: (selection: EventObjectSelection) => void;
   inventory: InventoryConfiguration;
   usage: InventoryUsage;
 };
@@ -41,16 +41,16 @@ export function ObjectLibrary({ onAdd, inventory, usage }: Props) {
           <section key={category}>
             <h3 className="mb-2 text-[10px] font-bold uppercase tracking-[0.13em] text-[#7b877f]">{category}</h3>
             <div className="space-y-1.5">
-              {OBJECT_CATALOG.filter((item) => item.category === category).map((item) => {
-                const Icon = icons[item.icon];
+              {OBJECT_CATALOG.filter((item) => item.category === category).flatMap(getLibraryChoices).map((choice) => {
+                const Icon = icons[choice.definition.icon];
                 return (
                   <button
-                    key={item.type}
+                    key={choice.key}
                     draggable
                     className="group flex w-full items-center gap-3 rounded-xl border border-transparent px-2.5 py-2 text-left transition-colors hover:border-[#dfe5e0] hover:bg-[#f4f6f3]"
-                    onClick={() => onAdd(item.type)}
+                    onClick={() => onAdd(choice.selection)}
                     onDragStart={(event) => {
-                      event.dataTransfer.setData("application/x-springs-object", item.type);
+                      event.dataTransfer.setData("application/x-springs-object", JSON.stringify(choice.selection));
                       event.dataTransfer.effectAllowed = "copy";
                     }}
                   >
@@ -58,9 +58,9 @@ export function ObjectLibrary({ onAdd, inventory, usage }: Props) {
                       <Icon size={17} strokeWidth={1.8} />
                     </span>
                     <span className="min-w-0">
-                      <span className="block truncate text-xs font-semibold text-[#35463c]">{item.name}</span>
+                      <span className="block truncate text-xs font-semibold text-[#35463c]">{choice.name}</span>
                       <span className="mt-0.5 block text-[10px] text-[#8a958e]">
-                        {item.defaultSeats ? `${item.defaultSeats} seats · ${describePhysicalDimensions(item)}` : item.resizable ? "Resizable planning footprint" : describePhysicalDimensions(item)}
+                        {choice.definition.defaultSeats ? `${choice.definition.defaultSeats} seats · ${describePhysicalDimensions(choice.physicalDimensions)}` : choice.definition.resizable ? "Resizable planning footprint" : describePhysicalDimensions(choice.physicalDimensions)}
                       </span>
                     </span>
                   </button>
@@ -72,6 +72,34 @@ export function ObjectLibrary({ onAdd, inventory, usage }: Props) {
       </div>
     </aside>
   );
+}
+
+type LibraryChoice = {
+  key: string;
+  definition: ObjectDefinition;
+  selection: EventObjectSelection;
+  name: string;
+  physicalDimensions: PhysicalObjectDimensions;
+};
+
+function getLibraryChoices(definition: ObjectDefinition): LibraryChoice[] {
+  if (!definition.variants) {
+    return [{
+      key: definition.type,
+      definition,
+      selection: { type: definition.type },
+      name: definition.name,
+      physicalDimensions: definition.physicalDimensions,
+    }];
+  }
+
+  return definition.variants.map((variant) => ({
+    key: `${definition.type}:${variant.id}`,
+    definition,
+    selection: { type: definition.type, variant: variant.id },
+    name: variant.name,
+    physicalDimensions: variant.physicalDimensions,
+  }));
 }
 
 function InventorySummary({ inventory, usage }: Pick<Props, "inventory" | "usage">) {

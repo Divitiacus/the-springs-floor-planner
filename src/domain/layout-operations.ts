@@ -1,5 +1,5 @@
-import type { EventObject, EventObjectType, FloorplanLayout } from "@/domain/floorplan";
-import { isGuestTable, OBJECT_DEFINITIONS } from "@/domain/object-catalog";
+import type { DanceFloorVariant, EventObject, EventObjectType, FloorplanLayout } from "@/domain/floorplan";
+import { getObjectVariant, isGuestTable, OBJECT_DEFINITIONS } from "@/domain/object-catalog";
 
 const now = () => new Date().toISOString();
 
@@ -19,8 +19,10 @@ export function createEventObject(
   position: { x: number; y: number },
   existing: EventObject[] = [],
   id = crypto.randomUUID(),
+  variant?: DanceFloorVariant,
 ): EventObject {
   const definition = OBJECT_DEFINITIONS[type];
+  const variantDefinition = getObjectVariant(type, variant);
   const tableNumber = isGuestTable(type)
     ? Math.max(0, ...existing.filter((item) => isGuestTable(item.type)).map((item) => item.tableNumber ?? 0)) + 1
     : undefined;
@@ -28,13 +30,14 @@ export function createEventObject(
   return {
     id,
     type,
+    variant: variantDefinition?.id,
     x: position.x,
     y: position.y,
-    width: definition.width,
-    height: definition.height,
-    physicalDimensions: definition.physicalDimensions,
+    width: variantDefinition?.width ?? definition.width,
+    height: variantDefinition?.height ?? definition.height,
+    physicalDimensions: variantDefinition?.physicalDimensions ?? definition.physicalDimensions,
     rotation: 0,
-    label: isGuestTable(type) ? `Table ${tableNumber}` : definition.shortLabel,
+    label: isGuestTable(type) ? `Table ${tableNumber}` : variantDefinition?.shortLabel ?? definition.shortLabel,
     tableNumber,
     seats: definition.defaultSeats,
     zIndex: existing.length,
@@ -46,7 +49,21 @@ export function addObject(layout: FloorplanLayout, object: EventObject): Floorpl
 }
 
 export function updateObject(layout: FloorplanLayout, id: string, patch: Partial<EventObject>): FloorplanLayout {
-  return touch(layout, layout.objects.map((object) => (object.id === id ? { ...object, ...patch, id } : object)));
+  return touch(layout, layout.objects.map((object) => {
+    if (object.id !== id) return object;
+    const allowedPatch = { ...patch };
+    if (!OBJECT_DEFINITIONS[object.type].resizable) {
+      delete allowedPatch.width;
+      delete allowedPatch.height;
+      delete allowedPatch.physicalDimensions;
+      delete allowedPatch.variant;
+    }
+    return constrainPhysicalFootprint({ ...object, ...allowedPatch, id });
+  }));
+}
+
+export function normalizePhysicalFootprints(layout: FloorplanLayout): FloorplanLayout {
+  return { ...layout, objects: layout.objects.map(constrainPhysicalFootprint) };
 }
 
 export function deleteObject(layout: FloorplanLayout, id: string): FloorplanLayout {
@@ -95,4 +112,17 @@ export function getLayoutStats(layout: FloorplanLayout) {
 
 function touch(layout: FloorplanLayout, objects: EventObject[]): FloorplanLayout {
   return { ...layout, objects, updatedAt: now() };
+}
+
+function constrainPhysicalFootprint(object: EventObject): EventObject {
+  const definition = OBJECT_DEFINITIONS[object.type];
+  if (definition.resizable) return object;
+  const variantDefinition = getObjectVariant(object.type, object.variant);
+  return {
+    ...object,
+    variant: variantDefinition?.id,
+    width: variantDefinition?.width ?? definition.width,
+    height: variantDefinition?.height ?? definition.height,
+    physicalDimensions: variantDefinition?.physicalDimensions ?? definition.physicalDimensions,
+  };
 }

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Download, Upload } from "lucide-react";
-import type { EventObjectType } from "@/domain/floorplan";
+import type { EventObjectSelection } from "@/domain/floorplan";
 import type { VenueTemplate } from "@/domain/floorplan";
 import type { InventoryConfiguration } from "@/domain/inventory";
 import { getInventoryUsage } from "@/domain/inventory";
@@ -36,10 +36,10 @@ export function FloorPlanner({ venue, locationName, inventory }: Props) {
   const inventoryUsage = getInventoryUsage(editor.layout);
 
   const addCentered = useCallback(
-    (type: EventObjectType) => {
+    (selection: EventObjectSelection) => {
       const column = objectCount % 6;
       const row = Math.floor(objectCount / 6) % 4;
-      addObject(type, {
+      addObject(selection, {
         x: venue.hall.x + venue.hall.width * 0.25 + column * 72,
         y: venue.hall.y + venue.hall.height * 0.3 + row * 72,
       });

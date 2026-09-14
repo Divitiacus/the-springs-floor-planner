@@ -12,14 +12,23 @@ export type EventObjectType =
   | "dance-floor"
   | "chair";
 
+export type DanceFloorVariant = "12x12" | "16x16" | "20x20";
+
+export type EventObjectSelection = {
+  type: EventObjectType;
+  variant?: DanceFloorVariant;
+};
+
 export type PhysicalObjectDimensions =
   | { status: "confirmed"; shape: "circle"; diameterInches: number }
+  | { status: "confirmed"; shape: "rectangle" | "area"; widthInches: number; depthInches: number }
   | { status: "partial"; shape: "rectangle"; lengthInches: number; depthInches: null }
   | { status: "unconfigured"; shape: "circle" | "rectangle" | "area"; widthInches: null; depthInches: null };
 
 export type EventObject = {
   id: string;
   type: EventObjectType;
+  variant?: DanceFloorVariant;
   x: number;
   y: number;
   width: number;
@@ -73,6 +82,7 @@ export type FixedArchitectureElement =
       width: number;
       rotation: number;
       swingDirection: "clockwise" | "counterclockwise";
+      swingAngle?: number;
     })
   | (FixedArchitectureBase & {
       kind: "stairs";

@@ -5,7 +5,7 @@ import Konva from "konva";
 import { Arc, Circle, Group, Image as KonvaImage, Layer, Line, Rect, Stage, Text, Transformer } from "react-konva";
 import type {
   EventObject,
-  EventObjectType,
+  EventObjectSelection,
   FixedArchitectureElement,
   FloorplanLayout,
   ReferenceFloorplanAsset,
@@ -23,7 +23,7 @@ type Props = {
   showReference: boolean;
   resetViewKey: number;
   onSelect: (id: string | null) => void;
-  onAdd: (type: EventObjectType, position: { x: number; y: number }) => void;
+  onAdd: (selection: EventObjectSelection, position: { x: number; y: number }) => void;
   onChange: (id: string, patch: Partial<EventObject>) => void;
   onZoomChange: (zoom: number) => void;
 };
@@ -82,12 +82,13 @@ export function FloorplanCanvas({ layout, venue, selectedId, mode, zoom, showRef
 
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
-    const type = event.dataTransfer.getData("application/x-springs-object") as EventObjectType;
-    if (!OBJECT_DEFINITIONS[type]) return;
+    const payload = event.dataTransfer.getData("application/x-springs-object");
+    const selection = parseObjectSelection(payload);
+    if (!selection || !OBJECT_DEFINITIONS[selection.type]) return;
     const stage = stageRef.current;
     const rect = event.currentTarget.getBoundingClientRect();
     if (!stage) return;
-    onAdd(type, {
+    onAdd(selection, {
       x: (event.clientX - rect.left - stage.x()) / scale,
       y: (event.clientY - rect.top - stage.y()) / scale,
     });
@@ -217,17 +218,19 @@ function FixedArchitectureNode({ element }: { element: FixedArchitectureElement 
 
   if (element.kind === "door") {
     const swingSign = element.swingDirection === "clockwise" ? 1 : -1;
+    const swingAngle = element.swingAngle ?? 90;
+    const swingRadians = (swingAngle * Math.PI) / 180;
     return (
       <Group x={element.x} y={element.y} rotation={element.rotation}>
         <Line points={[0, 0, element.width, 0]} stroke="#fffdfa" strokeWidth={12} />
-        <Line points={[0, 0, 0, swingSign * element.width]} stroke="#78877f" strokeWidth={2} />
+        <Line points={[0, 0, Math.cos(swingRadians) * element.width, Math.sin(swingRadians) * element.width * swingSign]} stroke="#78877f" strokeWidth={2} />
         <Arc
           x={0}
           y={0}
           innerRadius={element.width - 1}
           outerRadius={element.width + 1}
-          angle={90}
-          rotation={swingSign > 0 ? 0 : -90}
+          angle={swingAngle}
+          rotation={swingSign > 0 ? 0 : -swingAngle}
           fill="#a8b3ad"
         />
       </Group>
@@ -425,4 +428,15 @@ function DanceGrid({ width, height }: { width: number; height: number }) {
 
 function snap(value: number) {
   return Math.round(value / 5) * 5;
+}
+
+function parseObjectSelection(payload: string): EventObjectSelection | null {
+  try {
+    const parsed = JSON.parse(payload) as Partial<EventObjectSelection>;
+    return parsed.type && parsed.type in OBJECT_DEFINITIONS
+      ? { type: parsed.type, variant: parsed.variant }
+      : null;
+  } catch {
+    return payload in OBJECT_DEFINITIONS ? { type: payload as EventObjectSelection["type"] } : null;
+  }
 }

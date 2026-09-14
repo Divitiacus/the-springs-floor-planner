@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { EventObject, EventObjectType, FloorplanLayout } from "@/domain/floorplan";
+import type { EventObject, EventObjectSelection, FloorplanLayout } from "@/domain/floorplan";
 import { commitHistory, createHistory, redoHistory, undoHistory } from "@/domain/history";
 import {
   addObject,
@@ -10,6 +10,7 @@ import {
   deleteObject,
   duplicateObject,
   getLayoutStats,
+  normalizePhysicalFootprints,
   reorderObject,
   updateObject,
 } from "@/domain/layout-operations";
@@ -36,7 +37,7 @@ export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner 
       try {
         const stored = localStorage.getItem(storageKey);
         if (stored) {
-          const savedLayout = deserializeFloorplan(stored);
+          const savedLayout = normalizePhysicalFootprints(deserializeFloorplan(stored));
           const validation = validateLayoutInventory(savedLayout, inventory, inventoryOwner);
           if (!validation.valid) throw new Error(validation.message);
           setHistory(createHistory(savedLayout));
@@ -71,8 +72,8 @@ export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner 
   }, [commit, inventory, inventoryOwner]);
 
   const add = useCallback(
-    (type: EventObjectType, position: { x: number; y: number }) => {
-      const object = createEventObject(type, position, layout.objects);
+    (selection: EventObjectSelection, position: { x: number; y: number }) => {
+      const object = createEventObject(selection.type, position, layout.objects, undefined, selection.variant);
       if (commitValidated(addObject(layout, object))) setSelectedId(object.id);
     },
     [commitValidated, layout],
@@ -128,12 +129,13 @@ export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner 
   }, [storageKey, venueTemplateId]);
 
   const importLayout = useCallback((imported: FloorplanLayout) => {
-    const validation = validateLayoutInventory(imported, inventory, inventoryOwner);
+    const normalized = normalizePhysicalFootprints(imported);
+    const validation = validateLayoutInventory(normalized, inventory, inventoryOwner);
     if (!validation.valid) {
       setNotice(validation.message);
       return false;
     }
-    setHistory(createHistory(imported));
+    setHistory(createHistory(normalized));
     setSelectedId(null);
     setNotice("Floorplan JSON imported");
     return true;
