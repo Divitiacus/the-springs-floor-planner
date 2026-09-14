@@ -1,5 +1,5 @@
-import { FloorPlanner } from "@/components/editor/FloorPlanner";
+import { FloorPlanStart } from "@/components/start/FloorPlanStart";
 
 export default function Home() {
-  return <FloorPlanner />;
+  return <FloorPlanStart />;
 }

@@ -64,3 +64,18 @@ input:focus-visible {
 .toast-in {
   animation: toast-in 160ms ease-out;
 }
+
+.start-page-grid {
+  background-image:
+    linear-gradient(rgba(92, 113, 122, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(92, 113, 122, 0.035) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
+}
+
+.floorplan-placeholder {
+  background-image:
+    linear-gradient(rgba(104, 123, 130, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(104, 123, 130, 0.055) 1px, transparent 1px);
+  background-size: 32px 32px;
+}

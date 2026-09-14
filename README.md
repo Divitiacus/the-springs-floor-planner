@@ -1,6 +1,6 @@
 # The Springs Floor Planner
 
-A standalone proof of concept for building Springs-specific wedding and event floorplans. The prototype keeps permanent venue geometry separate from draggable event objects and saves the structured layout locally in the browser.
+A standalone Next.js application for Springs-specific wedding and event floorplans. The current milestone exposes a welcoming Location → Hall → Floor Plan entry flow; the destination route is intentionally a placeholder for the future editor.
 
 ## Start locally
 
@@ -24,10 +24,10 @@ npm run build
 
 ## Architecture
 
-- `src/domain`: floorplan types, object catalog, sample venue template, immutable layout operations, history, and persistence.
-- `src/hooks/useFloorplanEditor.ts`: client editor orchestration and local save/load.
-- `src/components/editor`: application shell, object library, toolbar, properties inspector, and dynamically loaded canvas boundary.
-- `src/components/editor/canvas`: locked venue rendering and editable Konva object layer.
-- `src/app`: App Router entry point and visual system.
+- `src/domain/location-catalog.ts`: stable location and hall identifiers plus extensible hall configuration metadata.
+- `src/components/start/FloorPlanStart.tsx`: dependent Location and Hall selectors and route navigation.
+- `src/app/page.tsx`: the Floor Plan Designer start page.
+- `src/app/floorplan/page.tsx`: the selected-venue workspace placeholder.
+- `src/components/editor` and related domain modules: the earlier proof-of-concept editor remains preserved but is not mounted by the current route workflow.
 
-The stored JSON has a schema version and a `layout` containing a venue template ID plus independently editable event objects. Browser storage uses the key `springs-floor-planner:v1`. The venue itself is not duplicated into every layout, so a later venue-template catalog can replace the sample cleanly.
+The catalog currently contains Magnolia with Pinehaven Terrace and The Hidden Magnolia. Routes use stable slugs, for example `/floorplan?location=magnolia&hall=pinehaven-terrace`.
