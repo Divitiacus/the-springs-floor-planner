@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, Hand, MousePointer2, Redo2, RotateCcw, Trash2, Undo2, ZoomIn, ZoomOut } from "lucide-react";
+import { Copy, Eye, EyeOff, Hand, MousePointer2, Redo2, RotateCcw, Trash2, Undo2, ZoomIn, ZoomOut } from "lucide-react";
 
 export type EditorMode = "select" | "pan";
 
@@ -10,6 +10,8 @@ type Props = {
   canUndo: boolean;
   canRedo: boolean;
   hasSelection: boolean;
+  hasReference: boolean;
+  showReference: boolean;
   onModeChange: (mode: EditorMode) => void;
   onUndo: () => void;
   onRedo: () => void;
@@ -17,6 +19,7 @@ type Props = {
   onDelete: () => void;
   onZoomChange: (zoom: number) => void;
   onResetView: () => void;
+  onToggleReference: () => void;
 };
 
 export function EditorToolbar(props: Props) {
@@ -34,6 +37,14 @@ export function EditorToolbar(props: Props) {
       </div>
 
       <div className="flex items-center gap-1">
+        {props.hasReference ? (
+          <>
+            <ToolButton label={props.showReference ? "Hide source reference" : "Show source reference"} active={props.showReference} onClick={props.onToggleReference}>
+              {props.showReference ? <Eye size={15} /> : <EyeOff size={15} />}
+            </ToolButton>
+            <Divider />
+          </>
+        ) : null}
         <ToolButton label="Zoom out" onClick={() => props.onZoomChange(Math.max(0.55, props.zoom - 0.1))}><ZoomOut size={15} /></ToolButton>
         <span className="w-12 text-center text-[11px] font-semibold tabular-nums text-[#55635b]">{Math.round(props.zoom * 100)}%</span>
         <ToolButton label="Zoom in" onClick={() => props.onZoomChange(Math.min(2.2, props.zoom + 0.1))}><ZoomIn size={15} /></ToolButton>

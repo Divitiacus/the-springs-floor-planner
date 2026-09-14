@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Building2, ChevronDown, MapPin } from "lucide-react";
@@ -14,11 +14,28 @@ export function FloorPlanStart() {
   const selectedLocation = SPRINGS_LOCATIONS.find((location) => location.slug === locationSlug);
   const canOpen = Boolean(selectedLocation && hallSlug);
 
+  const selectLocation = useCallback((slug: string) => {
+    setLocationSlug(slug);
+    setHallSlug("");
+  }, []);
+
   useEffect(() => {
-    const restoredLocationSlug = locationSelectRef.current?.value;
-    if (restoredLocationSlug && SPRINGS_LOCATIONS.some((location) => location.slug === restoredLocationSlug)) {
-      setLocationSlug(restoredLocationSlug);
-    }
+    const syncRestoredLocation = () => {
+      const restoredSlug = locationSelectRef.current?.value;
+      if (restoredSlug && SPRINGS_LOCATIONS.some((location) => location.slug === restoredSlug)) {
+        setLocationSlug(restoredSlug);
+      }
+    };
+
+    syncRestoredLocation();
+    const frame = window.requestAnimationFrame(syncRestoredLocation);
+    window.addEventListener("pageshow", syncRestoredLocation);
+    window.addEventListener("focus", syncRestoredLocation);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("pageshow", syncRestoredLocation);
+      window.removeEventListener("focus", syncRestoredLocation);
+    };
   }, []);
 
   const openFloorPlan = () => {
@@ -77,10 +94,8 @@ export function FloorPlanStart() {
                 ref={locationSelectRef}
                 id="location-select"
                 value={locationSlug}
-                onChange={(event) => {
-                  setLocationSlug(event.target.value);
-                  setHallSlug("");
-                }}
+                onInput={(event) => selectLocation(event.currentTarget.value)}
+                onChange={(event) => selectLocation(event.target.value)}
               >
                 <option value="">Select a location</option>
                 {SPRINGS_LOCATIONS.map((location) => (
@@ -91,6 +106,7 @@ export function FloorPlanStart() {
 
             <SelectField icon={<Building2 size={16} />} label="Hall" htmlFor="hall-select">
               <select
+                key={locationSlug || "no-location"}
                 id="hall-select"
                 value={hallSlug}
                 disabled={!selectedLocation}

@@ -41,6 +41,71 @@ export type FloorplanLayout = {
   updatedAt: string;
 };
 
+export type PlacementBehavior = "allowed" | "blocked" | "restricted";
+export type ArchitectureMeasurementStatus = "confirmed" | "source-traced" | "provisional";
+
+type FixedArchitectureBase = {
+  id: string;
+  label: string;
+  fixed: true;
+  placementBehavior: PlacementBehavior;
+  measurementStatus: ArchitectureMeasurementStatus;
+};
+
+export type FixedArchitectureElement =
+  | (FixedArchitectureBase & {
+      kind: "area";
+      role: "main-floor" | "stage" | "closet" | "catering" | "bar";
+      shape:
+        | { type: "rectangle"; x: number; y: number; width: number; height: number }
+        | { type: "polygon"; points: number[] };
+      elevation: "floor" | "raised";
+      labelRotation?: number;
+    })
+  | (FixedArchitectureBase & {
+      kind: "wall";
+      points: number[];
+    })
+  | (FixedArchitectureBase & {
+      kind: "door";
+      x: number;
+      y: number;
+      width: number;
+      rotation: number;
+      swingDirection: "clockwise" | "counterclockwise";
+    })
+  | (FixedArchitectureBase & {
+      kind: "stairs";
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      orientation: "horizontal" | "vertical";
+      treadCount: number;
+    })
+  | (FixedArchitectureBase & {
+      kind: "direction-label";
+      x: number;
+      y: number;
+      width: number;
+      rotation?: number;
+    });
+
+export type ReferenceFloorplanAsset = {
+  id: string;
+  source: string;
+  sourceDocument: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  opacity: number;
+  visibleByDefault: boolean;
+  locked: true;
+  interactive: false;
+  measurementStatus: "source-traced";
+};
+
 export type VenueElement =
   | {
       id: string;
@@ -67,9 +132,10 @@ export type VenueTemplate = {
   coordinateUnit: "inches";
   physicalWidthInches: number;
   physicalHeightInches: number;
-  physicalDimensionStatus: "confirmed" | "provisional";
+  physicalDimensionStatus: ArchitectureMeasurementStatus;
   hall: { x: number; y: number; width: number; height: number };
-  elements: VenueElement[];
+  elements: FixedArchitectureElement[];
+  referenceAsset: ReferenceFloorplanAsset | null;
 };
 
 export type LegacyVenueTemplate = {

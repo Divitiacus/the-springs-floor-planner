@@ -1,18 +1,19 @@
+import type {
+  ArchitectureMeasurementStatus,
+  FixedArchitectureElement,
+  ReferenceFloorplanAsset,
+} from "@/domain/floorplan";
 import type { InventoryConfiguration } from "@/domain/inventory";
 import { feetToInches } from "@/domain/physical-units";
+import { createHiddenMagnoliaConfiguration } from "@/domain/venues/hidden-magnolia";
 
 export type HallConfiguration = {
   physicalWidthInches: number;
   physicalHeightInches: number;
-  physicalDimensionStatus: "confirmed" | "provisional";
+  physicalDimensionStatus: ArchitectureMeasurementStatus;
   physicalDimensionNote?: string;
-  fixedArchitecturalElements: readonly {
-    id: string;
-    kind: string;
-    xInches: number;
-    yInches: number;
-  }[];
-  floorplanAsset: { id: string; source: string } | null;
+  fixedArchitecturalElements: readonly FixedArchitectureElement[];
+  floorplanAsset: ReferenceFloorplanAsset | null;
   inventory: InventoryConfiguration;
   sampleLayoutIds?: readonly string[];
 };
@@ -31,6 +32,14 @@ export type LocationCatalogEntry = {
   halls: readonly HallCatalogEntry[];
 };
 
+const MAGNOLIA_INVENTORY: InventoryConfiguration = {
+  "round-table-60": null,
+  "rectangle-table-6": null,
+  "rectangle-table-8": null,
+  "sweetheart-table": null,
+  chairs: null,
+};
+
 export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
   {
     id: "location_magnolia",
@@ -47,7 +56,7 @@ export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
         id: "hall_hidden_magnolia",
         slug: "the-hidden-magnolia",
         name: "The Hidden Magnolia",
-        configuration: createProvisionalMagnoliaConfiguration(),
+        configuration: createHiddenMagnoliaConfiguration(MAGNOLIA_INVENTORY),
       },
     ],
   },
@@ -59,15 +68,21 @@ function createProvisionalMagnoliaConfiguration(): HallConfiguration {
     physicalHeightInches: feetToInches(60),
     physicalDimensionStatus: "provisional",
     physicalDimensionNote: "Approximate working envelope; replace when measured hall dimensions are confirmed.",
-    fixedArchitecturalElements: [],
+    fixedArchitecturalElements: [
+      {
+        id: "pinehaven-main-floor",
+        kind: "area",
+        role: "main-floor",
+        label: "Main Event Floor",
+        fixed: true,
+        placementBehavior: "allowed",
+        measurementStatus: "provisional",
+        elevation: "floor",
+        shape: { type: "rectangle", x: 0, y: 0, width: 960, height: 720 },
+      },
+    ],
     floorplanAsset: null,
-    inventory: {
-      "round-table-60": null,
-      "rectangle-table-6": null,
-      "rectangle-table-8": null,
-      "sweetheart-table": null,
-      chairs: null,
-    },
+    inventory: MAGNOLIA_INVENTORY,
   };
 }
 

@@ -23,6 +23,7 @@ export function FloorPlanner({ venue, locationName, inventory }: Props) {
   const editor = useFloorplanEditor({ venueTemplateId: venue.id, inventory, inventoryOwner: locationName });
   const [mode, setMode] = useState<EditorMode>("select");
   const [zoom, setZoom] = useState(1);
+  const [showReference, setShowReference] = useState(venue.referenceAsset?.visibleByDefault ?? false);
   const [resetViewKey, setResetViewKey] = useState(0);
   const importInputRef = useRef<HTMLInputElement>(null);
   const addObject = editor.add;
@@ -39,11 +40,11 @@ export function FloorPlanner({ venue, locationName, inventory }: Props) {
       const column = objectCount % 6;
       const row = Math.floor(objectCount / 6) % 4;
       addObject(type, {
-        x: venue.physicalWidthInches * 0.3 + column * 72,
-        y: venue.physicalHeightInches * 0.3 + row * 72,
+        x: venue.hall.x + venue.hall.width * 0.25 + column * 72,
+        y: venue.hall.y + venue.hall.height * 0.3 + row * 72,
       });
     },
-    [addObject, objectCount, venue.physicalHeightInches, venue.physicalWidthInches],
+    [addObject, objectCount, venue.hall.height, venue.hall.width, venue.hall.x, venue.hall.y],
   );
 
   useEffect(() => {
@@ -133,6 +134,8 @@ export function FloorPlanner({ venue, locationName, inventory }: Props) {
             canUndo={editor.canUndo}
             canRedo={editor.canRedo}
             hasSelection={Boolean(editor.selectedId)}
+            hasReference={Boolean(venue.referenceAsset)}
+            showReference={showReference}
             onModeChange={setMode}
             onUndo={editor.undo}
             onRedo={editor.redo}
@@ -140,6 +143,7 @@ export function FloorPlanner({ venue, locationName, inventory }: Props) {
             onDelete={() => editor.remove()}
             onZoomChange={setZoom}
             onResetView={() => { setZoom(1); setResetViewKey((key) => key + 1); }}
+            onToggleReference={() => setShowReference((visible) => !visible)}
           />
           <EditorCanvas
             layout={editor.layout}
@@ -147,6 +151,7 @@ export function FloorPlanner({ venue, locationName, inventory }: Props) {
             selectedId={editor.selectedId}
             mode={mode}
             zoom={zoom}
+            showReference={showReference}
             resetViewKey={resetViewKey}
             onSelect={editor.setSelectedId}
             onAdd={editor.add}
@@ -159,7 +164,7 @@ export function FloorPlanner({ venue, locationName, inventory }: Props) {
               <span>{editor.stats.objectCount} objects</span>
               <span>{editor.stats.guestTables} guest tables</span>
               <span>{editor.stats.seats} seats</span>
-              <span>{venue.physicalDimensionStatus === "provisional" ? "Provisional scale" : "Confirmed scale"}</span>
+              <span>{venue.physicalDimensionStatus === "confirmed" ? "Confirmed scale" : venue.physicalDimensionStatus === "source-traced" ? "Source-traced geometry" : "Provisional scale"}</span>
             </div>
           </div>
         </section>

@@ -2,8 +2,15 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Konva from "konva";
-import { Arc, Circle, Group, Layer, Line, Rect, Stage, Text, Transformer } from "react-konva";
-import type { EventObject, EventObjectType, FloorplanLayout, VenueElement, VenueTemplate } from "@/domain/floorplan";
+import { Arc, Circle, Group, Image as KonvaImage, Layer, Line, Rect, Stage, Text, Transformer } from "react-konva";
+import type {
+  EventObject,
+  EventObjectType,
+  FixedArchitectureElement,
+  FloorplanLayout,
+  ReferenceFloorplanAsset,
+  VenueTemplate,
+} from "@/domain/floorplan";
 import { OBJECT_DEFINITIONS, isGuestTable } from "@/domain/object-catalog";
 import type { EditorMode } from "@/components/editor/EditorToolbar";
 
@@ -13,6 +20,7 @@ type Props = {
   selectedId: string | null;
   mode: EditorMode;
   zoom: number;
+  showReference: boolean;
   resetViewKey: number;
   onSelect: (id: string | null) => void;
   onAdd: (type: EventObjectType, position: { x: number; y: number }) => void;
@@ -20,7 +28,7 @@ type Props = {
   onZoomChange: (zoom: number) => void;
 };
 
-export function FloorplanCanvas({ layout, venue, selectedId, mode, zoom, onSelect, onAdd, onChange, onZoomChange }: Props) {
+export function FloorplanCanvas({ layout, venue, selectedId, mode, zoom, showReference, onSelect, onAdd, onChange, onZoomChange }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
@@ -107,7 +115,8 @@ export function FloorplanCanvas({ layout, venue, selectedId, mode, zoom, onSelec
         }}
       >
         <Layer listening={false}>
-          <Rect x={0} y={0} width={venue.physicalWidthInches} height={venue.physicalHeightInches} fill="#eef0ed" cornerRadius={18} shadowColor="#506058" shadowBlur={28} shadowOpacity={0.13} shadowOffsetY={8} />
+          <Rect x={0} y={0} width={venue.physicalWidthInches} height={venue.physicalHeightInches} fill="#edf0ec" cornerRadius={12} shadowColor="#506058" shadowBlur={28} shadowOpacity={0.13} shadowOffsetY={8} />
+          {showReference && venue.referenceAsset ? <ReferenceUnderlay asset={venue.referenceAsset} /> : null}
           <VenueLayer venue={venue} />
         </Layer>
 
@@ -144,8 +153,35 @@ export function FloorplanCanvas({ layout, venue, selectedId, mode, zoom, onSelec
       </Stage>
       <div className="pointer-events-none absolute bottom-12 left-4 rounded-md border border-[#d7ddd8] bg-[#fffefa]/95 px-2.5 py-1.5 text-[10px] font-semibold text-[#67736c] shadow-sm">
         {mode === "pan" ? "Pan mode · H" : "Select mode · V"}
+        {venue.referenceAsset ? ` · Reference ${showReference ? "on" : "off"}` : ""}
       </div>
     </div>
+  );
+}
+
+function ReferenceUnderlay({ asset }: { asset: ReferenceFloorplanAsset }) {
+  const [image, setImage] = useState<HTMLImageElement | null>(null);
+
+  useEffect(() => {
+    const nextImage = new window.Image();
+    nextImage.onload = () => setImage(nextImage);
+    nextImage.src = asset.source;
+    return () => {
+      nextImage.onload = null;
+    };
+  }, [asset.source]);
+
+  if (!image) return null;
+  return (
+    <KonvaImage
+      image={image}
+      x={asset.x}
+      y={asset.y}
+      width={asset.width}
+      height={asset.height}
+      opacity={asset.opacity}
+      listening={false}
+    />
   );
 }
 
@@ -160,41 +196,149 @@ function VenueLayer({ venue }: { venue: VenueTemplate }) {
 
   return (
     <>
-      <Rect {...venue.hall} fill="#fffdfa" stroke="#405248" strokeWidth={12} cornerRadius={4} />
+      {venue.elements.filter((element) => element.kind === "area").map((element) => (
+        <FixedArchitectureNode key={element.id} element={element} />
+      ))}
       {grid}
-      {venue.elements.map((element) => <VenueElementNode key={element.id} element={element} />)}
+      {venue.elements.filter((element) => element.kind !== "area").map((element) => (
+        <FixedArchitectureNode key={element.id} element={element} />
+      ))}
       <Text x={venue.hall.x + 18} y={venue.hall.y + 16} text={venue.name.toUpperCase()} fontSize={11} fontStyle="bold" letterSpacing={1.8} fill="#8b968f" />
-      <Text x={venue.hall.x + 18} y={venue.hall.y + 34} text={`${venue.physicalWidthInches / 12}' × ${venue.physicalHeightInches / 12}' · ${venue.physicalDimensionStatus.toUpperCase()}`} fontSize={9} fontStyle="bold" letterSpacing={1.1} fill="#9aa49e" />
+      <Text x={venue.hall.x + 18} y={venue.hall.y + 34} text={`${venue.hall.width / 12}' × ${venue.hall.height / 12}' MAIN FLOOR`} fontSize={9} fontStyle="bold" letterSpacing={1.1} fill="#9aa49e" />
       <Text x={venue.hall.x + venue.hall.width - 84} y={venue.hall.y + venue.hall.height - 29} text="N ↑" fontSize={12} fontStyle="bold" fill="#7d8981" />
     </>
   );
 }
 
-function VenueElementNode({ element }: { element: VenueElement }) {
+function FixedArchitectureNode({ element }: { element: FixedArchitectureElement }) {
+  if (element.kind === "wall") {
+    return <Line points={element.points} stroke="#46564d" strokeWidth={7} lineCap="square" lineJoin="miter" />;
+  }
+
   if (element.kind === "door") {
+    const swingSign = element.swingDirection === "clockwise" ? 1 : -1;
     return (
       <Group x={element.x} y={element.y} rotation={element.rotation}>
-        <Line points={[0, 0, element.width, 0]} stroke="#fffdfa" strokeWidth={16} />
-        <Line points={[0, 0, element.width, -element.width]} stroke="#8c9a92" strokeWidth={2} />
-        <Arc x={0} y={0} innerRadius={element.width - 1} outerRadius={element.width + 1} angle={90} rotation={-90} fill="#b2bcb6" />
-        <Text x={0} y={-13} width={element.width} align="center" text={element.label} fontSize={8} fontStyle="bold" fill="#79857e" />
+        <Line points={[0, 0, element.width, 0]} stroke="#fffdfa" strokeWidth={12} />
+        <Line points={[0, 0, 0, swingSign * element.width]} stroke="#78877f" strokeWidth={2} />
+        <Arc
+          x={0}
+          y={0}
+          innerRadius={element.width - 1}
+          outerRadius={element.width + 1}
+          angle={90}
+          rotation={swingSign > 0 ? 0 : -90}
+          fill="#a8b3ad"
+        />
       </Group>
     );
   }
 
+  if (element.kind === "stairs") {
+    const treads = Array.from({ length: element.treadCount + 1 }, (_, index) => {
+      const ratio = index / element.treadCount;
+      const points = element.orientation === "vertical"
+        ? [element.x + element.width * ratio, element.y, element.x + element.width * ratio, element.y + element.height]
+        : [element.x, element.y + element.height * ratio, element.x + element.width, element.y + element.height * ratio];
+      return <Line key={index} points={points} stroke="#7e8983" strokeWidth={1.5} />;
+    });
+    return (
+      <Group>
+        <Rect x={element.x} y={element.y} width={element.width} height={element.height} fill="#e2e4df" stroke="#657169" strokeWidth={2} />
+        {treads}
+        <Text x={element.x} y={element.y + element.height / 2 - 5} width={element.width} align="center" text="STAIRS" fontSize={8} fontStyle="bold" fill="#59655e" />
+      </Group>
+    );
+  }
+
+  if (element.kind === "direction-label") {
+    return <Text x={element.x} y={element.y} width={element.width} rotation={element.rotation ?? 0} align="center" text={`↕  ${element.label}  ↕`} fontSize={11} fontStyle="bold" letterSpacing={1.5} fill="#65736b" />;
+  }
+
   const colors = {
-    area: { fill: "#eef3ef", stroke: "#91a59a" },
-    stage: { fill: "#e8e2d8", stroke: "#9c8d78" },
-    service: { fill: "#eeeae3", stroke: "#a89e8e" },
-    bar: { fill: "#dfe8e1", stroke: "#728b7b" },
-  }[element.kind];
+    "main-floor": { fill: "#fffdfa", stroke: "#526159" },
+    stage: { fill: "#ddd4c4", stroke: "#8e7b61" },
+    closet: { fill: "#e7e5df", stroke: "#858a84" },
+    catering: { fill: "#ede8df", stroke: "#998e7f" },
+    bar: { fill: "#dce7df", stroke: "#687f70" },
+  }[element.role];
+
+  const shape = element.shape.type === "rectangle" ? (
+    <Rect
+      x={element.shape.x}
+      y={element.shape.y}
+      width={element.shape.width}
+      height={element.shape.height}
+      fill={colors.fill}
+      stroke={colors.stroke}
+      strokeWidth={element.role === "main-floor" ? 3 : 2}
+      shadowColor={element.elevation === "raised" ? "#594b39" : undefined}
+      shadowBlur={element.elevation === "raised" ? 10 : 0}
+      shadowOffsetX={element.elevation === "raised" ? 5 : 0}
+      shadowOffsetY={element.elevation === "raised" ? 5 : 0}
+      shadowOpacity={element.elevation === "raised" ? 0.22 : 0}
+    />
+  ) : (
+    <Line
+      points={element.shape.points}
+      closed
+      fill={colors.fill}
+      stroke={colors.stroke}
+      strokeWidth={2}
+      shadowColor={element.elevation === "raised" ? "#594b39" : undefined}
+      shadowBlur={element.elevation === "raised" ? 10 : 0}
+      shadowOffsetX={element.elevation === "raised" ? 5 : 0}
+      shadowOffsetY={element.elevation === "raised" ? 5 : 0}
+      shadowOpacity={element.elevation === "raised" ? 0.22 : 0}
+    />
+  );
+
+  const bounds = getAreaBounds(element);
+  const isCompact = bounds.width < 190;
 
   return (
     <Group>
-      <Rect x={element.x} y={element.y} width={element.width} height={element.height} fill={colors.fill} stroke={colors.stroke} strokeWidth={2} dash={element.kind === "area" ? [8, 5] : undefined} cornerRadius={element.kind === "bar" ? 30 : 5} />
-      <Text x={element.x} y={element.y + element.height / 2 - 6} width={element.width} align="center" text={element.label} fontSize={10} fontStyle="bold" letterSpacing={1.1} fill="#5f6d65" />
+      {shape}
+      {element.role !== "main-floor" ? (
+        element.labelRotation ? (
+          <Text
+            x={bounds.x + 8}
+            y={bounds.y + bounds.height - 8}
+            width={Math.max(20, bounds.height - 16)}
+            rotation={element.labelRotation}
+            align="center"
+            text={element.label.toUpperCase()}
+            fontSize={8}
+            fontStyle="bold"
+            letterSpacing={0.8}
+            fill="#536158"
+          />
+        ) : (
+          <Text
+            x={bounds.x + 8}
+            y={bounds.y + bounds.height / 2 - (isCompact ? 18 : 7)}
+            width={Math.max(20, bounds.width - 16)}
+            align="center"
+            text={element.label.toUpperCase()}
+            fontSize={isCompact ? 8 : 10}
+            lineHeight={1.35}
+            fontStyle="bold"
+            letterSpacing={isCompact ? 0.6 : 1.1}
+            fill="#536158"
+          />
+        )
+      ) : null}
     </Group>
   );
+}
+
+function getAreaBounds(element: Extract<FixedArchitectureElement, { kind: "area" }>) {
+  if (element.shape.type === "rectangle") return element.shape;
+  const xs = element.shape.points.filter((_, index) => index % 2 === 0);
+  const ys = element.shape.points.filter((_, index) => index % 2 === 1);
+  const x = Math.min(...xs);
+  const y = Math.min(...ys);
+  return { x, y, width: Math.max(...xs) - x, height: Math.max(...ys) - y };
 }
 
 type ObjectNodeProps = {
