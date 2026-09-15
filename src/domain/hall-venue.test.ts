@@ -57,4 +57,18 @@ describe("hall venue template", () => {
     expect(venue.elements.length).toBeGreaterThan(20);
     expect(table.width / venue.hall.width).toBe(1 / 16);
   });
+
+  it("loads Stonebrook at the confirmed 80-by-60-foot scale", () => {
+    const location = getLocationBySlug("lake-conroe");
+    const hall = getHallBySlug(location, "stonebrook");
+    if (!location || !hall) throw new Error("Stonebrook catalog entry missing");
+
+    const venue = createHallVenueTemplate(location, hall);
+    const table = createEventObject("round-table-60", { x: 672, y: 420 }, [], "stonebrook-scale");
+
+    expect(venue.hall).toEqual({ x: 192, y: 60, width: 960, height: 720 });
+    expect(venue.referenceAsset).toBeNull();
+    expect(venue.elements.length).toBeGreaterThan(20);
+    expect(table.width / venue.hall.width).toBe(1 / 16);
+  });
 });

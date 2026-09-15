@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   getHallBySlug,
   getLocationBySlug,
+  LAKE_CONROE_INVENTORY,
   MAGNOLIA_INVENTORY,
   resolveInventoryConfiguration,
   SPRINGS_LOCATIONS,
@@ -21,9 +22,49 @@ describe("location catalog", () => {
     const location = getLocationBySlug("lake-conroe");
     expect(location).toMatchObject({ id: "location_lake_conroe", name: "Lake Conroe" });
     expect(location?.halls).toMatchObject([
-      { id: "hall_stonebrook", slug: "stonebrook", name: "Stonebrook", configuration: null },
+      { id: "hall_stonebrook", slug: "stonebrook", name: "Stonebrook" },
       { id: "hall_heritage_pine", slug: "heritage-pine", name: "Heritage Pine" },
     ]);
+  });
+
+  it("shares the confirmed 320-chair Lake Conroe inventory across both halls", () => {
+    const location = getLocationBySlug("lake-conroe");
+    if (!location) throw new Error("Lake Conroe catalog entry missing");
+
+    expect(LAKE_CONROE_INVENTORY).toMatchObject({
+      scope: "location-shared",
+      limits: { chairs: 320 },
+    });
+    for (const hall of location.halls) {
+      expect(hall.configuration?.inventory).toBeUndefined();
+      expect(resolveInventoryConfiguration(location, hall)).toEqual({ chairs: 320 });
+    }
+  });
+
+  it("configures Stonebrook with its confirmed floor scale and raised stage", () => {
+    const location = getLocationBySlug("lake-conroe");
+    const hall = getHallBySlug(location, "stonebrook");
+    if (!hall?.configuration) throw new Error("Stonebrook configuration missing");
+    const elements = hall.configuration.fixedArchitecturalElements;
+    const mainFloor = elements.find((element) => element.kind === "area" && element.role === "main-floor");
+
+    expect(mainFloor).toMatchObject({
+      placementBehavior: "allowed",
+      measurementStatus: "confirmed",
+      shape: { type: "rectangle", x: 192, y: 60, width: 960, height: 720 },
+    });
+    expect(elements.find((element) => element.id === "stonebrook-stage")).toMatchObject({
+      fixed: true,
+      placementBehavior: "allowed",
+      elevation: "raised",
+    });
+    expect(elements.find((element) => element.id === "stonebrook-stage-stairs")).toMatchObject({
+      fixed: true,
+      placementBehavior: "blocked",
+    });
+    expect(elements.filter((element) => element.kind === "area" && element.role === "closet")).toHaveLength(2);
+    expect(elements.filter((element) => element.kind === "door")).toHaveLength(10);
+    expect(hall.configuration.floorplanAsset).toBeNull();
   });
 
   it("configures Heritage Pine with its confirmed floor scale and chair capacity", () => {

@@ -125,14 +125,6 @@ export function createHeritagePineConfiguration(): HallConfiguration {
       "Central event floor confirmed at 80′ × 60′; surrounding Heritage Pine architecture source-traced from the supplied floor plan.",
     fixedArchitecturalElements,
     floorplanAsset: null,
-    inventory: {
-      scope: "hall",
-      limits: { chairs: 320 },
-      source: {
-        fileName: "user-confirmed",
-        note: "The 320-chair total was confirmed for Heritage Pine; table quantities are not yet configured.",
-      },
-    },
   };
 }
 

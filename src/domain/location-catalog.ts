@@ -6,6 +6,7 @@ import type {
 import type { InventoryCatalog, InventoryConfiguration } from "@/domain/inventory";
 import { createHeritagePineConfiguration } from "@/domain/venues/heritage-pine";
 import { createHiddenMagnoliaConfiguration } from "@/domain/venues/hidden-magnolia";
+import { createStonebrookConfiguration } from "@/domain/venues/stonebrook";
 
 export type HallConfiguration = {
   physicalWidthInches: number;
@@ -62,6 +63,15 @@ export const MAGNOLIA_INVENTORY: InventoryCatalog = {
   ],
 };
 
+export const LAKE_CONROE_INVENTORY: InventoryCatalog = {
+  scope: "location-shared",
+  limits: { chairs: 320 },
+  source: {
+    fileName: "user-confirmed",
+    note: "The 320-chair total was confirmed for both Lake Conroe halls; table quantities are not yet configured.",
+  },
+};
+
 export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
   {
     id: "location_magnolia",
@@ -87,12 +97,13 @@ export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
     id: "location_lake_conroe",
     slug: "lake-conroe",
     name: "Lake Conroe",
+    inventory: LAKE_CONROE_INVENTORY,
     halls: [
       {
         id: "hall_stonebrook",
         slug: "stonebrook",
         name: "Stonebrook",
-        configuration: null,
+        configuration: createStonebrookConfiguration(),
       },
       {
         id: "hall_heritage_pine",
