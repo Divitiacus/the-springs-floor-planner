@@ -46,7 +46,7 @@ describe("location catalog", () => {
       "rectangle-table-6": 4,
       "rectangle-table-8": 6,
       "sweetheart-table": 1,
-      chairs: null,
+      chairs: 320,
     };
 
     expect(MAGNOLIA_INVENTORY).toMatchObject({
@@ -87,7 +87,7 @@ describe("location catalog", () => {
       "rectangle-table-6": 4,
       "rectangle-table-8": 6,
       "sweetheart-table": 1,
-      chairs: null,
+      chairs: 320,
     });
     expect(resolveInventoryConfiguration(magnolia, baseHall)["round-table-60"]).toBe(32);
   });

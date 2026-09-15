@@ -6,7 +6,7 @@ const now = () => new Date().toISOString();
 export function createEmptyLayout(venueTemplateId = "unconfigured-physical-venue"): FloorplanLayout {
   return {
     id: "local-floorplan",
-    name: "Miller–Reed Wedding",
+    name: "",
     venueTemplateId,
     coordinateUnit: "inches",
     objects: [],

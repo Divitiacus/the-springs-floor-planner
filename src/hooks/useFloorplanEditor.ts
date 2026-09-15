@@ -37,7 +37,11 @@ export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner 
       try {
         const stored = localStorage.getItem(storageKey);
         if (stored) {
-          const savedLayout = normalizePhysicalFootprints(deserializeFloorplan(stored));
+          const parsedLayout = deserializeFloorplan(stored);
+          const savedLayout = normalizePhysicalFootprints({
+            ...parsedLayout,
+            name: parsedLayout.name === "Miller–Reed Wedding" ? "" : parsedLayout.name,
+          });
           const validation = validateLayoutInventory(savedLayout, inventory, inventoryOwner);
           if (!validation.valid) throw new Error(validation.message);
           setHistory(createHistory(savedLayout));
@@ -119,6 +123,16 @@ export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner 
   const undo = useCallback(() => setHistory((current) => undoHistory(current)), []);
   const redo = useCallback(() => setHistory((current) => redoHistory(current)), []);
 
+  const renameLayout = useCallback((name: string) => {
+    const updatedAt = new Date().toISOString();
+    const rename = (source: FloorplanLayout) => ({ ...source, name, updatedAt });
+    setHistory((current) => ({
+      past: current.past.map(rename),
+      present: rename(current.present),
+      future: current.future.map(rename),
+    }));
+  }, []);
+
   const reset = useCallback(() => {
     if (!window.confirm("Reset this layout? All event objects will be removed.")) return;
     const fresh = createEmptyLayout(venueTemplateId);
@@ -158,6 +172,7 @@ export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner 
     reorder,
     undo,
     redo,
+    renameLayout,
     reset,
     importLayout,
   };

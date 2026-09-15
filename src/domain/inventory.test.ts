@@ -127,10 +127,16 @@ describe("inventory validation", () => {
     expect(validateLayoutInventory(layout, {})).toEqual({ valid: true });
   });
 
-  it("leaves Magnolia chairs unrestricted when the source quantity is unresolved", () => {
-    const chairHeavyLayout = createLayoutWith("chair", 400);
+  it("enforces Magnolia's confirmed shared total of 320 chairs", () => {
+    const allowedLayout = createLayoutWith("chair", 320);
+    const overLimitLayout = createLayoutWith("chair", 321);
 
-    expect(magnoliaInventory.chairs).toBeNull();
-    expect(validateLayoutInventory(chairHeavyLayout, magnoliaInventory, "Magnolia")).toEqual({ valid: true });
+    expect(magnoliaInventory.chairs).toBe(320);
+    expect(validateLayoutInventory(allowedLayout, magnoliaInventory, "Magnolia")).toEqual({ valid: true });
+    expect(validateLayoutInventory(overLimitLayout, magnoliaInventory, "Magnolia")).toMatchObject({
+      valid: false,
+      code: "chair-limit",
+      message: "This change would require 321 chairs, but Magnolia has 320 available.",
+    });
   });
 });

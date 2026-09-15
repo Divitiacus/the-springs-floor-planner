@@ -37,10 +37,12 @@ type PortableFloorplan = {
 
 /** A compact, client-owned file. Catalog dimensions and transient IDs are rebuilt when opened. */
 export function serializePortableFloorplan(layout: FloorplanLayout): string {
+  const name = layout.name.trim();
+  if (!name) throw new Error("Enter an event or client name before saving.");
   const portable: PortableFloorplan = {
     v: 3,
     h: layout.venueTemplateId,
-    n: layout.name,
+    n: name,
     o: layout.objects.map((object) => [
       object.type,
       object.variant ?? null,

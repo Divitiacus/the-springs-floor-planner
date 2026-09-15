@@ -39,11 +39,11 @@ export const MAGNOLIA_INVENTORY: InventoryCatalog = {
     "rectangle-table-6": 4,
     "rectangle-table-8": 6,
     "sweetheart-table": 1,
-    chairs: null,
+    chairs: 320,
   },
   source: {
     fileName: "the_springs_table_chair_inventory_from_powerpoints.xlsx",
-    note: "The source identifies Magnolia inventory but does not assign it by hall; shared at the location level pending confirmation.",
+    note: "Table quantities come from the source workbook. The 320-chair total was confirmed separately for both Magnolia halls and is shared at the location level.",
   },
   additionalItems: [
     {

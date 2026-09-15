@@ -137,7 +137,7 @@ describe("persistence", () => {
 
   it("creates a compact editable file and rebuilds derived object data when opened", () => {
     const object = createEventObject("dance-floor", { x: 100, y: 120 }, [], "dance-floor", "12x12");
-    const layout = addObject(createEmptyLayout("hall_hidden_magnolia"), object);
+    const layout = addObject({ ...createEmptyLayout("hall_hidden_magnolia"), name: "Taylor Reception" }, object);
     const portable = serializePortableFloorplan(layout);
     const reopened = deserializeFloorplan(portable);
 
@@ -159,6 +159,11 @@ describe("persistence", () => {
 
   it("rejects malformed compact editable files", () => {
     expect(() => deserializeFloorplan('{"v":3,"h":"hall","n":"Plan","o":[["dj"]]}')).toThrow(/valid Springs floorplan/);
+  });
+
+  it("requires an event or client name before creating an editable file", () => {
+    expect(createEmptyLayout().name).toBe("");
+    expect(() => serializePortableFloorplan(createEmptyLayout())).toThrow(/event or client name/i);
   });
 });
 

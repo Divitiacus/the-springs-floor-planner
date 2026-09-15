@@ -25,7 +25,9 @@ export function FloorPlanner({ venue, locationName, inventory }: Props) {
   const [zoom, setZoom] = useState(1);
   const [showReference, setShowReference] = useState(venue.referenceAsset?.visibleByDefault ?? false);
   const [resetViewKey, setResetViewKey] = useState(0);
+  const [nameRequired, setNameRequired] = useState(false);
   const importInputRef = useRef<HTMLInputElement>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
   const addObject = editor.add;
   const objectCount = editor.layout.objects.length;
   const selectedId = editor.selectedId;
@@ -75,15 +77,33 @@ export function FloorPlanner({ venue, locationName, inventory }: Props) {
   }, [duplicateObject, redo, removeObject, selectedId, undo]);
 
   const saveEditablePlan = () => {
+    const eventName = requireEventName();
+    if (!eventName) return;
     const blob = new Blob([serializePortableFloorplan(editor.layout)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `${fileSlug(editor.layout.name)}-${fileSlug(venue.name)}.springsplan`;
+    anchor.download = `${fileSlug(eventName)}-${fileSlug(venue.name)}.springsplan`;
     document.body.appendChild(anchor);
     anchor.click();
     anchor.remove();
     window.setTimeout(() => URL.revokeObjectURL(url), 0);
+  };
+
+  const requireEventName = () => {
+    const eventName = editor.layout.name.trim();
+    if (eventName) {
+      if (eventName !== editor.layout.name) editor.renameLayout(eventName);
+      setNameRequired(false);
+      return eventName;
+    }
+    setNameRequired(true);
+    nameInputRef.current?.focus();
+    return null;
+  };
+
+  const printPlan = () => {
+    if (requireEventName()) window.print();
   };
 
   const openSavedPlan = async (file: File | undefined) => {
@@ -113,7 +133,25 @@ export function FloorPlanner({ venue, locationName, inventory }: Props) {
               <h1 className="font-serif text-[19px] font-semibold tracking-[-0.01em] text-[#1d2923]">The Springs Floor Planner</h1>
               <span className="rounded-full bg-[#eaf0ec] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-[#54705f]">Prototype</span>
             </div>
-            <p className="mt-0.5 text-xs text-[#748078]">{editor.layout.name} · {venue.name}</p>
+            <div className="mt-0.5 flex items-center gap-1 text-xs text-[#748078]">
+              <input
+                ref={nameInputRef}
+                aria-label="Event or client name"
+                aria-invalid={nameRequired}
+                maxLength={80}
+                placeholder="Event or client name"
+                value={editor.layout.name}
+                onChange={(event) => {
+                  editor.renameLayout(event.target.value);
+                  if (event.target.value.trim()) setNameRequired(false);
+                }}
+                onBlur={() => editor.renameLayout(editor.layout.name.trim())}
+                className={`w-48 border-b bg-transparent pb-0.5 text-xs font-medium outline-none transition-colors placeholder:text-[#9aa49e] ${nameRequired ? "border-[#bd684a] text-[#8f4c38]" : "border-transparent text-[#5f6d65] hover:border-[#cbd3cd] focus:border-[#547765]"}`}
+              />
+              <span aria-hidden="true">·</span>
+              <span>{venue.name}</span>
+              {nameRequired ? <span className="ml-1 font-semibold text-[#a1533d]">Enter a name to save</span> : null}
+            </div>
           </div>
         </div>
 
@@ -144,7 +182,7 @@ export function FloorPlanner({ venue, locationName, inventory }: Props) {
                   <span className="mt-0.5 block text-[10px] leading-4 text-[#7b877f]">Download a small file to this computer so the plan can be edited later.</span>
                 </span>
               </button>
-              <button className="flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-[#f3f6f3]" onClick={() => window.print()}>
+              <button className="flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-[#f3f6f3]" onClick={printPlan}>
                 <Printer className="mt-0.5 shrink-0 text-[#456351]" size={16} />
                 <span>
                   <span className="block text-xs font-bold text-[#35463c]">Print / Save as PDF</span>
