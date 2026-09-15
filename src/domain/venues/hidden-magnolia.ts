@@ -133,21 +133,7 @@ export function createHiddenMagnoliaConfiguration(): HallConfiguration {
     physicalDimensionNote:
       "Central event floor confirmed at 80′ × 60′; surrounding architecture source-traced and provisional.",
     fixedArchitecturalElements,
-    floorplanAsset: {
-      id: "hidden-magnolia-source-reference",
-      source: "/venue-assets/magnolia-floor-plan-reference.png",
-      sourceDocument: "Magnolia Floor Plan_.pdf",
-      // Aligns source pixels to the confirmed 80' × 60' central-floor anchor.
-      x: -375,
-      y: -30,
-      width: 1980,
-      height: 1107,
-      opacity: 0.32,
-      visibleByDefault: false,
-      locked: true,
-      interactive: false,
-      measurementStatus: "source-traced",
-    },
+    floorplanAsset: null,
   };
 }
 

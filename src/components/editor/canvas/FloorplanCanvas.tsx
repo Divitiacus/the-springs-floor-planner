@@ -206,7 +206,6 @@ function VenueLayer({ venue }: { venue: VenueTemplate }) {
       ))}
       <Text x={venue.hall.x + 18} y={venue.hall.y + 16} text={venue.name.toUpperCase()} fontSize={11} fontStyle="bold" letterSpacing={1.8} fill="#8b968f" />
       <Text x={venue.hall.x + 18} y={venue.hall.y + 34} text={`${venue.hall.width / 12}' × ${venue.hall.height / 12}' MAIN FLOOR`} fontSize={9} fontStyle="bold" letterSpacing={1.1} fill="#9aa49e" />
-      <Text x={venue.hall.x + venue.hall.width - 84} y={venue.hall.y + venue.hall.height - 29} text="N ↑" fontSize={12} fontStyle="bold" fill="#7d8981" />
     </>
   );
 }

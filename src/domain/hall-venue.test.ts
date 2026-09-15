@@ -14,7 +14,7 @@ describe("hall venue template", () => {
     expect(venue.coordinateUnit).toBe("inches");
     expect(venue.hall).toEqual({ x: 180, y: 60, width: 960, height: 720 });
     expect(venue.elements.length).toBeGreaterThan(10);
-    expect(venue.referenceAsset?.sourceDocument).toBe("Magnolia Floor Plan_.pdf");
+    expect(venue.referenceAsset).toBeNull();
     expect("objects" in venue).toBe(false);
   });
 

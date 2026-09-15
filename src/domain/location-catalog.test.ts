@@ -90,17 +90,12 @@ describe("location catalog", () => {
     expect(resolveInventoryConfiguration(magnolia, baseHall)["round-table-60"]).toBe(32);
   });
 
-  it("keeps the source-traced Hidden Magnolia geometry isolated from Pinehaven", () => {
+  it("keeps the Hidden Magnolia reference image disabled", () => {
     const pinehaven = SPRINGS_LOCATIONS[0].halls[0].configuration;
     const hiddenMagnolia = SPRINGS_LOCATIONS[0].halls[1].configuration;
 
     expect(pinehaven.floorplanAsset).toBeNull();
-    expect(hiddenMagnolia.floorplanAsset).toMatchObject({
-      source: "/venue-assets/magnolia-floor-plan-reference.png",
-      locked: true,
-      interactive: false,
-      measurementStatus: "source-traced",
-    });
+    expect(hiddenMagnolia.floorplanAsset).toBeNull();
   });
 
   it("calibrates the Hidden Magnolia main floor to exact inch coordinates", () => {
