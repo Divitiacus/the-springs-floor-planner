@@ -90,6 +90,44 @@ describe("floorplan object operations", () => {
     expect(resized.objects[0]).toMatchObject({ width: 84, height: 22 });
   });
 
+  it("uses the confirmed 36-inch round Sweetheart Table footprint", () => {
+    const sweetheart = createEventObject("sweetheart-table", { x: 0, y: 0 }, [], "sweetheart");
+    const resized = updateObject(addObject(createEmptyLayout(), sweetheart), sweetheart.id, {
+      width: 72,
+      height: 36,
+    });
+
+    expect(sweetheart).toMatchObject({
+      width: 36,
+      height: 36,
+      seats: 2,
+      physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: 36 },
+    });
+    expect(OBJECT_DEFINITIONS["sweetheart-table"]).toMatchObject({ resizable: false, maximumSeats: 2 });
+    expect(resized.objects[0]).toMatchObject({ width: 36, height: 36 });
+  });
+
+  it.each([
+    ["32-round" as const, 32],
+    ["36-round" as const, 36],
+  ])("creates the confirmed %s Cocktail Table variant at %d inches round", (variant, diameter) => {
+    const cocktail = createEventObject("cocktail-table", { x: 0, y: 0 }, [], variant, variant);
+    const resized = updateObject(addObject(createEmptyLayout(), cocktail), cocktail.id, {
+      width: 60,
+      height: 60,
+    });
+
+    expect(cocktail).toMatchObject({
+      variant,
+      width: diameter,
+      height: diameter,
+      physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: diameter },
+    });
+    expect(cocktail.seats).toBeUndefined();
+    expect(cocktail.tableNumber).toBeUndefined();
+    expect(resized.objects[0]).toMatchObject({ variant, width: diameter, height: diameter });
+  });
+
   it("uses the confirmed DJ and Photo Booth footprints", () => {
     const dj = createEventObject("dj", { x: 0, y: 0 }, [], "dj");
     const photoBooth = createEventObject("photo-booth", { x: 0, y: 0 }, [], "photo-booth");
@@ -219,6 +257,23 @@ describe("persistence", () => {
       width: 84,
       height: 22,
       physicalDimensions: { widthInches: 84, depthInches: 22 },
+    });
+  });
+
+  it("round-trips a Cocktail Table variant through the compact editable file", () => {
+    const cocktail = createEventObject("cocktail-table", { x: 220, y: 180 }, [], "cocktail", "36-round");
+    const layout = addObject(
+      { ...createEmptyLayout("hall_sycamore_grove"), name: "Cocktail Layout" },
+      cocktail,
+    );
+    const reopened = deserializeFloorplan(serializePortableFloorplan(layout));
+
+    expect(reopened.objects[0]).toMatchObject({
+      type: "cocktail-table",
+      variant: "36-round",
+      width: 36,
+      height: 36,
+      physicalDimensions: { shape: "circle", diameterInches: 36 },
     });
   });
 

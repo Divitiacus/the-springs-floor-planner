@@ -1,4 +1,4 @@
-import type { EventObjectType, FloorplanLayout } from "@/domain/floorplan";
+import type { EventObject, EventObjectType, FloorplanLayout } from "@/domain/floorplan";
 import { OBJECT_DEFINITIONS, TABLE_TYPES } from "@/domain/object-catalog";
 
 export const INVENTORY_ITEM_TYPES = [
@@ -7,6 +7,8 @@ export const INVENTORY_ITEM_TYPES = [
   "rectangle-table-8",
   "parson-table-7",
   "sweetheart-table",
+  "cocktail-table-32",
+  "cocktail-table-36",
   "chairs",
 ] as const;
 
@@ -41,12 +43,15 @@ export function getInventoryUsage(layout: FloorplanLayout): InventoryUsage {
     "rectangle-table-8": 0,
     "parson-table-7": 0,
     "sweetheart-table": 0,
+    "cocktail-table-32": 0,
+    "cocktail-table-36": 0,
     chairs: 0,
   };
 
   for (const object of layout.objects) {
-    if (isInventoryObject(object.type)) {
-      usage[object.type] += 1;
+    const inventoryType = getInventoryObjectType(object);
+    if (inventoryType) {
+      usage[inventoryType] += 1;
       if (TABLE_TYPES.has(object.type)) usage.chairs += object.seats ?? 0;
     } else if (object.type === "chair") {
       usage.chairs += 1;
@@ -80,7 +85,7 @@ export function validateLayoutInventory(
       return {
         valid: false,
         code: "table-limit",
-        message: `All ${limit} available ${OBJECT_DEFINITIONS[type].inventoryLabel} are already in this floorplan.`,
+        message: `All ${limit} available ${INVENTORY_LABELS[type]} are already in this floorplan.`,
       };
     }
   }
@@ -97,6 +102,27 @@ export function validateLayoutInventory(
   return { valid: true };
 }
 
-function isInventoryObject(type: EventObjectType): type is Exclude<InventoryItemType, "chairs"> {
+type DirectInventoryObjectType = Extract<Exclude<InventoryItemType, "chairs">, EventObjectType>;
+
+function isInventoryObject(type: EventObjectType): type is DirectInventoryObjectType {
   return (INVENTORY_ITEM_TYPES as readonly string[]).includes(type);
 }
+
+function getInventoryObjectType(object: Pick<EventObject, "type" | "variant">): Exclude<InventoryItemType, "chairs"> | null {
+  if (object.type === "cocktail-table") {
+    if (object.variant === "36-round") return "cocktail-table-36";
+    if (object.variant === "32-round" || object.variant === undefined) return "cocktail-table-32";
+    return null;
+  }
+  return isInventoryObject(object.type) ? object.type : null;
+}
+
+const INVENTORY_LABELS: Record<Exclude<InventoryItemType, "chairs">, string> = {
+  "round-table-60": OBJECT_DEFINITIONS["round-table-60"].inventoryLabel,
+  "rectangle-table-6": OBJECT_DEFINITIONS["rectangle-table-6"].inventoryLabel,
+  "rectangle-table-8": OBJECT_DEFINITIONS["rectangle-table-8"].inventoryLabel,
+  "parson-table-7": OBJECT_DEFINITIONS["parson-table-7"].inventoryLabel,
+  "sweetheart-table": OBJECT_DEFINITIONS["sweetheart-table"].inventoryLabel,
+  "cocktail-table-32": "32-inch cocktail tables",
+  "cocktail-table-36": "36-inch cocktail tables",
+};

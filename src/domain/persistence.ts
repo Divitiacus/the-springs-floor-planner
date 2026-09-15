@@ -1,7 +1,7 @@
 import type {
-  DanceFloorVariant,
   EventObject,
   EventObjectType,
+  EventObjectVariant,
   FloorplanLayout,
   StoredFloorplan,
 } from "@/domain/floorplan";
@@ -16,7 +16,7 @@ export function serializeFloorplan(layout: FloorplanLayout): string {
 
 type PortableObject = [
   type: EventObjectType,
-  variant: DanceFloorVariant | null,
+  variant: EventObjectVariant | null,
   x: number,
   y: number,
   width: number,
@@ -118,7 +118,7 @@ function isPortableObject(value: unknown): value is PortableObject {
   if (typeof type !== "string" || !(type in OBJECT_DEFINITIONS)) return false;
   if (variant !== null) {
     if (typeof variant !== "string") return false;
-    const resolved = getObjectVariant(type as EventObjectType, variant as DanceFloorVariant);
+    const resolved = getObjectVariant(type as EventObjectType, variant as EventObjectVariant);
     if (!resolved || resolved.id !== variant) return false;
   }
   return (

@@ -1,4 +1,4 @@
-import type { DanceFloorVariant, EventObject, EventObjectType, FloorplanLayout } from "@/domain/floorplan";
+import type { EventObject, EventObjectType, EventObjectVariant, FloorplanLayout } from "@/domain/floorplan";
 import { getObjectVariant, isGuestTable, OBJECT_DEFINITIONS } from "@/domain/object-catalog";
 
 const now = () => new Date().toISOString();
@@ -19,7 +19,7 @@ export function createEventObject(
   position: { x: number; y: number },
   existing: EventObject[] = [],
   id = crypto.randomUUID(),
-  variant?: DanceFloorVariant,
+  variant?: EventObjectVariant,
 ): EventObject {
   const definition = OBJECT_DEFINITIONS[type];
   const variantDefinition = getObjectVariant(type, variant);

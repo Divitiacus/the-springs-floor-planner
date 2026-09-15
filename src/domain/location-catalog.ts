@@ -45,47 +45,74 @@ export const MAGNOLIA_INVENTORY: InventoryCatalog = {
     "rectangle-table-8": 6,
     "parson-table-7": 6,
     "sweetheart-table": 1,
+    "cocktail-table-32": 6,
     chairs: 320,
   },
   source: {
     fileName: "the_springs_table_chair_inventory_from_powerpoints.xlsx",
-    note: "Table quantities come from the source workbook. The 320-chair total was confirmed separately for both Magnolia halls and is shared at the location level.",
+    note: "Table quantities come from the source workbook. Sweetheart tables use the separately confirmed 36-inch round footprint. The 320-chair total was confirmed separately for both Magnolia halls and is shared at the location level.",
   },
-  additionalItems: [
-    {
-      sourceItemKey: "cocktail-table-32",
-      name: "32-inch Round Cocktail Table",
-      quantity: 6,
-      note: "Standing only.",
-    },
-  ],
 };
 
 export const LAKE_CONROE_INVENTORY: InventoryCatalog = {
   scope: "location-shared",
-  limits: { "parson-table-7": 6, chairs: 320 },
+  limits: { "parson-table-7": 6, "sweetheart-table": 2, chairs: 320 },
   source: {
     fileName: "the_springs_table_chair_inventory_from_powerpoints.xlsx",
-    note: "The source workbook confirms 6 Parson tables for each Lake Conroe hall. The 320-chair total was confirmed separately.",
+    note: "The source workbook confirms 6 Parson tables and 2 sweetheart tables for each Lake Conroe hall. Sweetheart tables use the separately confirmed 36-inch round footprint. The 320-chair total was confirmed separately.",
   },
 };
 
 export const KATY_INVENTORY: InventoryCatalog = {
   scope: "location-shared",
-  limits: { "parson-table-7": 5, chairs: 320 },
+  limits: { "parson-table-7": 5, "sweetheart-table": 2, chairs: 320 },
   source: {
     fileName: "the_springs_table_chair_inventory_from_powerpoints.xlsx",
-    note: "The source workbook confirms 5 Parson tables shared across both Katy halls. The 320-chair total was confirmed separately.",
+    note: "The source workbook confirms 5 Parson tables and 2 sweetheart tables shared across both Katy halls. Sweetheart tables use the separately confirmed 36-inch round footprint. Cocktail table quantity is confirmed, but its diameter is not stated. The 320-chair total was confirmed separately.",
   },
+  additionalItems: [
+    {
+      sourceItemKey: "cocktail-table",
+      name: "Cocktail Table",
+      quantity: 5,
+      note: "Physical size is not stated, so this quantity is not assigned to a scaled cocktail-table variant.",
+    },
+  ],
 };
 
 export const ANGLETON_INVENTORY: InventoryCatalog = {
   scope: "location-shared",
-  limits: { "parson-table-7": 6, chairs: 320 },
+  limits: { "parson-table-7": 6, "sweetheart-table": 2, "cocktail-table-36": 5, chairs: 320 },
   source: {
     fileName: "the_springs_table_chair_inventory_from_powerpoints.xlsx",
-    note: "The source workbook confirms 6 Parson tables for Sycamore Grove. The 320-chair total was confirmed separately.",
+    note: "The source workbook confirms 6 Parson tables, 2 two-seat rounds, and 5 36-inch cocktail tables for Sycamore Grove. Sweetheart tables use the separately confirmed 36-inch round footprint. The 320-chair total was confirmed separately.",
   },
+};
+
+const HERITAGE_PINE_INVENTORY: InventoryCatalog = {
+  scope: "hall",
+  limits: { "cocktail-table-36": 5 },
+  source: {
+    fileName: "the_springs_table_chair_inventory_from_powerpoints.xlsx",
+    note: "The source workbook confirms 5 36-inch round cocktail tables for Heritage Pine.",
+  },
+};
+
+const STONEBROOK_COCKTAIL_SOURCE: InventoryCatalog = {
+  scope: "hall",
+  limits: {},
+  source: {
+    fileName: "the_springs_table_chair_inventory_from_powerpoints.xlsx",
+    note: "The source workbook confirms 5 highboy cocktail tables for Stonebrook, but does not state their diameter.",
+  },
+  additionalItems: [
+    {
+      sourceItemKey: "cocktail-table",
+      name: "Highboy Cocktail Table",
+      quantity: 5,
+      note: "Physical size is not stated, so this quantity is not assigned to a scaled cocktail-table variant.",
+    },
+  ],
 };
 
 export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
@@ -119,13 +146,13 @@ export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
         id: "hall_stonebrook",
         slug: "stonebrook",
         name: "Stonebrook",
-        configuration: createStonebrookConfiguration(),
+        configuration: { ...createStonebrookConfiguration(), inventory: STONEBROOK_COCKTAIL_SOURCE },
       },
       {
         id: "hall_heritage_pine",
         slug: "heritage-pine",
         name: "Heritage Pine",
-        configuration: createHeritagePineConfiguration(),
+        configuration: { ...createHeritagePineConfiguration(), inventory: HERITAGE_PINE_INVENTORY },
       },
     ],
   },

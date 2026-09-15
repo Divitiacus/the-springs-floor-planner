@@ -11,6 +11,8 @@ const noLimits: InventoryConfiguration = {
   "rectangle-table-8": null,
   "parson-table-7": null,
   "sweetheart-table": null,
+  "cocktail-table-32": null,
+  "cocktail-table-36": null,
   chairs: null,
 };
 
@@ -68,6 +70,23 @@ describe("inventory validation", () => {
     });
   });
 
+  it("tracks each confirmed Cocktail Table size separately without adding chairs", () => {
+    const cocktail32 = createEventObject("cocktail-table", { x: 0, y: 0 }, [], "cocktail-32", "32-round");
+    const cocktail36 = createEventObject("cocktail-table", { x: 60, y: 0 }, [cocktail32], "cocktail-36", "36-round");
+    const layout = addObject(addObject(createEmptyLayout(), cocktail32), cocktail36);
+
+    expect(getInventoryUsage(layout)).toMatchObject({
+      "cocktail-table-32": 1,
+      "cocktail-table-36": 1,
+      chairs: 0,
+    });
+    expect(validateLayoutInventory(layout, { "cocktail-table-32": 0 })).toMatchObject({
+      valid: false,
+      code: "table-limit",
+      message: "All 0 available 32-inch cocktail tables are already in this floorplan.",
+    });
+  });
+
   it("does not allow duplication beyond Magnolia's shared inventory", () => {
     const layout = createLayoutWith("round-table-60", 32);
     const duplicated = duplicateObject(layout, layout.objects[0].id, "over-limit-copy");
@@ -75,6 +94,26 @@ describe("inventory validation", () => {
     expect(validateLayoutInventory(duplicated, magnoliaInventory, "Magnolia")).toMatchObject({
       valid: false,
       code: "table-limit",
+    });
+  });
+
+  it("enforces Magnolia's six confirmed 32-inch Cocktail Tables", () => {
+    let layout = createEmptyLayout();
+    for (let index = 0; index < 7; index += 1) {
+      const cocktail = createEventObject(
+        "cocktail-table",
+        { x: index * 40, y: 0 },
+        layout.objects,
+        `cocktail-${index}`,
+        "32-round",
+      );
+      layout = addObject(layout, cocktail);
+    }
+
+    expect(validateLayoutInventory(layout, magnoliaInventory, "Magnolia")).toMatchObject({
+      valid: false,
+      code: "table-limit",
+      message: "All 6 available 32-inch cocktail tables are already in this floorplan.",
     });
   });
 

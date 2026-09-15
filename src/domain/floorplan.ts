@@ -4,6 +4,7 @@ export type EventObjectType =
   | "rectangle-table-8"
   | "parson-table-7"
   | "sweetheart-table"
+  | "cocktail-table"
   | "cake-table"
   | "gift-table"
   | "dj"
@@ -14,10 +15,12 @@ export type EventObjectType =
   | "chair";
 
 export type DanceFloorVariant = "12x12" | "16x16" | "20x20";
+export type CocktailTableVariant = "32-round" | "36-round";
+export type EventObjectVariant = DanceFloorVariant | CocktailTableVariant;
 
 export type EventObjectSelection = {
   type: EventObjectType;
-  variant?: DanceFloorVariant;
+  variant?: EventObjectVariant;
 };
 
 export type PhysicalObjectDimensions =
@@ -29,7 +32,7 @@ export type PhysicalObjectDimensions =
 export type EventObject = {
   id: string;
   type: EventObjectType;
-  variant?: DanceFloorVariant;
+  variant?: EventObjectVariant;
   x: number;
   y: number;
   width: number;

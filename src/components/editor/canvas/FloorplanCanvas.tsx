@@ -353,7 +353,7 @@ type ObjectNodeProps = {
 };
 
 function EventObjectNode({ object, selected, canDrag, setNode, onSelect, onChange }: ObjectNodeProps) {
-  const isRound = object.type === "round-table-60" || object.type === "cake-table";
+  const isRound = object.physicalDimensions.shape === "circle";
   const isDance = object.type === "dance-floor";
   const fill = isDance ? "#e6ded2" : object.type === "chair" ? "#60796b" : isGuestTable(object.type) ? "#fffdf7" : "#dce8e0";
   const stroke = selected ? "#294f3d" : isDance ? "#9d8e7b" : "#5e7768";

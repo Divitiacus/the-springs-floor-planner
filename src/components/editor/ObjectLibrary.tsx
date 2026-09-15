@@ -109,6 +109,8 @@ function InventorySummary({ inventory, usage }: Pick<Props, "inventory" | "usage
     { type: "rectangle-table-8" as const, label: "8' Rectangle" },
     { type: "parson-table-7" as const, label: "Parson" },
     { type: "sweetheart-table" as const, label: "Sweetheart" },
+    { type: "cocktail-table-32" as const, label: '32" Cocktail' },
+    { type: "cocktail-table-36" as const, label: '36" Cocktail' },
     { type: "chairs" as const, label: "Chairs" },
   ];
 

@@ -1,12 +1,12 @@
-import type { DanceFloorVariant, EventObjectType, PhysicalObjectDimensions } from "@/domain/floorplan";
+import type { EventObjectType, EventObjectVariant, PhysicalObjectDimensions } from "@/domain/floorplan";
 
 export type ObjectVariantDefinition = {
-  id: DanceFloorVariant;
+  id: EventObjectVariant;
   name: string;
   shortLabel: string;
   width: number;
   height: number;
-  physicalDimensions: { status: "confirmed"; shape: "area"; widthInches: number; depthInches: number };
+  physicalDimensions: PhysicalObjectDimensions;
 };
 
 export type ObjectDefinition = {
@@ -22,6 +22,7 @@ export type ObjectDefinition = {
   inventoryLabel: string;
   physicalDimensions: PhysicalObjectDimensions;
   resizable: boolean;
+  defaultVariant?: EventObjectVariant;
   variants?: readonly ObjectVariantDefinition[];
   regionalStyleKey?: "photo-booth";
   showInLibrary?: boolean;
@@ -33,7 +34,24 @@ export const OBJECT_CATALOG: ObjectDefinition[] = [
   { type: "rectangle-table-6", name: "6-foot Rectangle Table", shortLabel: "6' Rectangle", category: "Tables", width: 72, height: 36, defaultSeats: 8, maximumSeats: 8, inventoryLabel: "6-foot rectangle tables", physicalDimensions: { status: "partial", shape: "rectangle", lengthInches: 72, depthInches: null }, resizable: false, icon: "rectangle" },
   { type: "rectangle-table-8", name: "8-foot Rectangle Table", shortLabel: "8' Rectangle", category: "Tables", width: 96, height: 36, defaultSeats: 10, maximumSeats: 10, inventoryLabel: "8-foot rectangle tables", physicalDimensions: { status: "partial", shape: "rectangle", lengthInches: 96, depthInches: null }, resizable: false, icon: "rectangle" },
   { type: "parson-table-7", name: "Parson Table", shortLabel: "Parson", category: "Tables", width: 84, height: 22, inventoryLabel: "Parson tables", physicalDimensions: { status: "confirmed", shape: "rectangle", widthInches: 84, depthInches: 22 }, resizable: false, icon: "rectangle" },
-  { type: "sweetheart-table", name: "Sweetheart Table", shortLabel: "Sweetheart", category: "Tables", width: 72, height: 36, defaultSeats: 2, maximumSeats: 2, inventoryLabel: "sweetheart tables", physicalDimensions: { status: "unconfigured", shape: "rectangle", widthInches: null, depthInches: null }, resizable: false, icon: "heart" },
+  { type: "sweetheart-table", name: "Sweetheart Table", shortLabel: "Sweetheart", category: "Tables", width: 36, height: 36, defaultSeats: 2, maximumSeats: 2, inventoryLabel: "sweetheart tables", physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: 36 }, resizable: false, icon: "heart" },
+  {
+    type: "cocktail-table",
+    name: "Cocktail Table",
+    shortLabel: "Cocktail",
+    category: "Tables",
+    width: 32,
+    height: 32,
+    inventoryLabel: "cocktail tables",
+    physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: 32 },
+    resizable: false,
+    defaultVariant: "32-round",
+    icon: "round",
+    variants: [
+      { id: "32-round", name: "32-inch Cocktail Table", shortLabel: "32\" Cocktail", width: 32, height: 32, physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: 32 } },
+      { id: "36-round", name: "36-inch Cocktail Table", shortLabel: "36\" Cocktail", width: 36, height: 36, physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: 36 } },
+    ],
+  },
   { type: "cake-table", name: "Cake Table", shortLabel: "Cake", category: "Event essentials", width: 62, height: 62, inventoryLabel: "cake tables", physicalDimensions: { status: "unconfigured", shape: "circle", widthInches: null, depthInches: null }, resizable: false, icon: "round" },
   { type: "gift-table", name: "Gift Table", shortLabel: "Gifts", category: "Event essentials", width: 88, height: 48, inventoryLabel: "gift tables", physicalDimensions: { status: "unconfigured", shape: "rectangle", widthInches: null, depthInches: null }, resizable: true, icon: "rectangle" },
   { type: "dj", name: "DJ", shortLabel: "DJ", category: "Production", width: 72, height: 72, inventoryLabel: "DJ areas", physicalDimensions: { status: "confirmed", shape: "area", widthInches: 72, depthInches: 72 }, resizable: false, icon: "music" },
@@ -50,6 +68,7 @@ export const OBJECT_CATALOG: ObjectDefinition[] = [
     inventoryLabel: "dance floors",
     physicalDimensions: { status: "confirmed", shape: "area", widthInches: 192, depthInches: 192 },
     resizable: false,
+    defaultVariant: "16x16",
     icon: "dance",
     variants: [
       { id: "12x12", name: "12' × 12' Dance Floor", shortLabel: "Dance Floor 12' × 12'", width: 144, height: 144, physicalDimensions: { status: "confirmed", shape: "area", widthInches: 144, depthInches: 144 } },
@@ -75,13 +94,13 @@ export function isGuestTable(type: EventObjectType) {
   return type === "round-table-60" || type === "rectangle-table-6" || type === "rectangle-table-8";
 }
 
-export function getObjectVariant(type: EventObjectType, variant?: DanceFloorVariant) {
+export function getObjectVariant(type: EventObjectType, variant?: EventObjectVariant) {
   const variants = OBJECT_DEFINITIONS[type].variants;
   if (!variants) return undefined;
-  return variants.find((candidate) => candidate.id === (variant ?? "16x16"));
+  return variants.find((candidate) => candidate.id === (variant ?? OBJECT_DEFINITIONS[type].defaultVariant));
 }
 
-export function getObjectDisplayName(type: EventObjectType, variant?: DanceFloorVariant) {
+export function getObjectDisplayName(type: EventObjectType, variant?: EventObjectVariant) {
   return getObjectVariant(type, variant)?.name ?? OBJECT_DEFINITIONS[type].name;
 }
 
