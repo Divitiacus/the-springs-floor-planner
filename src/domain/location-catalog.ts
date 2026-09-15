@@ -6,6 +6,7 @@ import type {
 import type { InventoryCatalog, InventoryConfiguration } from "@/domain/inventory";
 import { createHeritagePineConfiguration } from "@/domain/venues/heritage-pine";
 import { createHiddenMagnoliaConfiguration } from "@/domain/venues/hidden-magnolia";
+import { createMagnoliaManorConfiguration } from "@/domain/venues/magnolia-manor";
 import { createStonebrookConfiguration } from "@/domain/venues/stonebrook";
 import { createStonecreekReserveConfiguration } from "@/domain/venues/stonecreek-reserve";
 import { createSycamoreGroveConfiguration } from "@/domain/venues/sycamore-grove";
@@ -81,11 +82,11 @@ export const KATY_INVENTORY: InventoryCatalog = {
 };
 
 export const ANGLETON_INVENTORY: InventoryCatalog = {
-  scope: "location-shared",
+  scope: "hall",
   limits: { "parson-table-7": 6, "sweetheart-table": 2, "cocktail-table-36": 5, chairs: 320 },
   source: {
     fileName: "the_springs_table_chair_inventory_from_powerpoints.xlsx",
-    note: "The source workbook confirms 6 Parson tables, 2 two-seat rounds, and 5 36-inch cocktail tables for Sycamore Grove. Sweetheart tables use the separately confirmed 36-inch round footprint. The 320-chair total was confirmed separately.",
+    note: "The source workbook confirms 6 Parson tables, 2 two-seat rounds, and 5 36-inch cocktail tables for Sycamore Grove. Sweetheart tables use the separately confirmed 36-inch round footprint. The 320-chair total was confirmed separately for Sycamore Grove. Magnolia Manor inventory is not yet configured.",
   },
 };
 
@@ -180,13 +181,18 @@ export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
     id: "location_angleton",
     slug: "angleton",
     name: "Angleton",
-    inventory: ANGLETON_INVENTORY,
     halls: [
       {
         id: "hall_sycamore_grove",
         slug: "sycamore-grove",
         name: "Sycamore Grove",
-        configuration: createSycamoreGroveConfiguration(),
+        configuration: { ...createSycamoreGroveConfiguration(), inventory: ANGLETON_INVENTORY },
+      },
+      {
+        id: "hall_magnolia_manor",
+        slug: "magnolia-manor",
+        name: "Magnolia Manor",
+        configuration: createMagnoliaManorConfiguration(),
       },
     ],
   },

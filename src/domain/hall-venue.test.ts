@@ -102,4 +102,18 @@ describe("hall venue template", () => {
     expect(venue.elements.length).toBeGreaterThan(20);
     expect(table.width / venue.hall.width).toBe(1 / 16);
   });
+
+  it("loads Magnolia Manor at the confirmed 67-foot-6-inch square scale", () => {
+    const location = getLocationBySlug("angleton");
+    const hall = getHallBySlug(location, "magnolia-manor");
+    if (!location || !hall) throw new Error("Magnolia Manor catalog entry missing");
+
+    const venue = createHallVenueTemplate(location, hall);
+    const table = createEventObject("round-table-60", { x: 455, y: 485 }, [], "manor-scale");
+
+    expect(venue.hall).toEqual({ x: 50, y: 80, width: 810, height: 810 });
+    expect(venue.referenceAsset).toBeNull();
+    expect(venue.elements.length).toBeGreaterThan(50);
+    expect(table.width / venue.hall.width).toBe(2 / 27);
+  });
 });

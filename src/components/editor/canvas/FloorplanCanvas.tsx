@@ -205,14 +205,24 @@ function VenueLayer({ venue }: { venue: VenueTemplate }) {
         <FixedArchitectureNode key={element.id} element={element} />
       ))}
       <Text x={venue.hall.x + 18} y={venue.hall.y + 16} text={venue.name.toUpperCase()} fontSize={11} fontStyle="bold" letterSpacing={1.8} fill="#8b968f" />
-      <Text x={venue.hall.x + 18} y={venue.hall.y + 34} text={`${venue.hall.width / 12}' × ${venue.hall.height / 12}' MAIN FLOOR`} fontSize={9} fontStyle="bold" letterSpacing={1.1} fill="#9aa49e" />
+      <Text x={venue.hall.x + 18} y={venue.hall.y + 34} text={`${formatFeetAndInches(venue.hall.width)} × ${formatFeetAndInches(venue.hall.height)} MAIN FLOOR`} fontSize={9} fontStyle="bold" letterSpacing={1.1} fill="#9aa49e" />
     </>
   );
+}
+
+function formatFeetAndInches(inches: number) {
+  const feet = Math.floor(inches / 12);
+  const remainder = Math.round(inches - feet * 12);
+  return remainder ? `${feet}′${remainder}″` : `${feet}′`;
 }
 
 function FixedArchitectureNode({ element }: { element: FixedArchitectureElement }) {
   if (element.kind === "wall") {
     return <Line points={element.points} stroke="#46564d" strokeWidth={7} lineCap="square" lineJoin="miter" />;
+  }
+
+  if (element.kind === "railing") {
+    return <Line points={element.points} stroke="#78827c" strokeWidth={3} lineCap="square" lineJoin="miter" />;
   }
 
   if (element.kind === "door") {
@@ -257,12 +267,23 @@ function FixedArchitectureNode({ element }: { element: FixedArchitectureElement 
     return <Text x={element.x} y={element.y} width={element.width} rotation={element.rotation ?? 0} align="center" text={`↕  ${element.label}  ↕`} fontSize={11} fontStyle="bold" letterSpacing={1.5} fill="#65736b" />;
   }
 
+  if (element.kind === "label") {
+    return <Text x={element.x} y={element.y} width={element.width} rotation={element.rotation ?? 0} align="center" text={element.label.toUpperCase()} fontSize={element.fontSize ?? 10} fontStyle="bold" letterSpacing={1.2} fill="#65736b" />;
+  }
+
   const colors = {
     "main-floor": { fill: "#fffdfa", stroke: "#526159" },
     stage: { fill: "#ddd4c4", stroke: "#8e7b61" },
     closet: { fill: "#e7e5df", stroke: "#858a84" },
     catering: { fill: "#ede8df", stroke: "#998e7f" },
     bar: { fill: "#dce7df", stroke: "#687f70" },
+    buffet: { fill: "#e8e0d3", stroke: "#8e7c66" },
+    porch: { fill: "#e4e7e2", stroke: "#7b8680" },
+    "second-floor": { fill: "#eef0ec", stroke: "#7c8881" },
+    "open-to-below": { fill: "#f5f3ee", stroke: "#a5aaa5" },
+    pillar: { fill: "#69736d", stroke: "#4d5751" },
+    fireplace: { fill: "#d6d1c8", stroke: "#7e7569" },
+    landing: { fill: "#e0e2dd", stroke: "#68736d" },
   }[element.role];
 
   const shape = element.shape.type === "rectangle" ? (
@@ -301,7 +322,7 @@ function FixedArchitectureNode({ element }: { element: FixedArchitectureElement 
   return (
     <Group>
       {shape}
-      {element.role !== "main-floor" ? (
+      {element.role !== "main-floor" && element.role !== "pillar" && element.showLabel !== false ? (
         element.labelRotation ? (
           <Text
             x={bounds.x + 8}

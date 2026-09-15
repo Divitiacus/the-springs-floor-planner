@@ -89,21 +89,23 @@ describe("location catalog", () => {
     }
   });
 
-  it("defines Angleton with Sycamore Grove and a stable route slug", () => {
+  it("defines Angleton with both confirmed halls and stable route slugs", () => {
     const location = getLocationBySlug("angleton");
     expect(location).toMatchObject({ id: "location_angleton", name: "Angleton" });
     expect(location?.halls).toMatchObject([
       { id: "hall_sycamore_grove", slug: "sycamore-grove", name: "Sycamore Grove" },
+      { id: "hall_magnolia_manor", slug: "magnolia-manor", name: "Magnolia Manor" },
     ]);
   });
 
-  it("applies Angleton's confirmed chair and Parson Table inventory", () => {
+  it("keeps Sycamore Grove inventory hall-specific until Magnolia Manor inventory is confirmed", () => {
     const location = getLocationBySlug("angleton");
-    const hall = getHallBySlug(location, "sycamore-grove");
-    if (!location || !hall) throw new Error("Sycamore Grove catalog entry missing");
+    const sycamoreGrove = getHallBySlug(location, "sycamore-grove");
+    const magnoliaManor = getHallBySlug(location, "magnolia-manor");
+    if (!location || !sycamoreGrove || !magnoliaManor) throw new Error("Angleton catalog entry missing");
 
     expect(ANGLETON_INVENTORY).toMatchObject({
-      scope: "location-shared",
+      scope: "hall",
       limits: {
         "parson-table-7": 6,
         "sweetheart-table": 2,
@@ -111,12 +113,105 @@ describe("location catalog", () => {
         chairs: 320,
       },
     });
-    expect(hall.configuration?.inventory).toBeUndefined();
-    expect(resolveInventoryConfiguration(location, hall)).toEqual({
+    expect(location.inventory).toBeUndefined();
+    expect(sycamoreGrove.configuration?.inventory).toBe(ANGLETON_INVENTORY);
+    expect(resolveInventoryConfiguration(location, sycamoreGrove)).toEqual({
       "parson-table-7": 6,
       "sweetheart-table": 2,
       "cocktail-table-36": 5,
       chairs: 320,
+    });
+    expect(magnoliaManor.configuration?.inventory).toBeUndefined();
+    expect(resolveInventoryConfiguration(location, magnoliaManor)).toEqual({});
+  });
+
+  it("models Magnolia Manor from its confirmed 67-foot-6-inch measurements", () => {
+    const location = getLocationBySlug("angleton");
+    const hall = getHallBySlug(location, "magnolia-manor");
+    if (!hall?.configuration) throw new Error("Magnolia Manor configuration missing");
+    const elements = hall.configuration.fixedArchitecturalElements;
+
+    expect(elements.find((element) => element.id === "magnolia-manor-main-floor")).toMatchObject({
+      kind: "area",
+      role: "main-floor",
+      placementBehavior: "allowed",
+      measurementStatus: "confirmed",
+      shape: { type: "rectangle", x: 50, y: 80, width: 810, height: 810 },
+    });
+    expect(elements.find((element) => element.id === "magnolia-manor-entrance-porch")).toMatchObject({
+      kind: "area",
+      role: "porch",
+      measurementStatus: "confirmed",
+      shape: { type: "rectangle", height: 92 },
+    });
+    expect(hall.configuration.floorplanAsset).toBeNull();
+  });
+
+  it("stores Magnolia Manor's confirmed permanent fixture dimensions", () => {
+    const location = getLocationBySlug("angleton");
+    const hall = getHallBySlug(location, "magnolia-manor");
+    if (!hall?.configuration) throw new Error("Magnolia Manor configuration missing");
+    const elements = hall.configuration.fixedArchitecturalElements;
+
+    expect(elements.find((element) => element.id === "magnolia-manor-bar-counter")).toMatchObject({
+      placementBehavior: "blocked",
+      measurementStatus: "confirmed",
+      shape: { type: "rectangle", width: 194, height: 45 },
+    });
+    expect(elements.find((element) => element.id === "magnolia-manor-bar-top")).toMatchObject({
+      shape: { type: "rectangle", width: 194, height: 21 },
+    });
+    expect(elements.find((element) => element.id === "magnolia-manor-bar-sink")).toMatchObject({
+      shape: { type: "rectangle", width: 76, height: 24 },
+    });
+    expect(elements.find((element) => element.id === "magnolia-manor-buffet")).toMatchObject({
+      placementBehavior: "blocked",
+      shape: { type: "rectangle", width: 168, height: 48 },
+    });
+  });
+
+  it("represents Magnolia Manor's staircase measurements and structural pillars", () => {
+    const location = getLocationBySlug("angleton");
+    const hall = getHallBySlug(location, "magnolia-manor");
+    if (!hall?.configuration) throw new Error("Magnolia Manor configuration missing");
+    const elements = hall.configuration.fixedArchitecturalElements;
+
+    expect(elements.find((element) => element.id === "magnolia-manor-stair-landing")).toMatchObject({
+      measurementStatus: "confirmed",
+      shape: { type: "rectangle", width: 80, height: 79 },
+    });
+    expect(elements.find((element) => element.id === "magnolia-manor-bottom-flight")).toMatchObject({
+      width: 113,
+      height: 132,
+      placementBehavior: "blocked",
+    });
+    expect(elements.find((element) => element.id === "magnolia-manor-top-railing")).toMatchObject({
+      kind: "railing",
+      measurementStatus: "confirmed",
+      points: [325, 171, 585, 171],
+    });
+    const hallPillars = elements.filter((element) => element.id.match(/^magnolia-manor-pillar-\d+$/));
+    expect(hallPillars).toHaveLength(6);
+    expect(hallPillars.every((element) => element.physicalNote?.includes("24 feet 2 inches"))).toBe(true);
+    expect(elements.find((element) => element.id === "magnolia-manor-bottom-stair-pillar-west")?.physicalNote).toContain("53 inches tall");
+  });
+
+  it("keeps Magnolia Manor's 12-foot second floor separate from its blocked open-to-below", () => {
+    const location = getLocationBySlug("angleton");
+    const hall = getHallBySlug(location, "magnolia-manor");
+    if (!hall?.configuration) throw new Error("Magnolia Manor configuration missing");
+    const elements = hall.configuration.fixedArchitecturalElements;
+    const secondFloor = elements.filter((element) => element.kind === "area" && element.role === "second-floor");
+
+    expect(secondFloor).toHaveLength(4);
+    expect(secondFloor).toEqual(expect.arrayContaining([
+      expect.objectContaining({ shape: expect.objectContaining({ width: 810, height: 144 }) }),
+      expect.objectContaining({ shape: expect.objectContaining({ width: 144, height: 522 }) }),
+    ]));
+    expect(elements.find((element) => element.id === "magnolia-manor-open-to-below")).toMatchObject({
+      placementBehavior: "blocked",
+      measurementStatus: "confirmed",
+      shape: { type: "rectangle", width: 522, height: 522 },
     });
   });
 

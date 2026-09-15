@@ -60,6 +60,7 @@ export type ArchitectureMeasurementStatus = "confirmed" | "source-traced" | "pro
 type FixedArchitectureBase = {
   id: string;
   label: string;
+  physicalNote?: string;
   fixed: true;
   placementBehavior: PlacementBehavior;
   measurementStatus: ArchitectureMeasurementStatus;
@@ -68,15 +69,32 @@ type FixedArchitectureBase = {
 export type FixedArchitectureElement =
   | (FixedArchitectureBase & {
       kind: "area";
-      role: "main-floor" | "stage" | "closet" | "catering" | "bar";
+      role:
+        | "main-floor"
+        | "stage"
+        | "closet"
+        | "catering"
+        | "bar"
+        | "buffet"
+        | "porch"
+        | "second-floor"
+        | "open-to-below"
+        | "pillar"
+        | "fireplace"
+        | "landing";
       shape:
         | { type: "rectangle"; x: number; y: number; width: number; height: number }
         | { type: "polygon"; points: number[] };
       elevation: "floor" | "raised";
       labelRotation?: number;
+      showLabel?: boolean;
     })
   | (FixedArchitectureBase & {
       kind: "wall";
+      points: number[];
+    })
+  | (FixedArchitectureBase & {
+      kind: "railing";
       points: number[];
     })
   | (FixedArchitectureBase & {
@@ -103,6 +121,14 @@ export type FixedArchitectureElement =
       y: number;
       width: number;
       rotation?: number;
+    })
+  | (FixedArchitectureBase & {
+      kind: "label";
+      x: number;
+      y: number;
+      width: number;
+      rotation?: number;
+      fontSize?: number;
     });
 
 export type ReferenceFloorplanAsset = {
