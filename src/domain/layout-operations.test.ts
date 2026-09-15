@@ -11,7 +11,7 @@ import {
   updateObject,
 } from "@/domain/layout-operations";
 import { deserializeFloorplan, serializeFloorplan, serializePortableFloorplan } from "@/domain/persistence";
-import { OBJECT_CATALOG, OBJECT_DEFINITIONS } from "@/domain/object-catalog";
+import { isObjectAvailableForInventory, OBJECT_CATALOG, OBJECT_DEFINITIONS } from "@/domain/object-catalog";
 
 describe("floorplan object operations", () => {
   it("shows only movable event essentials in the object library catalog", () => {
@@ -74,6 +74,28 @@ describe("floorplan object operations", () => {
     expect(sixFoot).toMatchObject({ width: 72, height: 30 });
     expect(eightFoot).toMatchObject({ width: 96, height: 30 });
     expect(resized.objects[0]).toMatchObject({ width: 72, height: 30 });
+  });
+
+  it("defines Wallisville-only 48-inch round and wooden Farmhouse tables", () => {
+    expect(OBJECT_DEFINITIONS["round-table-48"]).toMatchObject({
+      width: 48,
+      height: 48,
+      defaultSeats: 6,
+      maximumSeats: 6,
+      inventoryOnly: true,
+      physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: 48 },
+    });
+    expect(OBJECT_DEFINITIONS["farmhouse-table-6"]).toMatchObject({
+      name: "Wooden Farmhouse Table",
+      width: 72,
+      height: 30,
+      defaultSeats: 8,
+      maximumSeats: 8,
+      inventoryOnly: true,
+      physicalDimensions: { status: "confirmed", shape: "rectangle", widthInches: 72, depthInches: 30 },
+    });
+    expect(isObjectAvailableForInventory(OBJECT_DEFINITIONS["farmhouse-table-6"], {})).toBe(false);
+    expect(isObjectAvailableForInventory(OBJECT_DEFINITIONS["farmhouse-table-6"], { "farmhouse-table-6": 5 })).toBe(true);
   });
 
   it("creates a fixed-size, non-seating Parson Table from its inventory key", () => {

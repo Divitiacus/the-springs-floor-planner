@@ -6,9 +6,11 @@ import { deserializeFloorplan, serializeFloorplan } from "@/domain/persistence";
 import { feetToInches, inchesToFeet } from "@/domain/physical-units";
 
 const noLimits: InventoryConfiguration = {
+  "round-table-48": null,
   "round-table-60": null,
   "rectangle-table-6": null,
   "rectangle-table-8": null,
+  "farmhouse-table-6": null,
   "parson-table-7": null,
   "sweetheart-table": null,
   "cocktail-table-32": null,
@@ -87,6 +89,23 @@ describe("inventory validation", () => {
     });
   });
 
+  it("tracks Wallisville's location-specific round and Farmhouse tables", () => {
+    const round = createEventObject("round-table-48", { x: 0, y: 0 }, [], "round-48");
+    const farmhouse = createEventObject("farmhouse-table-6", { x: 80, y: 0 }, [round], "farmhouse");
+    const layout = addObject(addObject(createEmptyLayout(), round), farmhouse);
+
+    expect(getInventoryUsage(layout)).toMatchObject({
+      "round-table-48": 1,
+      "farmhouse-table-6": 1,
+      chairs: 14,
+    });
+    expect(validateLayoutInventory(layout, { "farmhouse-table-6": 0 })).toMatchObject({
+      valid: false,
+      code: "table-limit",
+      message: "All 0 available wooden Farmhouse tables are already in this floorplan.",
+    });
+  });
+
   it("does not allow duplication beyond Magnolia's shared inventory", () => {
     const layout = createLayoutWith("round-table-60", 32);
     const duplicated = duplicateObject(layout, layout.objects[0].id, "over-limit-copy");
@@ -140,9 +159,11 @@ describe("inventory validation", () => {
   });
 
   it.each([
+    ["round-table-48", 6],
     ["round-table-60", 10],
     ["rectangle-table-6", 8],
     ["rectangle-table-8", 10],
+    ["farmhouse-table-6", 8],
     ["sweetheart-table", 2],
   ] as const)("enforces the %s seating maximum", (type, maximum) => {
     const table = createEventObject(type, { x: 0, y: 0 }, [], "table");

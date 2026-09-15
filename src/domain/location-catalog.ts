@@ -93,10 +93,21 @@ export const ANGLETON_INVENTORY: InventoryCatalog = {
 
 export const WALLISVILLE_FARMHOUSE_INVENTORY: InventoryCatalog = {
   scope: "hall",
-  limits: { chairs: 250 },
+  limits: {
+    "round-table-48": 2,
+    "round-table-60": 30,
+    "rectangle-table-6": 4,
+    "rectangle-table-8": 4,
+    "farmhouse-table-6": 5,
+    "parson-table-7": 4,
+    "sweetheart-table": 4,
+    "cocktail-table-32": 5,
+    "cocktail-table-36": 2,
+    chairs: 250,
+  },
   source: {
-    fileName: "Wallisville Farmhouse floor plans supplied by the user",
-    note: "The user confirmed a 250-guest count for Farmhouse. Table inventory is not yet configured.",
+    fileName: "Wallisville inventory matrix and Farmhouse table reference supplied by the user",
+    note: "The supplied inventory row confirms the Wallisville table quantities and 250 chairs. The separate Farmhouse reference confirms five wooden 6-foot by 30-inch Farmhouse tables.",
   },
 };
 

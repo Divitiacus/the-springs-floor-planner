@@ -2,9 +2,11 @@ import type { EventObject, EventObjectType, FloorplanLayout } from "@/domain/flo
 import { OBJECT_DEFINITIONS, TABLE_TYPES } from "@/domain/object-catalog";
 
 export const INVENTORY_ITEM_TYPES = [
+  "round-table-48",
   "round-table-60",
   "rectangle-table-6",
   "rectangle-table-8",
+  "farmhouse-table-6",
   "parson-table-7",
   "sweetheart-table",
   "cocktail-table-32",
@@ -38,9 +40,11 @@ export type InventoryValidationResult =
 
 export function getInventoryUsage(layout: FloorplanLayout): InventoryUsage {
   const usage: InventoryUsage = {
+    "round-table-48": 0,
     "round-table-60": 0,
     "rectangle-table-6": 0,
     "rectangle-table-8": 0,
+    "farmhouse-table-6": 0,
     "parson-table-7": 0,
     "sweetheart-table": 0,
     "cocktail-table-32": 0,
@@ -118,9 +122,11 @@ function getInventoryObjectType(object: Pick<EventObject, "type" | "variant">): 
 }
 
 const INVENTORY_LABELS: Record<Exclude<InventoryItemType, "chairs">, string> = {
+  "round-table-48": OBJECT_DEFINITIONS["round-table-48"].inventoryLabel,
   "round-table-60": OBJECT_DEFINITIONS["round-table-60"].inventoryLabel,
   "rectangle-table-6": OBJECT_DEFINITIONS["rectangle-table-6"].inventoryLabel,
   "rectangle-table-8": OBJECT_DEFINITIONS["rectangle-table-8"].inventoryLabel,
+  "farmhouse-table-6": OBJECT_DEFINITIONS["farmhouse-table-6"].inventoryLabel,
   "parson-table-7": OBJECT_DEFINITIONS["parson-table-7"].inventoryLabel,
   "sweetheart-table": OBJECT_DEFINITIONS["sweetheart-table"].inventoryLabel,
   "cocktail-table-32": "32-inch cocktail tables",

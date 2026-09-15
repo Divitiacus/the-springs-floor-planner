@@ -26,13 +26,16 @@ export type ObjectDefinition = {
   variants?: readonly ObjectVariantDefinition[];
   regionalStyleKey?: "photo-booth";
   showInLibrary?: boolean;
+  inventoryOnly?: boolean;
   icon: "round" | "rectangle" | "heart" | "music" | "bar" | "buffet" | "camera" | "dance" | "chair";
 };
 
 export const OBJECT_CATALOG: ObjectDefinition[] = [
+  { type: "round-table-48", name: "48-inch Round Table", shortLabel: "48\" Round", category: "Tables", width: 48, height: 48, defaultSeats: 6, maximumSeats: 6, inventoryLabel: "48-inch round tables", physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: 48 }, resizable: false, inventoryOnly: true, icon: "round" },
   { type: "round-table-60", name: "60-inch Round Table", shortLabel: "60\" Round", category: "Tables", width: 60, height: 60, defaultSeats: 8, maximumSeats: 10, inventoryLabel: "60-inch round tables", physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: 60 }, resizable: false, icon: "round" },
   { type: "rectangle-table-6", name: "6-foot Rectangle Table", shortLabel: "6' Rectangle", category: "Tables", width: 72, height: 30, defaultSeats: 8, maximumSeats: 8, inventoryLabel: "6-foot rectangle tables", physicalDimensions: { status: "confirmed", shape: "rectangle", widthInches: 72, depthInches: 30 }, resizable: false, icon: "rectangle" },
   { type: "rectangle-table-8", name: "8-foot Rectangle Table", shortLabel: "8' Rectangle", category: "Tables", width: 96, height: 30, defaultSeats: 10, maximumSeats: 10, inventoryLabel: "8-foot rectangle tables", physicalDimensions: { status: "confirmed", shape: "rectangle", widthInches: 96, depthInches: 30 }, resizable: false, icon: "rectangle" },
+  { type: "farmhouse-table-6", name: "Wooden Farmhouse Table", shortLabel: "Farmhouse", category: "Tables", width: 72, height: 30, defaultSeats: 8, maximumSeats: 8, inventoryLabel: "wooden Farmhouse tables", physicalDimensions: { status: "confirmed", shape: "rectangle", widthInches: 72, depthInches: 30 }, resizable: false, inventoryOnly: true, icon: "rectangle" },
   { type: "parson-table-7", name: "Parson Table", shortLabel: "Parson", category: "Tables", width: 84, height: 22, inventoryLabel: "Parson tables", physicalDimensions: { status: "confirmed", shape: "rectangle", widthInches: 84, depthInches: 22 }, resizable: false, icon: "rectangle" },
   { type: "sweetheart-table", name: "Sweetheart Table", shortLabel: "Sweetheart", category: "Tables", width: 36, height: 36, defaultSeats: 2, maximumSeats: 2, inventoryLabel: "sweetheart tables", physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: 36 }, resizable: false, icon: "heart" },
   {
@@ -84,14 +87,16 @@ export const OBJECT_DEFINITIONS = Object.fromEntries(
 ) as Record<EventObjectType, ObjectDefinition>;
 
 export const TABLE_TYPES = new Set<EventObjectType>([
+  "round-table-48",
   "round-table-60",
   "rectangle-table-6",
   "rectangle-table-8",
+  "farmhouse-table-6",
   "sweetheart-table",
 ]);
 
 export function isGuestTable(type: EventObjectType) {
-  return type === "round-table-60" || type === "rectangle-table-6" || type === "rectangle-table-8";
+  return type === "round-table-48" || type === "round-table-60" || type === "rectangle-table-6" || type === "rectangle-table-8" || type === "farmhouse-table-6";
 }
 
 export function getObjectVariant(type: EventObjectType, variant?: EventObjectVariant) {
@@ -102,6 +107,13 @@ export function getObjectVariant(type: EventObjectType, variant?: EventObjectVar
 
 export function getObjectDisplayName(type: EventObjectType, variant?: EventObjectVariant) {
   return getObjectVariant(type, variant)?.name ?? OBJECT_DEFINITIONS[type].name;
+}
+
+export function isObjectAvailableForInventory(
+  definition: ObjectDefinition,
+  inventory: Readonly<Record<string, unknown>>,
+) {
+  return !definition.inventoryOnly || Object.prototype.hasOwnProperty.call(inventory, definition.type);
 }
 
 export function describePhysicalDimensions(source: ObjectDefinition | PhysicalObjectDimensions) {

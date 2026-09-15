@@ -2,7 +2,7 @@
 
 import { Armchair, Camera, Circle, Heart, LayoutGrid, Martini, Music2, RectangleHorizontal, Utensils } from "lucide-react";
 import type { EventObjectSelection, PhysicalObjectDimensions } from "@/domain/floorplan";
-import { describePhysicalDimensions, OBJECT_CATALOG, type ObjectDefinition } from "@/domain/object-catalog";
+import { describePhysicalDimensions, isObjectAvailableForInventory, OBJECT_CATALOG, type ObjectDefinition } from "@/domain/object-catalog";
 import type { InventoryConfiguration, InventoryUsage } from "@/domain/inventory";
 
 const categories: ObjectDefinition["category"][] = ["Tables", "Production", "Event essentials"];
@@ -41,31 +41,35 @@ export function ObjectLibrary({ onAdd, inventory, usage }: Props) {
           <section key={category}>
             <h3 className="mb-2 text-[10px] font-bold uppercase tracking-[0.13em] text-[#7b877f]">{category}</h3>
             <div className="space-y-1.5">
-              {OBJECT_CATALOG.filter((item) => item.category === category && item.showInLibrary !== false).flatMap(getLibraryChoices).map((choice) => {
-                const Icon = icons[choice.definition.icon];
-                return (
-                  <button
-                    key={choice.key}
-                    draggable
-                    className="group flex w-full items-center gap-3 rounded-xl border border-transparent px-2.5 py-2 text-left transition-colors hover:border-[#dfe5e0] hover:bg-[#f4f6f3]"
-                    onClick={() => onAdd(choice.selection)}
-                    onDragStart={(event) => {
-                      event.dataTransfer.setData("application/x-springs-object", JSON.stringify(choice.selection));
-                      event.dataTransfer.effectAllowed = "copy";
-                    }}
-                  >
-                    <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#edf2ee] text-[#456351] group-hover:bg-[#dfe9e2]">
-                      <Icon size={17} strokeWidth={1.8} />
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block truncate text-xs font-semibold text-[#35463c]">{choice.name}</span>
-                      <span className="mt-0.5 block text-[10px] text-[#8a958e]">
-                        {choice.definition.defaultSeats ? `${choice.definition.defaultSeats} seats · ${describePhysicalDimensions(choice.physicalDimensions)}` : choice.definition.resizable ? "Resizable planning footprint" : describePhysicalDimensions(choice.physicalDimensions)}
+              {OBJECT_CATALOG
+                .filter((item) => item.category === category && item.showInLibrary !== false)
+                .flatMap(getLibraryChoices)
+                .filter((choice) => isObjectAvailableForInventory(choice.definition, inventory))
+                .map((choice) => {
+                  const Icon = icons[choice.definition.icon];
+                  return (
+                    <button
+                      key={choice.key}
+                      draggable
+                      className="group flex w-full items-center gap-3 rounded-xl border border-transparent px-2.5 py-2 text-left transition-colors hover:border-[#dfe5e0] hover:bg-[#f4f6f3]"
+                      onClick={() => onAdd(choice.selection)}
+                      onDragStart={(event) => {
+                        event.dataTransfer.setData("application/x-springs-object", JSON.stringify(choice.selection));
+                        event.dataTransfer.effectAllowed = "copy";
+                      }}
+                    >
+                      <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#edf2ee] text-[#456351] group-hover:bg-[#dfe9e2]">
+                        <Icon size={17} strokeWidth={1.8} />
                       </span>
-                    </span>
-                  </button>
-                );
-              })}
+                      <span className="min-w-0">
+                        <span className="block truncate text-xs font-semibold text-[#35463c]">{choice.name}</span>
+                        <span className="mt-0.5 block text-[10px] text-[#8a958e]">
+                          {choice.definition.defaultSeats ? `${choice.definition.defaultSeats} seats · ${describePhysicalDimensions(choice.physicalDimensions)}` : choice.definition.resizable ? "Resizable planning footprint" : describePhysicalDimensions(choice.physicalDimensions)}
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })}
             </div>
           </section>
         ))}
@@ -104,9 +108,11 @@ function getLibraryChoices(definition: ObjectDefinition): LibraryChoice[] {
 
 function InventorySummary({ inventory, usage }: Pick<Props, "inventory" | "usage">) {
   const rows = [
+    { type: "round-table-48" as const, label: '48" Round', inventoryOnly: true },
     { type: "round-table-60" as const, label: '60" Round' },
     { type: "rectangle-table-6" as const, label: "6' Rectangle" },
     { type: "rectangle-table-8" as const, label: "8' Rectangle" },
+    { type: "farmhouse-table-6" as const, label: "Farmhouse", inventoryOnly: true },
     { type: "parson-table-7" as const, label: "Parson" },
     { type: "sweetheart-table" as const, label: "Sweetheart" },
     { type: "cocktail-table-32" as const, label: '32" Cocktail' },
@@ -118,7 +124,7 @@ function InventorySummary({ inventory, usage }: Pick<Props, "inventory" | "usage
     <section className="rounded-xl border border-[#dfe5e0] bg-[#f6f8f6] p-3" aria-labelledby="inventory-heading">
       <h3 id="inventory-heading" className="text-[10px] font-bold uppercase tracking-[0.13em] text-[#718078]">Inventory use</h3>
       <dl className="mt-2 space-y-1.5">
-        {rows.map((row) => (
+        {rows.filter((row) => !row.inventoryOnly || Object.prototype.hasOwnProperty.call(inventory, row.type)).map((row) => (
           <div key={row.type} className="flex items-center justify-between gap-2 text-[10px]">
             <dt className="font-semibold text-[#536158]">{row.label}</dt>
             <dd className="tabular-nums text-[#75827b]">

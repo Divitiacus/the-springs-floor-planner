@@ -30,9 +30,31 @@ describe("location catalog", () => {
     expect(hall).toMatchObject({ id: "hall_farmhouse_wallisville", name: "Farmhouse" });
     expect(WALLISVILLE_FARMHOUSE_INVENTORY).toMatchObject({
       scope: "hall",
-      limits: { chairs: 250 },
+      limits: {
+        "round-table-48": 2,
+        "round-table-60": 30,
+        "rectangle-table-6": 4,
+        "rectangle-table-8": 4,
+        "farmhouse-table-6": 5,
+        "parson-table-7": 4,
+        "sweetheart-table": 4,
+        "cocktail-table-32": 5,
+        "cocktail-table-36": 2,
+        chairs: 250,
+      },
     });
-    expect(resolveInventoryConfiguration(location, hall)).toEqual({ chairs: 250 });
+    expect(resolveInventoryConfiguration(location, hall)).toEqual({
+      "round-table-48": 2,
+      "round-table-60": 30,
+      "rectangle-table-6": 4,
+      "rectangle-table-8": 4,
+      "farmhouse-table-6": 5,
+      "parson-table-7": 4,
+      "sweetheart-table": 4,
+      "cocktail-table-32": 5,
+      "cocktail-table-36": 2,
+      chairs: 250,
+    });
 
     const elements = hall.configuration.fixedArchitecturalElements;
     expect(elements.find((element) => element.id === "farmhouse-wallisville-main-floor")).toMatchObject({
