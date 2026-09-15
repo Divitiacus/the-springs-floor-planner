@@ -54,10 +54,26 @@ describe("floorplan object operations", () => {
 
   it("offers distinct 6-foot and 8-foot rectangle tables without a 72-inch round", () => {
     expect(OBJECT_CATALOG.map((definition) => definition.name)).not.toContain("72-inch Round Table");
-    expect(OBJECT_DEFINITIONS["rectangle-table-6"].physicalDimensions).toMatchObject({ lengthInches: 72, depthInches: null });
-    expect(OBJECT_DEFINITIONS["rectangle-table-8"].physicalDimensions).toMatchObject({ lengthInches: 96, depthInches: null });
-    expect(OBJECT_DEFINITIONS["rectangle-table-8"].width).toBeGreaterThan(OBJECT_DEFINITIONS["rectangle-table-6"].width);
-    expect(OBJECT_DEFINITIONS["rectangle-table-8"].height).toBe(OBJECT_DEFINITIONS["rectangle-table-6"].height);
+    expect(OBJECT_DEFINITIONS["rectangle-table-6"]).toMatchObject({
+      width: 72,
+      height: 30,
+      resizable: false,
+      physicalDimensions: { status: "confirmed", shape: "rectangle", widthInches: 72, depthInches: 30 },
+    });
+    expect(OBJECT_DEFINITIONS["rectangle-table-8"]).toMatchObject({
+      width: 96,
+      height: 30,
+      resizable: false,
+      physicalDimensions: { status: "confirmed", shape: "rectangle", widthInches: 96, depthInches: 30 },
+    });
+
+    const sixFoot = createEventObject("rectangle-table-6", { x: 0, y: 0 }, [], "six-foot");
+    const eightFoot = createEventObject("rectangle-table-8", { x: 0, y: 0 }, [sixFoot], "eight-foot");
+    const resized = updateObject(addObject(createEmptyLayout(), sixFoot), sixFoot.id, { width: 120, height: 48 });
+
+    expect(sixFoot).toMatchObject({ width: 72, height: 30 });
+    expect(eightFoot).toMatchObject({ width: 96, height: 30 });
+    expect(resized.objects[0]).toMatchObject({ width: 72, height: 30 });
   });
 
   it("creates a fixed-size, non-seating Parson Table from its inventory key", () => {
@@ -274,6 +290,25 @@ describe("persistence", () => {
       width: 36,
       height: 36,
       physicalDimensions: { shape: "circle", diameterInches: 36 },
+    });
+  });
+
+  it("reopens fixed rectangle tables at their current confirmed catalog size", () => {
+    const table = {
+      ...createEventObject("rectangle-table-6", { x: 220, y: 180 }, [], "rectangle"),
+      height: 36,
+    };
+    const layout = addObject(
+      { ...createEmptyLayout("hall_hidden_magnolia"), name: "Rectangle Layout" },
+      table,
+    );
+    const reopened = deserializeFloorplan(serializePortableFloorplan(layout));
+
+    expect(reopened.objects[0]).toMatchObject({
+      type: "rectangle-table-6",
+      width: 72,
+      height: 30,
+      physicalDimensions: { widthInches: 72, depthInches: 30 },
     });
   });
 

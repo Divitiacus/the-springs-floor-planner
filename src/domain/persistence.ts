@@ -77,13 +77,15 @@ function inflatePortableFloorplan(stored: PortableFloorplan): FloorplanLayout {
       const [type, variant, x, y, width, height, rotation, label, tableNumber, seats, zIndex] = entry;
       const definition = OBJECT_DEFINITIONS[type];
       const variantDefinition = getObjectVariant(type, variant ?? undefined);
+      const catalogWidth = variantDefinition?.width ?? definition.width;
+      const catalogHeight = variantDefinition?.height ?? definition.height;
       const object: EventObject = {
         id: `opened-${index + 1}`,
         type,
         x,
         y,
-        width,
-        height,
+        width: definition.resizable ? width : catalogWidth,
+        height: definition.resizable ? height : catalogHeight,
         physicalDimensions: variantDefinition?.physicalDimensions ?? definition.physicalDimensions,
         rotation,
         label,
