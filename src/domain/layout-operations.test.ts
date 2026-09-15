@@ -14,6 +14,21 @@ import { deserializeFloorplan, serializeFloorplan, serializePortableFloorplan } 
 import { OBJECT_CATALOG, OBJECT_DEFINITIONS } from "@/domain/object-catalog";
 
 describe("floorplan object operations", () => {
+  it("shows only movable event essentials in the object library catalog", () => {
+    const libraryTypes = OBJECT_CATALOG
+      .filter((definition) => definition.showInLibrary !== false)
+      .map((definition) => definition.type);
+
+    expect(libraryTypes).not.toContain("buffet");
+    expect(libraryTypes).not.toContain("chair");
+    expect(OBJECT_DEFINITIONS.buffet).toBeDefined();
+    expect(OBJECT_DEFINITIONS.chair).toBeDefined();
+    expect(OBJECT_DEFINITIONS["portable-bar"]).toMatchObject({
+      name: "Satellite Bar",
+      shortLabel: "Satellite Bar",
+    });
+  });
+
   it("creates a catalog object with sensible table defaults", () => {
     const object = createEventObject("round-table-60", { x: 240, y: 320 }, [], "table-1");
     expect(object).toMatchObject({

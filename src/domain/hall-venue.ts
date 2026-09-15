@@ -6,6 +6,7 @@ export function createHallVenueTemplate(
   hall: HallCatalogEntry,
 ): VenueTemplate {
   const { configuration } = hall;
+  if (!configuration) throw new Error(`Hall ${hall.id} does not have floor plan geometry yet.`);
   const mainFloor = configuration.fixedArchitecturalElements.find(
     (element): element is Extract<FixedArchitectureElement, { kind: "area" }> =>
       element.kind === "area" && element.role === "main-floor",

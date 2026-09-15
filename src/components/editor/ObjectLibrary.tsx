@@ -41,7 +41,7 @@ export function ObjectLibrary({ onAdd, inventory, usage }: Props) {
           <section key={category}>
             <h3 className="mb-2 text-[10px] font-bold uppercase tracking-[0.13em] text-[#7b877f]">{category}</h3>
             <div className="space-y-1.5">
-              {OBJECT_CATALOG.filter((item) => item.category === category).flatMap(getLibraryChoices).map((choice) => {
+              {OBJECT_CATALOG.filter((item) => item.category === category && item.showInLibrary !== false).flatMap(getLibraryChoices).map((choice) => {
                 const Icon = icons[choice.definition.icon];
                 return (
                   <button

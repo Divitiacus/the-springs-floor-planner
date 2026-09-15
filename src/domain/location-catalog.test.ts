@@ -9,11 +9,20 @@ import {
 
 describe("location catalog", () => {
   it("defines Magnolia with exactly its two confirmed halls", () => {
-    expect(SPRINGS_LOCATIONS).toHaveLength(1);
+    expect(SPRINGS_LOCATIONS).toHaveLength(2);
     expect(SPRINGS_LOCATIONS[0]).toMatchObject({ name: "Magnolia", slug: "magnolia" });
     expect(SPRINGS_LOCATIONS[0].halls.map((hall) => hall.name)).toEqual([
       "Pinehaven Terrace",
       "The Hidden Magnolia",
+    ]);
+  });
+
+  it("defines Lake Conroe with its two confirmed halls and stable route slugs", () => {
+    const location = getLocationBySlug("lake-conroe");
+    expect(location).toMatchObject({ id: "location_lake_conroe", name: "Lake Conroe" });
+    expect(location?.halls).toMatchObject([
+      { id: "hall_stonebrook", slug: "stonebrook", name: "Stonebrook", configuration: null },
+      { id: "hall_heritage_pine", slug: "heritage-pine", name: "Heritage Pine", configuration: null },
     ]);
   });
 
@@ -29,8 +38,8 @@ describe("location catalog", () => {
   });
 
   it("shares the calibrated Magnolia geometry with Pinehaven Terrace", () => {
-    const pinehaven = SPRINGS_LOCATIONS[0].halls[0].configuration;
-    const hiddenMagnolia = SPRINGS_LOCATIONS[0].halls[1].configuration;
+    const pinehaven = SPRINGS_LOCATIONS[0].halls[0].configuration!;
+    const hiddenMagnolia = SPRINGS_LOCATIONS[0].halls[1].configuration!;
     expect(pinehaven).toEqual(hiddenMagnolia);
     expect(pinehaven).toMatchObject({
       physicalWidthInches: 1320,
@@ -55,7 +64,7 @@ describe("location catalog", () => {
       source: { fileName: "the_springs_table_chair_inventory_from_powerpoints.xlsx" },
     });
     for (const hall of magnolia.halls) {
-      expect(hall.configuration.inventory).toBeUndefined();
+      expect(hall.configuration?.inventory).toBeUndefined();
       expect(resolveInventoryConfiguration(magnolia, hall)).toEqual(expected);
     }
   });
@@ -70,6 +79,7 @@ describe("location catalog", () => {
   it("allows a future hall inventory to override only its confirmed values", () => {
     const magnolia = SPRINGS_LOCATIONS[0];
     const baseHall = magnolia.halls[0];
+    if (!baseHall.configuration) throw new Error("Magnolia hall configuration missing");
     const hallWithOverride = {
       ...baseHall,
       configuration: {
@@ -93,15 +103,15 @@ describe("location catalog", () => {
   });
 
   it("keeps the Hidden Magnolia reference image disabled", () => {
-    const pinehaven = SPRINGS_LOCATIONS[0].halls[0].configuration;
-    const hiddenMagnolia = SPRINGS_LOCATIONS[0].halls[1].configuration;
+    const pinehaven = SPRINGS_LOCATIONS[0].halls[0].configuration!;
+    const hiddenMagnolia = SPRINGS_LOCATIONS[0].halls[1].configuration!;
 
     expect(pinehaven.floorplanAsset).toBeNull();
     expect(hiddenMagnolia.floorplanAsset).toBeNull();
   });
 
   it("calibrates the Hidden Magnolia main floor to exact inch coordinates", () => {
-    const hiddenMagnolia = SPRINGS_LOCATIONS[0].halls[1].configuration;
+    const hiddenMagnolia = SPRINGS_LOCATIONS[0].halls[1].configuration!;
     const mainFloor = hiddenMagnolia.fixedArchitecturalElements.find(
       (element) => element.kind === "area" && element.role === "main-floor",
     );
@@ -115,7 +125,7 @@ describe("location catalog", () => {
   });
 
   it("models fixed architecture separately from placement behavior", () => {
-    const elements = SPRINGS_LOCATIONS[0].halls[1].configuration.fixedArchitecturalElements;
+    const elements = SPRINGS_LOCATIONS[0].halls[1].configuration!.fixedArchitecturalElements;
     const stage = elements.find((element) => element.kind === "area" && element.role === "stage");
     const closets = elements.filter((element) => element.kind === "area" && element.role === "closet");
     const catering = elements.find((element) => element.kind === "area" && element.role === "catering");
@@ -130,7 +140,7 @@ describe("location catalog", () => {
   });
 
   it("provides structured polygon, wall, door, and stair rendering inputs", () => {
-    const elements = SPRINGS_LOCATIONS[0].halls[1].configuration.fixedArchitecturalElements;
+    const elements = SPRINGS_LOCATIONS[0].halls[1].configuration!.fixedArchitecturalElements;
     const doors = elements.filter((element) => element.kind === "door");
     const stairs = elements.filter((element) => element.kind === "stairs");
 
@@ -143,7 +153,7 @@ describe("location catalog", () => {
   });
 
   it("matches the source-traced exterior door hinges and outward bottom swings", () => {
-    const doors = SPRINGS_LOCATIONS[0].halls[1].configuration.fixedArchitecturalElements.filter(
+    const doors = SPRINGS_LOCATIONS[0].halls[1].configuration!.fixedArchitecturalElements.filter(
       (element) => element.kind === "door",
     );
     const bottomDoors = doors.filter((door) => door.y === 780);

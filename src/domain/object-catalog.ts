@@ -24,6 +24,7 @@ export type ObjectDefinition = {
   resizable: boolean;
   variants?: readonly ObjectVariantDefinition[];
   regionalStyleKey?: "photo-booth";
+  showInLibrary?: boolean;
   icon: "round" | "rectangle" | "heart" | "music" | "bar" | "buffet" | "camera" | "dance" | "chair";
 };
 
@@ -35,8 +36,8 @@ export const OBJECT_CATALOG: ObjectDefinition[] = [
   { type: "cake-table", name: "Cake Table", shortLabel: "Cake", category: "Event essentials", width: 62, height: 62, inventoryLabel: "cake tables", physicalDimensions: { status: "unconfigured", shape: "circle", widthInches: null, depthInches: null }, resizable: false, icon: "round" },
   { type: "gift-table", name: "Gift Table", shortLabel: "Gifts", category: "Event essentials", width: 88, height: 48, inventoryLabel: "gift tables", physicalDimensions: { status: "unconfigured", shape: "rectangle", widthInches: null, depthInches: null }, resizable: true, icon: "rectangle" },
   { type: "dj", name: "DJ", shortLabel: "DJ", category: "Production", width: 72, height: 72, inventoryLabel: "DJ areas", physicalDimensions: { status: "confirmed", shape: "area", widthInches: 72, depthInches: 72 }, resizable: false, icon: "music" },
-  { type: "portable-bar", name: "Bar", shortLabel: "Bar", category: "Event essentials", width: 118, height: 52, inventoryLabel: "bars", physicalDimensions: { status: "unconfigured", shape: "rectangle", widthInches: null, depthInches: null }, resizable: true, icon: "bar" },
-  { type: "buffet", name: "Buffet", shortLabel: "Buffet", category: "Event essentials", width: 140, height: 48, inventoryLabel: "buffets", physicalDimensions: { status: "unconfigured", shape: "rectangle", widthInches: null, depthInches: null }, resizable: true, icon: "buffet" },
+  { type: "portable-bar", name: "Satellite Bar", shortLabel: "Satellite Bar", category: "Event essentials", width: 118, height: 52, inventoryLabel: "satellite bars", physicalDimensions: { status: "unconfigured", shape: "rectangle", widthInches: null, depthInches: null }, resizable: true, icon: "bar" },
+  { type: "buffet", name: "Buffet", shortLabel: "Buffet", category: "Event essentials", width: 140, height: 48, inventoryLabel: "buffets", physicalDimensions: { status: "unconfigured", shape: "rectangle", widthInches: null, depthInches: null }, resizable: true, showInLibrary: false, icon: "buffet" },
   { type: "photo-booth", name: "Photo Booth", shortLabel: "Photo Booth", category: "Production", width: 120, height: 120, inventoryLabel: "photo booths", physicalDimensions: { status: "confirmed", shape: "area", widthInches: 120, depthInches: 120 }, resizable: false, regionalStyleKey: "photo-booth", icon: "camera" },
   {
     type: "dance-floor",
@@ -55,7 +56,7 @@ export const OBJECT_CATALOG: ObjectDefinition[] = [
       { id: "20x20", name: "20' × 20' Dance Floor", shortLabel: "Dance Floor 20' × 20'", width: 240, height: 240, physicalDimensions: { status: "confirmed", shape: "area", widthInches: 240, depthInches: 240 } },
     ],
   },
-  { type: "chair", name: "Generic Chair", shortLabel: "Chair", category: "Event essentials", width: 30, height: 34, inventoryLabel: "chairs", physicalDimensions: { status: "unconfigured", shape: "rectangle", widthInches: null, depthInches: null }, resizable: false, icon: "chair" },
+  { type: "chair", name: "Generic Chair", shortLabel: "Chair", category: "Event essentials", width: 30, height: 34, inventoryLabel: "chairs", physicalDimensions: { status: "unconfigured", shape: "rectangle", widthInches: null, depthInches: null }, resizable: false, showInLibrary: false, icon: "chair" },
 ];
 
 export const OBJECT_DEFINITIONS = Object.fromEntries(

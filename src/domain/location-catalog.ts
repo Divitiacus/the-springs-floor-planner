@@ -21,7 +21,7 @@ export type HallCatalogEntry = {
   id: string;
   slug: string;
   name: string;
-  configuration: HallConfiguration;
+  configuration: HallConfiguration | null;
 };
 
 export type LocationCatalogEntry = {
@@ -82,6 +82,25 @@ export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
       },
     ],
   },
+  {
+    id: "location_lake_conroe",
+    slug: "lake-conroe",
+    name: "Lake Conroe",
+    halls: [
+      {
+        id: "hall_stonebrook",
+        slug: "stonebrook",
+        name: "Stonebrook",
+        configuration: null,
+      },
+      {
+        id: "hall_heritage_pine",
+        slug: "heritage-pine",
+        name: "Heritage Pine",
+        configuration: null,
+      },
+    ],
+  },
 ];
 
 export function resolveInventoryConfiguration(
@@ -90,7 +109,7 @@ export function resolveInventoryConfiguration(
 ): InventoryConfiguration {
   return {
     ...(location.inventory?.limits ?? {}),
-    ...(hall.configuration.inventory?.limits ?? {}),
+    ...(hall.configuration?.inventory?.limits ?? {}),
   };
 }
 
