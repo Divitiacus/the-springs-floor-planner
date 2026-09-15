@@ -79,3 +79,52 @@ input:focus-visible {
     linear-gradient(90deg, rgba(104, 123, 130, 0.055) 1px, transparent 1px);
   background-size: 32px 32px;
 }
+
+@media print {
+  @page {
+    size: landscape;
+    margin: 0.3in;
+  }
+
+  html,
+  body {
+    background: white;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .floor-planner-shell {
+    height: 7.9in !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    background: white !important;
+  }
+
+  .floor-planner-header {
+    height: 0.65in !important;
+    padding: 0 0.12in !important;
+  }
+
+  .floor-planner-actions,
+  .floor-planner-library,
+  .floor-planner-properties,
+  .floor-planner-toolbar,
+  .floor-planner-status,
+  .toast-in {
+    display: none !important;
+  }
+
+  .floor-planner-workspace {
+    display: block !important;
+    min-height: 0 !important;
+  }
+
+  .floor-planner-canvas {
+    height: 7.2in !important;
+    border: 0 !important;
+  }
+
+  .canvas-grid {
+    background: white !important;
+  }
+}

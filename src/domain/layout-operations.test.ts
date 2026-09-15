@@ -10,7 +10,7 @@ import {
   normalizePhysicalFootprints,
   updateObject,
 } from "@/domain/layout-operations";
-import { deserializeFloorplan, serializeFloorplan } from "@/domain/persistence";
+import { deserializeFloorplan, serializeFloorplan, serializePortableFloorplan } from "@/domain/persistence";
 import { OBJECT_CATALOG, OBJECT_DEFINITIONS } from "@/domain/object-catalog";
 
 describe("floorplan object operations", () => {
@@ -133,6 +133,32 @@ describe("persistence", () => {
 
   it("rejects malformed JSON data", () => {
     expect(() => deserializeFloorplan('{"schemaVersion":2,"layout":{}}')).toThrow(/valid Springs floorplan/);
+  });
+
+  it("creates a compact editable file and rebuilds derived object data when opened", () => {
+    const object = createEventObject("dance-floor", { x: 100, y: 120 }, [], "dance-floor", "12x12");
+    const layout = addObject(createEmptyLayout("hall_hidden_magnolia"), object);
+    const portable = serializePortableFloorplan(layout);
+    const reopened = deserializeFloorplan(portable);
+
+    expect(portable.length).toBeLessThan(serializeFloorplan(layout).length);
+    expect(portable).not.toContain("physicalDimensions");
+    expect(portable).not.toContain('"id"');
+    expect(reopened).toMatchObject({
+      name: layout.name,
+      venueTemplateId: "hall_hidden_magnolia",
+      objects: [{
+        type: "dance-floor",
+        variant: "12x12",
+        width: 144,
+        height: 144,
+        physicalDimensions: { widthInches: 144, depthInches: 144 },
+      }],
+    });
+  });
+
+  it("rejects malformed compact editable files", () => {
+    expect(() => deserializeFloorplan('{"v":3,"h":"hall","n":"Plan","o":[["dj"]]}')).toThrow(/valid Springs floorplan/);
   });
 });
 

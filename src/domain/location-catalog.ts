@@ -4,7 +4,6 @@ import type {
   ReferenceFloorplanAsset,
 } from "@/domain/floorplan";
 import type { InventoryCatalog, InventoryConfiguration } from "@/domain/inventory";
-import { feetToInches } from "@/domain/physical-units";
 import { createHiddenMagnoliaConfiguration } from "@/domain/venues/hidden-magnolia";
 
 export type HallConfiguration = {
@@ -73,7 +72,7 @@ export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
         id: "hall_pinehaven_terrace",
         slug: "pinehaven-terrace",
         name: "Pinehaven Terrace",
-        configuration: createProvisionalMagnoliaConfiguration(),
+        configuration: createHiddenMagnoliaConfiguration(),
       },
       {
         id: "hall_hidden_magnolia",
@@ -84,29 +83,6 @@ export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
     ],
   },
 ];
-
-function createProvisionalMagnoliaConfiguration(): HallConfiguration {
-  return {
-    physicalWidthInches: feetToInches(80),
-    physicalHeightInches: feetToInches(60),
-    physicalDimensionStatus: "provisional",
-    physicalDimensionNote: "Approximate working envelope; replace when measured hall dimensions are confirmed.",
-    fixedArchitecturalElements: [
-      {
-        id: "pinehaven-main-floor",
-        kind: "area",
-        role: "main-floor",
-        label: "Main Event Floor",
-        fixed: true,
-        placementBehavior: "allowed",
-        measurementStatus: "provisional",
-        elevation: "floor",
-        shape: { type: "rectangle", x: 0, y: 0, width: 960, height: 720 },
-      },
-    ],
-    floorplanAsset: null,
-  };
-}
 
 export function resolveInventoryConfiguration(
   location: LocationCatalogEntry,

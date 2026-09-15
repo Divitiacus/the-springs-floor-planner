@@ -28,12 +28,14 @@ describe("location catalog", () => {
     expect(getHallBySlug(undefined, "pinehaven-terrace")).toBeUndefined();
   });
 
-  it("keeps Pinehaven's working dimensions provisional", () => {
-    const configuration = SPRINGS_LOCATIONS[0].halls[0].configuration;
-    expect(configuration).toMatchObject({
-      physicalWidthInches: 960,
-      physicalHeightInches: 720,
-      physicalDimensionStatus: "provisional",
+  it("shares the calibrated Magnolia geometry with Pinehaven Terrace", () => {
+    const pinehaven = SPRINGS_LOCATIONS[0].halls[0].configuration;
+    const hiddenMagnolia = SPRINGS_LOCATIONS[0].halls[1].configuration;
+    expect(pinehaven).toEqual(hiddenMagnolia);
+    expect(pinehaven).toMatchObject({
+      physicalWidthInches: 1320,
+      physicalHeightInches: 840,
+      physicalDimensionStatus: "source-traced",
     });
   });
 

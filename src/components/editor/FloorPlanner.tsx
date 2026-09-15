@@ -1,12 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Download, Upload } from "lucide-react";
+import { ChevronDown, Download, FileUp, Printer } from "lucide-react";
 import type { EventObjectSelection } from "@/domain/floorplan";
 import type { VenueTemplate } from "@/domain/floorplan";
 import type { InventoryConfiguration } from "@/domain/inventory";
 import { getInventoryUsage } from "@/domain/inventory";
-import { deserializeFloorplan, serializeFloorplan } from "@/domain/persistence";
+import { deserializeFloorplan, serializePortableFloorplan } from "@/domain/persistence";
 import { useFloorplanEditor } from "@/hooks/useFloorplanEditor";
 import { EditorCanvas } from "@/components/editor/EditorCanvas";
 import { ObjectLibrary } from "@/components/editor/ObjectLibrary";
@@ -74,22 +74,28 @@ export function FloorPlanner({ venue, locationName, inventory }: Props) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [duplicateObject, redo, removeObject, selectedId, undo]);
 
-  const exportJson = () => {
-    const blob = new Blob([serializeFloorplan(editor.layout)], { type: "application/json" });
+  const saveEditablePlan = () => {
+    const blob = new Blob([serializePortableFloorplan(editor.layout)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = "springs-floorplan.json";
+    anchor.download = `${fileSlug(editor.layout.name)}-${fileSlug(venue.name)}.springsplan`;
+    document.body.appendChild(anchor);
     anchor.click();
-    URL.revokeObjectURL(url);
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
   };
 
-  const onImport = async (file: File | undefined) => {
+  const openSavedPlan = async (file: File | undefined) => {
     if (!file) return;
     try {
-      editor.importLayout(deserializeFloorplan(await file.text()));
+      const imported = deserializeFloorplan(await file.text());
+      if (imported.venueTemplateId !== venue.id) {
+        throw new Error(`This saved plan belongs to a different hall. Open ${venue.name} plans here.`);
+      }
+      editor.importLayout(imported);
     } catch (error) {
-      window.alert(error instanceof Error ? error.message : "Unable to import floorplan.");
+      window.alert(error instanceof Error ? error.message : "Unable to open this saved plan.");
     }
   };
 
@@ -98,8 +104,8 @@ export function FloorPlanner({ venue, locationName, inventory }: Props) {
   }
 
   return (
-    <main className="flex h-screen min-h-[720px] flex-col overflow-hidden bg-[#f6f4ef]">
-      <header className="flex h-[72px] shrink-0 items-center justify-between border-b border-[#dce2dd] bg-[#fffefa] px-5">
+    <main className="floor-planner-shell flex h-screen min-h-[720px] flex-col overflow-hidden bg-[#f6f4ef]">
+      <header className="floor-planner-header flex h-[72px] shrink-0 items-center justify-between border-b border-[#dce2dd] bg-[#fffefa] px-5">
         <div className="flex items-center gap-4">
           <div className="grid size-10 place-items-center rounded-full bg-[#294f3d] font-serif text-lg font-semibold text-white">S</div>
           <div>
@@ -111,23 +117,52 @@ export function FloorPlanner({ venue, locationName, inventory }: Props) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button className="flex h-9 items-center gap-2 rounded-lg border border-[#d7ddd8] bg-white px-3 text-xs font-semibold text-[#405047] hover:bg-[#f7f8f6]" onClick={exportJson}>
-            <Download size={14} /> Export JSON
-          </button>
+        <div className="floor-planner-actions flex items-center gap-2">
           <button className="flex h-9 items-center gap-2 rounded-lg border border-[#d7ddd8] bg-white px-3 text-xs font-semibold text-[#405047] hover:bg-[#f7f8f6]" onClick={() => importInputRef.current?.click()}>
-            <Upload size={14} /> Import
+            <FileUp size={14} /> Open saved plan
           </button>
-          <input ref={importInputRef} className="hidden" type="file" accept="application/json,.json" onChange={(event) => void onImport(event.target.files?.[0])} />
+          <input
+            ref={importInputRef}
+            className="hidden"
+            type="file"
+            accept="application/json,.json,.springsplan"
+            onChange={(event) => {
+              void openSavedPlan(event.target.files?.[0]);
+              event.currentTarget.value = "";
+            }}
+          />
           <button className="h-9 rounded-lg border border-[#d7ddd8] bg-white px-3 text-xs font-semibold text-[#405047] hover:bg-[#f7f8f6]" onClick={editor.reset}>Reset</button>
-          <button className="h-9 rounded-lg bg-[#294f3d] px-4 text-xs font-bold text-white shadow-sm hover:bg-[#1f4031]" onClick={editor.save}>Save floorplan</button>
+          <details className="group relative">
+            <summary className="flex h-9 list-none items-center gap-2 rounded-lg bg-[#294f3d] px-4 text-xs font-bold text-white shadow-sm hover:bg-[#1f4031] [&::-webkit-details-marker]:hidden">
+              Save / Print <ChevronDown className="transition-transform group-open:rotate-180" size={14} />
+            </summary>
+            <div className="absolute right-0 top-11 z-50 w-72 overflow-hidden rounded-xl border border-[#d7ddd8] bg-white p-1.5 shadow-xl">
+              <button className="flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-[#f3f6f3]" onClick={saveEditablePlan}>
+                <Download className="mt-0.5 shrink-0 text-[#456351]" size={16} />
+                <span>
+                  <span className="block text-xs font-bold text-[#35463c]">Save editable plan</span>
+                  <span className="mt-0.5 block text-[10px] leading-4 text-[#7b877f]">Download a small file to this computer so the plan can be edited later.</span>
+                </span>
+              </button>
+              <button className="flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-[#f3f6f3]" onClick={() => window.print()}>
+                <Printer className="mt-0.5 shrink-0 text-[#456351]" size={16} />
+                <span>
+                  <span className="block text-xs font-bold text-[#35463c]">Print / Save as PDF</span>
+                  <span className="mt-0.5 block text-[10px] leading-4 text-[#7b877f]">Create a final copy for printing or uploading to Operations Hub.</span>
+                </span>
+              </button>
+              <p className="border-t border-[#e4e8e4] px-3 pb-1 pt-2 text-[10px] leading-4 text-[#849088]">Changes are also recovered automatically in this browser.</p>
+            </div>
+          </details>
         </div>
       </header>
 
-      <div className="grid min-h-0 flex-1 grid-cols-[258px_minmax(520px,1fr)_292px]">
-        <ObjectLibrary onAdd={addCentered} inventory={inventory} usage={inventoryUsage} />
+      <div className="floor-planner-workspace grid min-h-0 flex-1 grid-cols-[258px_minmax(520px,1fr)_292px]">
+        <div className="floor-planner-library min-h-0 overflow-hidden [&>aside]:h-full">
+          <ObjectLibrary onAdd={addCentered} inventory={inventory} usage={inventoryUsage} />
+        </div>
 
-        <section className="flex min-w-0 flex-col border-x border-[#dce2dd]">
+        <section className="floor-planner-canvas flex min-w-0 flex-col border-x border-[#dce2dd]">
           <EditorToolbar
             mode={mode}
             zoom={zoom}
@@ -158,7 +193,7 @@ export function FloorPlanner({ venue, locationName, inventory }: Props) {
             onChange={editor.update}
             onZoomChange={setZoom}
           />
-          <div className="flex h-9 shrink-0 items-center justify-between border-t border-[#dce2dd] bg-[#fffefa] px-4 text-[11px] text-[#6c7871]">
+          <div className="floor-planner-status flex h-9 shrink-0 items-center justify-between border-t border-[#dce2dd] bg-[#fffefa] px-4 text-[11px] text-[#6c7871]">
             <span>{mode === "pan" ? "Drag the canvas to pan" : "Click an object to select · Drag to move"}</span>
             <div className="flex items-center gap-4 font-semibold text-[#425148]">
               <span>{editor.stats.objectCount} objects</span>
@@ -169,13 +204,15 @@ export function FloorPlanner({ venue, locationName, inventory }: Props) {
           </div>
         </section>
 
-        <PropertiesPanel
-          object={editor.selectedObject}
-          onChange={editor.update}
-          onDuplicate={() => editor.duplicate()}
-          onDelete={() => editor.remove()}
-          onReorder={editor.reorder}
-        />
+        <div className="floor-planner-properties min-h-0 overflow-hidden [&>aside]:h-full">
+          <PropertiesPanel
+            object={editor.selectedObject}
+            onChange={editor.update}
+            onDuplicate={() => editor.duplicate()}
+            onDelete={() => editor.remove()}
+            onReorder={editor.reorder}
+          />
+        </div>
       </div>
 
       {editor.notice ? (
@@ -185,4 +222,13 @@ export function FloorPlanner({ venue, locationName, inventory }: Props) {
       ) : null}
     </main>
   );
+}
+
+function fileSlug(value: string) {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "") || "floorplan";
 }

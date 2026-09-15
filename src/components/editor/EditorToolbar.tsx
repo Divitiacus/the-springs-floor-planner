@@ -24,7 +24,7 @@ type Props = {
 
 export function EditorToolbar(props: Props) {
   return (
-    <div className="flex h-12 shrink-0 items-center justify-between border-b border-[#dce2dd] bg-[#fffefa] px-3">
+    <div className="floor-planner-toolbar flex h-12 shrink-0 items-center justify-between border-b border-[#dce2dd] bg-[#fffefa] px-3">
       <div className="flex items-center gap-1">
         <ToolButton label="Select (V)" active={props.mode === "select"} onClick={() => props.onModeChange("select")}><MousePointer2 size={15} /></ToolButton>
         <ToolButton label="Pan (H)" active={props.mode === "pan"} onClick={() => props.onModeChange("pan")}><Hand size={15} /></ToolButton>

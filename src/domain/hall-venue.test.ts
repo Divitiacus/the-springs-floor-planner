@@ -18,16 +18,16 @@ describe("hall venue template", () => {
     expect("objects" in venue).toBe(false);
   });
 
-  it("does not apply Hidden Magnolia source geometry to Pinehaven Terrace", () => {
+  it("applies the shared Magnolia source geometry to Pinehaven Terrace", () => {
     const location = getLocationBySlug("magnolia");
     const hall = getHallBySlug(location, "pinehaven-terrace");
     if (!location || !hall) throw new Error("Pinehaven catalog entry missing");
 
     const venue = createHallVenueTemplate(location, hall);
 
-    expect(venue.hall).toEqual({ x: 0, y: 0, width: 960, height: 720 });
+    expect(venue.hall).toEqual({ x: 180, y: 60, width: 960, height: 720 });
     expect(venue.referenceAsset).toBeNull();
-    expect(venue.elements).toHaveLength(1);
+    expect(venue.elements.length).toBeGreaterThan(10);
   });
 
   it("keeps a 60-inch round table mathematically proportional to the calibrated floor", () => {

@@ -1,5 +1,11 @@
-import type { FloorplanLayout, StoredFloorplan } from "@/domain/floorplan";
-import { OBJECT_DEFINITIONS } from "@/domain/object-catalog";
+import type {
+  DanceFloorVariant,
+  EventObject,
+  EventObjectType,
+  FloorplanLayout,
+  StoredFloorplan,
+} from "@/domain/floorplan";
+import { getObjectVariant, OBJECT_DEFINITIONS } from "@/domain/object-catalog";
 
 export const STORAGE_KEY = "springs-floor-planner:v2";
 
@@ -8,10 +14,119 @@ export function serializeFloorplan(layout: FloorplanLayout): string {
   return JSON.stringify(stored, null, 2);
 }
 
+type PortableObject = [
+  type: EventObjectType,
+  variant: DanceFloorVariant | null,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  rotation: number,
+  label: string,
+  tableNumber: number | null,
+  seats: number | null,
+  zIndex: number,
+];
+
+type PortableFloorplan = {
+  v: 3;
+  h: string;
+  n: string;
+  o: PortableObject[];
+};
+
+/** A compact, client-owned file. Catalog dimensions and transient IDs are rebuilt when opened. */
+export function serializePortableFloorplan(layout: FloorplanLayout): string {
+  const portable: PortableFloorplan = {
+    v: 3,
+    h: layout.venueTemplateId,
+    n: layout.name,
+    o: layout.objects.map((object) => [
+      object.type,
+      object.variant ?? null,
+      object.x,
+      object.y,
+      object.width,
+      object.height,
+      object.rotation,
+      object.label,
+      object.tableNumber ?? null,
+      object.seats ?? null,
+      object.zIndex,
+    ]),
+  };
+  return JSON.stringify(portable);
+}
+
 export function deserializeFloorplan(value: string): FloorplanLayout {
   const parsed: unknown = JSON.parse(value);
+  if (isPortableFloorplan(parsed)) return inflatePortableFloorplan(parsed);
   if (!isStoredFloorplan(parsed)) throw new Error("This file is not a valid Springs floorplan.");
   return parsed.layout;
+}
+
+function inflatePortableFloorplan(stored: PortableFloorplan): FloorplanLayout {
+  return {
+    id: "local-floorplan",
+    name: stored.n,
+    venueTemplateId: stored.h,
+    coordinateUnit: "inches",
+    objects: stored.o.map((entry, index) => {
+      const [type, variant, x, y, width, height, rotation, label, tableNumber, seats, zIndex] = entry;
+      const definition = OBJECT_DEFINITIONS[type];
+      const variantDefinition = getObjectVariant(type, variant ?? undefined);
+      const object: EventObject = {
+        id: `opened-${index + 1}`,
+        type,
+        x,
+        y,
+        width,
+        height,
+        physicalDimensions: variantDefinition?.physicalDimensions ?? definition.physicalDimensions,
+        rotation,
+        label,
+        zIndex,
+      };
+      if (variant) object.variant = variant;
+      if (tableNumber !== null) object.tableNumber = tableNumber;
+      if (seats !== null) object.seats = seats;
+      return object;
+    }),
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+function isPortableFloorplan(value: unknown): value is PortableFloorplan {
+  if (!value || typeof value !== "object") return false;
+  const stored = value as Partial<PortableFloorplan>;
+  return (
+    stored.v === 3 &&
+    typeof stored.h === "string" &&
+    stored.h.length > 0 &&
+    typeof stored.n === "string" &&
+    stored.n.length > 0 &&
+    Array.isArray(stored.o) &&
+    stored.o.every(isPortableObject)
+  );
+}
+
+function isPortableObject(value: unknown): value is PortableObject {
+  if (!Array.isArray(value) || value.length !== 11) return false;
+  const [type, variant, x, y, width, height, rotation, label, tableNumber, seats, zIndex] = value;
+  if (typeof type !== "string" || !(type in OBJECT_DEFINITIONS)) return false;
+  if (variant !== null) {
+    if (typeof variant !== "string") return false;
+    const resolved = getObjectVariant(type as EventObjectType, variant as DanceFloorVariant);
+    if (!resolved || resolved.id !== variant) return false;
+  }
+  return (
+    [x, y, width, height, rotation, zIndex].every((number) => typeof number === "number" && Number.isFinite(number)) &&
+    width > 0 &&
+    height > 0 &&
+    typeof label === "string" &&
+    (tableNumber === null || (typeof tableNumber === "number" && Number.isFinite(tableNumber))) &&
+    (seats === null || (typeof seats === "number" && Number.isFinite(seats)))
+  );
 }
 
 function isStoredFloorplan(value: unknown): value is StoredFloorplan {

@@ -57,6 +57,11 @@ export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner 
     return () => window.clearTimeout(timeout);
   }, [notice]);
 
+  useEffect(() => {
+    if (!ready) return;
+    localStorage.setItem(storageKey, serializeFloorplan(layout));
+  }, [layout, ready, storageKey]);
+
   const commit = useCallback((next: FloorplanLayout) => {
     setHistory((current) => commitHistory(current, next));
   }, []);
@@ -114,11 +119,6 @@ export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner 
   const undo = useCallback(() => setHistory((current) => undoHistory(current)), []);
   const redo = useCallback(() => setHistory((current) => redoHistory(current)), []);
 
-  const save = useCallback(() => {
-    localStorage.setItem(storageKey, serializeFloorplan(layout));
-    setNotice("Floorplan saved locally");
-  }, [layout, storageKey]);
-
   const reset = useCallback(() => {
     if (!window.confirm("Reset this layout? All event objects will be removed.")) return;
     const fresh = createEmptyLayout(venueTemplateId);
@@ -137,7 +137,7 @@ export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner 
     }
     setHistory(createHistory(normalized));
     setSelectedId(null);
-    setNotice("Floorplan JSON imported");
+    setNotice("Saved plan opened");
     return true;
   }, [inventory, inventoryOwner]);
 
@@ -158,7 +158,6 @@ export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner 
     reorder,
     undo,
     redo,
-    save,
     reset,
     importLayout,
   };
