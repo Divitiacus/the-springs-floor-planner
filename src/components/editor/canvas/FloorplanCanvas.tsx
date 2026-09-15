@@ -187,14 +187,21 @@ function ReferenceUnderlay({ asset }: { asset: ReferenceFloorplanAsset }) {
 }
 
 function VenueLayer({ venue }: { venue: VenueTemplate }) {
-  const grid = [];
   const floorAreaRoles = new Set(["main-floor", "event-floor-extension", "porch", "second-floor", "open-to-below"]);
-  for (let x = venue.hall.x + 60; x < venue.hall.x + venue.hall.width; x += 60) {
-    grid.push(<Line key={`x-${x}`} points={[x, venue.hall.y, x, venue.hall.y + venue.hall.height]} stroke="#e7e9e5" strokeWidth={1} />);
-  }
-  for (let y = venue.hall.y + 60; y < venue.hall.y + venue.hall.height; y += 60) {
-    grid.push(<Line key={`y-${y}`} points={[venue.hall.x, y, venue.hall.x + venue.hall.width, y]} stroke="#e7e9e5" strokeWidth={1} />);
-  }
+  const gridAreaRoles = new Set(["main-floor", "event-floor-extension"]);
+  const grid = venue.elements.flatMap((element) => {
+    if (element.kind !== "area" || !gridAreaRoles.has(element.role) || element.shape.type !== "rectangle") return [];
+
+    const { x, y, width, height } = element.shape;
+    const lines = [];
+    for (let gridX = firstGridLineAfter(x, venue.hall.x); gridX < x + width; gridX += 60) {
+      lines.push(<Line key={`${element.id}-grid-x-${gridX}`} points={[gridX, y, gridX, y + height]} stroke="#e7e9e5" strokeWidth={1} />);
+    }
+    for (let gridY = firstGridLineAfter(y, venue.hall.y); gridY < y + height; gridY += 60) {
+      lines.push(<Line key={`${element.id}-grid-y-${gridY}`} points={[x, gridY, x + width, gridY]} stroke="#e7e9e5" strokeWidth={1} />);
+    }
+    return lines;
+  });
 
   return (
     <>
@@ -218,6 +225,12 @@ function VenueLayer({ venue }: { venue: VenueTemplate }) {
       <Text x={venue.hall.x + 18} y={venue.hall.y + 34} text={`${formatFeetAndInches(venue.hall.width)} × ${formatFeetAndInches(venue.hall.height)} MAIN FLOOR`} fontSize={9} fontStyle="bold" letterSpacing={1.1} fill="#9aa49e" />
     </>
   );
+}
+
+function firstGridLineAfter(minimum: number, origin: number) {
+  const spacing = 60;
+  const aligned = origin + Math.ceil((minimum - origin) / spacing) * spacing;
+  return aligned <= minimum ? aligned + spacing : aligned;
 }
 
 function formatFeetAndInches(inches: number) {

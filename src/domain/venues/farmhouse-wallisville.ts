@@ -4,7 +4,7 @@ import type { HallConfiguration } from "@/domain/location-catalog";
 const MAIN_X = 40;
 const MAIN_Y = 376;
 const MAIN_WIDTH = 1056; // 88′
-const MAIN_HEIGHT = 861; // 71′9″
+const MAIN_HEIGHT = 525; // 43′9″
 const EXTENSION_X = 376;
 const EXTENSION_Y = 40;
 const EXTENSION_WIDTH = 384; // 32′
@@ -19,7 +19,7 @@ type Common = { fixed: true; measurementStatus: "source-traced" };
 /**
  * Farmhouse geometry traced from the clean Wallisville plan supplied by the user.
  * The companion dimensioned plan confirms the major 28′ / 32′ / 28′ width bands,
- * 28′ upper extension, 71′9″ main body, and 26′3″ lower service wing.
+ * 28′ upper extension, 43′9″ main body, and 26′3″ lower service wing.
  */
 export function createFarmhouseWallisvilleConfiguration(): HallConfiguration {
   const common: Common = { fixed: true, measurementStatus: "source-traced" };
@@ -30,7 +30,7 @@ export function createFarmhouseWallisvilleConfiguration(): HallConfiguration {
         common,
         "farmhouse-wallisville-main-floor",
         "main-floor",
-        "Main Event Floor · 88′ × 71′9″",
+        "Main Event Floor · 88′ × 43′9″",
         MAIN_X,
         MAIN_Y,
         MAIN_WIDTH,
@@ -73,7 +73,7 @@ export function createFarmhouseWallisvilleConfiguration(): HallConfiguration {
       "buffet",
       "Permanent Buffet",
       820,
-      1295,
+      SERVICE_Y + 58,
       54,
       192,
       "blocked",
@@ -85,7 +85,7 @@ export function createFarmhouseWallisvilleConfiguration(): HallConfiguration {
       "bar",
       "Permanent Bar",
       1014,
-      1300,
+      SERVICE_Y + 63,
       36,
       108,
       "blocked",
@@ -100,7 +100,7 @@ export function createFarmhouseWallisvilleConfiguration(): HallConfiguration {
       placementBehavior: "blocked",
       measurementStatus: "confirmed",
       x: 532,
-      y: 1045,
+      y: MAIN_Y + MAIN_HEIGHT - 192,
       width: 72,
       height: 192,
       orientation: "vertical",
@@ -115,10 +115,10 @@ export function createFarmhouseWallisvilleConfiguration(): HallConfiguration {
 
   return {
     physicalWidthInches: 1136,
-    physicalHeightInches: 1592,
+    physicalHeightInches: 1256,
     physicalDimensionStatus: "source-traced",
     physicalDimensionNote:
-      "Farmhouse major dimensions are confirmed from the supplied dimensioned plan. Wall, door, fixture, and staircase positions are source-traced from the cleaner companion drawing. Unidentified rooms remain unlabeled.",
+      "Farmhouse major dimensions are confirmed from the supplied dimensioned plan: the main body is 88 feet wide by 43 feet 9 inches deep. Wall, door, fixture, and staircase positions are source-traced from the cleaner companion drawing. Unidentified rooms remain unlabeled.",
     fixedArchitecturalElements,
     floorplanAsset: null,
   };
@@ -136,18 +136,18 @@ function createWalls(common: Common): FixedArchitectureElement[] {
     wall(common, "farmhouse-wallisville-service-west-wall", [SERVICE_X, SERVICE_Y, SERVICE_X, SERVICE_Y + SERVICE_HEIGHT]),
     wall(common, "farmhouse-wallisville-service-east-wall", [SERVICE_X + SERVICE_WIDTH, SERVICE_Y, SERVICE_X + SERVICE_WIDTH, SERVICE_Y + SERVICE_HEIGHT]),
     wall(common, "farmhouse-wallisville-service-south-wall", [SERVICE_X, SERVICE_Y + SERVICE_HEIGHT, SERVICE_X + SERVICE_WIDTH, SERVICE_Y + SERVICE_HEIGHT]),
-    wall(common, "farmhouse-wallisville-service-divider", [996, 1308, 996, SERVICE_Y + SERVICE_HEIGHT]),
+    wall(common, "farmhouse-wallisville-service-divider", [996, SERVICE_Y + 71, 996, SERVICE_Y + SERVICE_HEIGHT]),
   ];
 }
 
 function createDoors(common: Common): FixedArchitectureElement[] {
   return [
-    door(common, "farmhouse-wallisville-west-double-door-north", MAIN_X, 742, 48, 90, "counterclockwise"),
-    door(common, "farmhouse-wallisville-west-double-door-south", MAIN_X, 838, 48, -90, "clockwise"),
-    door(common, "farmhouse-wallisville-east-double-door-north", MAIN_X + MAIN_WIDTH, 742, 48, 90, "clockwise"),
-    door(common, "farmhouse-wallisville-east-double-door-south", MAIN_X + MAIN_WIDTH, 838, 48, -90, "counterclockwise"),
-    door(common, "farmhouse-wallisville-east-service-door", MAIN_X + MAIN_WIDTH, 1120, 48, 90, "clockwise"),
-    door(common, "farmhouse-wallisville-service-west-door", SERVICE_X, 1360, 48, 90, "counterclockwise"),
+    door(common, "farmhouse-wallisville-west-double-door-north", MAIN_X, 581, 48, 90, "counterclockwise"),
+    door(common, "farmhouse-wallisville-west-double-door-south", MAIN_X, 677, 48, -90, "clockwise"),
+    door(common, "farmhouse-wallisville-east-double-door-north", MAIN_X + MAIN_WIDTH, 581, 48, 90, "clockwise"),
+    door(common, "farmhouse-wallisville-east-double-door-south", MAIN_X + MAIN_WIDTH, 677, 48, -90, "counterclockwise"),
+    door(common, "farmhouse-wallisville-east-service-door", MAIN_X + MAIN_WIDTH, MAIN_Y + MAIN_HEIGHT - 117, 48, 90, "clockwise"),
+    door(common, "farmhouse-wallisville-service-west-door", SERVICE_X, SERVICE_Y + 123, 48, 90, "counterclockwise"),
     door(common, "farmhouse-wallisville-service-south-door", 1030, SERVICE_Y + SERVICE_HEIGHT, 48, 0, "clockwise"),
   ];
 }

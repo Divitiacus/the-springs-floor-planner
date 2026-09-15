@@ -41,7 +41,7 @@ describe("location catalog", () => {
       placementBehavior: "allowed",
       measurementStatus: "confirmed",
       showOutline: false,
-      shape: { type: "rectangle", width: 1056, height: 861 },
+      shape: { type: "rectangle", width: 1056, height: 525 },
     });
     expect(elements.find((element) => element.id === "farmhouse-wallisville-upper-extension")).toMatchObject({
       role: "event-floor-extension",
@@ -60,7 +60,9 @@ describe("location catalog", () => {
       width: 72,
       height: 192,
       curvedTop: true,
+      y: 709,
     });
+    expect(hall.configuration).toMatchObject({ physicalHeightInches: 1256 });
     expect(hall.configuration.floorplanAsset).toBeNull();
   });
 
