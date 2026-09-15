@@ -47,9 +47,7 @@ export function createMagnoliaManorConfiguration(): HallConfiguration {
     ),
 
     // Confirmed permanent service fixtures.
-    area(common, "magnolia-manor-bar-counter", "bar", "Bar", 118, 158, 194, 45, "blocked", "confirmed"),
-    areaWithoutLabel(common, "magnolia-manor-bar-top", "bar", "Bar Top · 21″ Deep", 118, 158, 194, 21, "blocked", "confirmed"),
-    areaWithoutLabel(common, "magnolia-manor-bar-sink", "bar", "Back Sink · 6′4″ × 2′", 177, 203, 76, 24, "blocked", "confirmed"),
+    areaWithNote(common, "magnolia-manor-bar-counter", "bar", "Bar", 118, 158, 194, 45, "blocked", "confirmed", "Confirmed overall bar footprint is 16′2″ × 3′9″. The top section is 21 inches deep and the back sink area is 6′4″ × 2′; those details are retained as data without separate canvas shapes."),
     area(common, "magnolia-manor-buffet", "buffet", "Buffet", 626, 158, 168, 48, "blocked", "confirmed"),
 
     ...createFirstFloorStaircase(common),
@@ -65,7 +63,6 @@ export function createMagnoliaManorConfiguration(): HallConfiguration {
     ...createFirstFloorWalls(common),
     ...createFirstFloorDoors(common),
     label(common, "magnolia-manor-first-floor-label", "FIRST FLOOR · RECEPTION HALL", 275, 100, 360, 13),
-    label(common, "magnolia-manor-suite-label", "SUITE ENTRANCE", 775, 322, 120, 9, 90),
 
     // The second-floor balcony is displayed beside the planning floor so its
     // architecture remains legible without overlapping first-floor objects.
@@ -92,7 +89,7 @@ export function createMagnoliaManorConfiguration(): HallConfiguration {
     physicalHeightInches: 1022,
     physicalDimensionStatus: "source-traced",
     physicalDimensionNote:
-      "Magnolia Manor reception hall confirmed at 67′6″ × 67′6″. The second-floor balcony is 12′ wide and the entrance porch is 7′8″ deep. Staircase, bar, sink, buffet, and specified railing dimensions use confirmed measurements; doors, fireplace, and unmeasured pillar footprints are source-traced from the supplied plan.",
+      "Magnolia Manor reception hall confirmed at 67′6″ × 67′6″. The second-floor balcony is 12′ wide and the entrance porch is 7′8″ deep. Staircase, bar, sink, buffet, and specified railing dimensions use confirmed measurements; doors, fireplace, and unmeasured pillar footprints are source-traced from the supplied plan. The unidentified 4′ × 4′4″ detail behind the stair railing is intentionally not modeled pending confirmation.",
     fixedArchitecturalElements,
     floorplanAsset: null,
   };
@@ -101,7 +98,7 @@ export function createMagnoliaManorConfiguration(): HallConfiguration {
 function createFirstFloorStaircase(common: Common): FixedArchitectureElement[] {
   return [
     area(common, "magnolia-manor-stair-landing", "landing", "Landing · 6′8″ × 6′7″", 415, 178, 80, 79, "blocked", "confirmed"),
-    stairs(common, "magnolia-manor-bottom-flight", "Bottom Stair Flight · 9′5″ Wide", 399, 257, 113, 132, "vertical", 9, "Confirmed 113-inch width with 132-inch bottom-flight railings.", "y", true),
+    stairs(common, "magnolia-manor-bottom-flight", "Bottom Stair Flight · 9′5″ Wide", 399, 257, 113, 132, "vertical", 9, "Confirmed 113-inch width with 132-inch bottom-flight railings. The omitted support pillars are confirmed at 53 inches tall.", "y", true),
     stairs(common, "magnolia-manor-west-flight", "Side Stair Flight", 317, 178, 98, 79, "horizontal", 8, "Confirmed 98-inch side-flight railings.", "x"),
     stairs(common, "magnolia-manor-east-flight", "Side Stair Flight", 495, 178, 98, 79, "horizontal", 8, "Confirmed 98-inch side-flight railings.", "x"),
     railing(common, "magnolia-manor-top-railing", "Top Railing · 21′8″", [325, 171, 585, 171], "Confirmed 260-inch straight railing."),
@@ -109,9 +106,6 @@ function createFirstFloorStaircase(common: Common): FixedArchitectureElement[] {
     railing(common, "magnolia-manor-bottom-railing-east", "Bottom Flight Railing · 11′", [512, 257, 512, 389], "Confirmed 132-inch railing."),
     railing(common, "magnolia-manor-side-railing-west", "Side Flight Railing · 8′2″", [317, 257, 415, 257], "Confirmed 98-inch railing."),
     railing(common, "magnolia-manor-side-railing-east", "Side Flight Railing · 8′2″", [495, 257, 593, 257], "Confirmed 98-inch railing."),
-    areaWithNote(common, "magnolia-manor-stair-square", "pillar", "Stair Structure", 431, 127, 48, 48, "blocked", "source-traced", "Confirmed 48 inches wide and 52 inches tall; the displayed floor depth is source-traced because the second measurement is vertical height."),
-    areaWithNote(common, "magnolia-manor-bottom-stair-pillar-west", "pillar", "Stair Pillar", 389, 379, 20, 20, "blocked", "source-traced", "Bottom pillar confirmed at 53 inches tall; footprint is source-traced."),
-    areaWithNote(common, "magnolia-manor-bottom-stair-pillar-east", "pillar", "Stair Pillar", 502, 379, 20, 20, "blocked", "source-traced", "Bottom pillar confirmed at 53 inches tall; footprint is source-traced."),
   ];
 }
 

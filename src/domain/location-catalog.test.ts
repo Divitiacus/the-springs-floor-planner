@@ -158,12 +158,10 @@ describe("location catalog", () => {
       measurementStatus: "confirmed",
       shape: { type: "rectangle", width: 194, height: 45 },
     });
-    expect(elements.find((element) => element.id === "magnolia-manor-bar-top")).toMatchObject({
-      shape: { type: "rectangle", width: 194, height: 21 },
-    });
-    expect(elements.find((element) => element.id === "magnolia-manor-bar-sink")).toMatchObject({
-      shape: { type: "rectangle", width: 76, height: 24 },
-    });
+    expect(elements.find((element) => element.id === "magnolia-manor-bar-counter")?.physicalNote).toContain("top section is 21 inches deep");
+    expect(elements.find((element) => element.id === "magnolia-manor-bar-counter")?.physicalNote).toContain("back sink area is 6′4″ × 2′");
+    expect(elements.find((element) => element.id === "magnolia-manor-bar-top")).toBeUndefined();
+    expect(elements.find((element) => element.id === "magnolia-manor-bar-sink")).toBeUndefined();
     expect(elements.find((element) => element.id === "magnolia-manor-buffet")).toMatchObject({
       placementBehavior: "blocked",
       shape: { type: "rectangle", width: 168, height: 48 },
@@ -193,7 +191,11 @@ describe("location catalog", () => {
     const hallPillars = elements.filter((element) => element.id.match(/^magnolia-manor-pillar-\d+$/));
     expect(hallPillars).toHaveLength(6);
     expect(hallPillars.every((element) => element.physicalNote?.includes("24 feet 2 inches"))).toBe(true);
-    expect(elements.find((element) => element.id === "magnolia-manor-bottom-stair-pillar-west")?.physicalNote).toContain("53 inches tall");
+    expect(elements.find((element) => element.id === "magnolia-manor-bottom-flight")?.physicalNote).toContain("53 inches tall");
+    expect(elements.find((element) => element.id.startsWith("magnolia-manor-bottom-stair-pillar"))).toBeUndefined();
+    expect(elements.find((element) => element.id === "magnolia-manor-stair-square")).toBeUndefined();
+    expect(hall.configuration.physicalDimensionNote).toContain("intentionally not modeled");
+    expect(elements.find((element) => element.id === "magnolia-manor-suite-label")).toBeUndefined();
   });
 
   it("keeps Magnolia Manor's 12-foot second floor separate from its blocked open-to-below", () => {
