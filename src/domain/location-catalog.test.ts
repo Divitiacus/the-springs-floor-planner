@@ -64,7 +64,7 @@ describe("location catalog", () => {
     expect(elements.find((element) => element.id === "chateau-buffet-room")).toMatchObject({
       role: "buffet",
       placementBehavior: "blocked",
-      shape: { type: "rectangle", width: 228, height: 288 },
+      shape: { type: "rectangle", width: 288, height: 228 },
     });
     expect(elements.filter((element) => element.kind === "area" && element.role === "pillar")).toHaveLength(19);
     expect(hall.configuration.floorplanAsset).toBeNull();
