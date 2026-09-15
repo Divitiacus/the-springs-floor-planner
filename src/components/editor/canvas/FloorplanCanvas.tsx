@@ -262,13 +262,22 @@ function FixedArchitectureNode({ element }: { element: FixedArchitectureElement 
       const treadAxis = element.treadAxis ?? (element.orientation === "vertical" ? "x" : "y");
       const flare = element.curvedBottom && treadAxis === "y" && ratio > 0.72
         ? ((ratio - 0.72) / 0.28) * 18
-        : 0;
+        : element.curvedTop && treadAxis === "y" && ratio < 0.28
+          ? ((0.28 - ratio) / 0.28) * 18
+          : 0;
       const points = treadAxis === "x"
         ? [element.x + element.width * ratio, element.y, element.x + element.width * ratio, element.y + element.height]
         : [element.x - flare, element.y + element.height * ratio, element.x + element.width + flare, element.y + element.height * ratio];
       return <Line key={index} points={points} stroke="#7e8983" strokeWidth={1.5} />;
     });
-    const stairShape = element.curvedBottom ? (
+    const stairShape = element.curvedTop ? (
+      <Path
+        data={`M ${element.x - 18} ${element.y} C ${element.x - 10} ${element.y + 5}, ${element.x} ${element.y + 11}, ${element.x} ${element.y + 25} L ${element.x} ${element.y + element.height} L ${element.x + element.width} ${element.y + element.height} L ${element.x + element.width} ${element.y + 25} C ${element.x + element.width} ${element.y + 11}, ${element.x + element.width + 10} ${element.y + 5}, ${element.x + element.width + 18} ${element.y} Z`}
+        fill="#e2e4df"
+        stroke="#657169"
+        strokeWidth={2}
+      />
+    ) : element.curvedBottom ? (
       <Path
         data={`M ${element.x} ${element.y} L ${element.x + element.width} ${element.y} L ${element.x + element.width} ${element.y + element.height - 25} C ${element.x + element.width} ${element.y + element.height - 11}, ${element.x + element.width + 10} ${element.y + element.height - 5}, ${element.x + element.width + 18} ${element.y + element.height} L ${element.x - 18} ${element.y + element.height} C ${element.x - 10} ${element.y + element.height - 5}, ${element.x} ${element.y + element.height - 11}, ${element.x} ${element.y + element.height - 25} Z`}
         fill="#e2e4df"
@@ -318,8 +327,8 @@ function FixedArchitectureNode({ element }: { element: FixedArchitectureElement 
       width={element.shape.width}
       height={element.shape.height}
       fill={colors.fill}
-      stroke={colors.stroke}
-      strokeWidth={element.role === "main-floor" ? 3 : 2}
+      stroke={element.showOutline === false ? undefined : colors.stroke}
+      strokeWidth={element.showOutline === false ? 0 : element.role === "main-floor" ? 3 : 2}
       shadowColor={element.elevation === "raised" ? "#594b39" : undefined}
       shadowBlur={element.elevation === "raised" ? 10 : 0}
       shadowOffsetX={element.elevation === "raised" ? 5 : 0}
@@ -331,8 +340,8 @@ function FixedArchitectureNode({ element }: { element: FixedArchitectureElement 
       points={element.shape.points}
       closed
       fill={colors.fill}
-      stroke={colors.stroke}
-      strokeWidth={2}
+      stroke={element.showOutline === false ? undefined : colors.stroke}
+      strokeWidth={element.showOutline === false ? 0 : 2}
       shadowColor={element.elevation === "raised" ? "#594b39" : undefined}
       shadowBlur={element.elevation === "raised" ? 10 : 0}
       shadowOffsetX={element.elevation === "raised" ? 5 : 0}

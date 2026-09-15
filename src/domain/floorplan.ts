@@ -89,6 +89,7 @@ export type FixedArchitectureElement =
       elevation: "floor" | "raised";
       labelRotation?: number;
       showLabel?: boolean;
+      showOutline?: boolean;
     })
   | (FixedArchitectureBase & {
       kind: "wall";
@@ -117,6 +118,7 @@ export type FixedArchitectureElement =
       treadCount: number;
       treadAxis?: "x" | "y";
       curvedBottom?: boolean;
+      curvedTop?: boolean;
       showLabel?: boolean;
     })
   | (FixedArchitectureBase & {

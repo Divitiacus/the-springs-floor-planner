@@ -40,11 +40,13 @@ describe("location catalog", () => {
       role: "main-floor",
       placementBehavior: "allowed",
       measurementStatus: "confirmed",
+      showOutline: false,
       shape: { type: "rectangle", width: 1056, height: 861 },
     });
     expect(elements.find((element) => element.id === "farmhouse-wallisville-upper-extension")).toMatchObject({
       role: "event-floor-extension",
       placementBehavior: "allowed",
+      showOutline: false,
       shape: { type: "rectangle", width: 384, height: 336 },
     });
     expect(elements.find((element) => element.id === "farmhouse-wallisville-service-wing")).toMatchObject({
@@ -57,6 +59,7 @@ describe("location catalog", () => {
       placementBehavior: "blocked",
       width: 72,
       height: 192,
+      curvedTop: true,
     });
     expect(hall.configuration.floorplanAsset).toBeNull();
   });
