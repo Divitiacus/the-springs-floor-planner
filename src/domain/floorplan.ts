@@ -157,6 +157,7 @@ export type ReferenceFloorplanAsset = {
   id: string;
   source: string;
   sourceDocument: string;
+  visualRole?: "reference" | "architectural-base";
   x: number;
   y: number;
   width: number;

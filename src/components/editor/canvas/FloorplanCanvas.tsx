@@ -42,6 +42,7 @@ export function FloorplanCanvas({ layout, venue, selectedId, mode, zoom, showRef
     [size, venue.physicalHeightInches, venue.physicalWidthInches],
   );
   const scale = fitScale * zoom;
+  const hasArchitecturalBase = venue.referenceAsset?.visualRole === "architectural-base";
 
   useEffect(() => {
     const container = containerRef.current;
@@ -118,8 +119,8 @@ export function FloorplanCanvas({ layout, venue, selectedId, mode, zoom, showRef
       >
         <Layer listening={false}>
           <Rect x={0} y={0} width={venue.physicalWidthInches} height={venue.physicalHeightInches} fill="#edf0ec" cornerRadius={12} shadowColor="#506058" shadowBlur={28} shadowOpacity={0.13} shadowOffsetY={8} />
-          {showReference && venue.referenceAsset ? <ReferenceUnderlay asset={venue.referenceAsset} /> : null}
-          <VenueLayer venue={venue} />
+          {(hasArchitecturalBase || showReference) && venue.referenceAsset ? <ReferenceUnderlay asset={venue.referenceAsset} /> : null}
+          {hasArchitecturalBase ? null : <VenueLayer venue={venue} />}
         </Layer>
 
         <Layer>
@@ -155,7 +156,7 @@ export function FloorplanCanvas({ layout, venue, selectedId, mode, zoom, showRef
       </Stage>
       <div className="pointer-events-none absolute bottom-12 left-4 rounded-md border border-[#d7ddd8] bg-[#fffefa]/95 px-2.5 py-1.5 text-[10px] font-semibold text-[#67736c] shadow-sm">
         {mode === "pan" ? "Pan mode · H" : "Select mode · V"}
-        {venue.referenceAsset ? ` · Reference ${showReference ? "on" : "off"}` : ""}
+        {hasArchitecturalBase ? " · Original source plan" : venue.referenceAsset ? ` · Reference ${showReference ? "on" : "off"}` : ""}
       </div>
     </div>
   );

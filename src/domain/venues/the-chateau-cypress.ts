@@ -1,8 +1,12 @@
 import type { FixedArchitectureElement, VenueFloorRegion } from "@/domain/floorplan";
 import type { HallConfiguration, HallLevelConfiguration } from "@/domain/location-catalog";
 
-const CANVAS_WIDTH = 1740;
+const CANVAS_WIDTH = 1840;
 const CANVAS_HEIGHT = 980;
+const MAIN_FLOOR_IMAGE_WIDTH = 1837;
+const MAIN_FLOOR_IMAGE_HEIGHT = 945;
+const BALCONY_IMAGE_WIDTH = 1840;
+const BALCONY_IMAGE_HEIGHT = 960;
 
 // The supplied plans are landscape drawings of the same building. In this
 // orientation the confirmed 55′ hall axis is horizontal and the confirmed 69′
@@ -35,13 +39,27 @@ export function createTheChateauCypressConfiguration(): HallConfiguration {
       physicalHeightInches: CANVAS_HEIGHT,
       physicalDimensionStatus: "source-traced",
       physicalDimensionNote:
-        "Main-floor geometry is independently traced from Main Floor.jpg. Confirmed dimensions include the 55′ × 69′ event hall, 24′ × 14′6″ raised stage, 18′4″ permanent bar, and 19′ × 24′ buffet room.",
+        "Main-floor geometry is independently traced from Main Floor.jpg at one physical inch per source pixel. Confirmed dimensions include the 55′ × 69′ event hall, 24′ × 14′6″ raised stage, 18′4″ permanent bar, and 19′ × 24′ buffet room.",
       planningBounds: { x: HALL_X, y: HALL_Y, width: HALL_WIDTH, height: HALL_HEIGHT },
       defaultObjectPosition: { x: 930, y: 390 },
       usableAreas: createMainFloorUsableAreas(),
       voidAreas: [],
       fixedArchitecturalElements: mainFloorElements,
-      floorplanAsset: null,
+      floorplanAsset: {
+        id: "cypress-main-floor-original",
+        source: "/floorplans/cypress/main-floor.jpg",
+        sourceDocument: "Main Floor.jpg",
+        visualRole: "architectural-base",
+        x: (CANVAS_WIDTH - MAIN_FLOOR_IMAGE_WIDTH) / 2,
+        y: (CANVAS_HEIGHT - MAIN_FLOOR_IMAGE_HEIGHT) / 2,
+        width: MAIN_FLOOR_IMAGE_WIDTH,
+        height: MAIN_FLOOR_IMAGE_HEIGHT,
+        opacity: 1,
+        visibleByDefault: true,
+        locked: true,
+        interactive: false,
+        measurementStatus: "source-traced",
+      },
     },
     {
       id: "level-2-balcony",
@@ -51,13 +69,27 @@ export function createTheChateauCypressConfiguration(): HallConfiguration {
       physicalHeightInches: CANVAS_HEIGHT,
       physicalDimensionStatus: "source-traced",
       physicalDimensionNote:
-        "Balcony geometry is independently traced from Balcony.jpg. Positive regions describe the wraparound walkway; the rotunda and main-hall openings are explicit open-to-below voids.",
+        "Balcony geometry is independently traced from Balcony.jpg at one physical inch per source pixel. Confirmed calibration anchors include the 15′ balcony depth and 48′6″ run; positive regions describe the wraparound walkway, and the rotunda and main-hall openings are explicit open-to-below voids.",
       planningBounds: { x: 248, y: 28, width: 1172, height: 872 },
       defaultObjectPosition: { x: 900, y: 145 },
       usableAreas: createBalconyUsableAreas(),
       voidAreas: createBalconyVoidAreas(),
       fixedArchitecturalElements: balconyElements,
-      floorplanAsset: null,
+      floorplanAsset: {
+        id: "cypress-balcony-original",
+        source: "/floorplans/cypress/balcony.jpg",
+        sourceDocument: "Balcony.jpg",
+        visualRole: "architectural-base",
+        x: (CANVAS_WIDTH - BALCONY_IMAGE_WIDTH) / 2,
+        y: (CANVAS_HEIGHT - BALCONY_IMAGE_HEIGHT) / 2,
+        width: BALCONY_IMAGE_WIDTH,
+        height: BALCONY_IMAGE_HEIGHT,
+        opacity: 1,
+        visibleByDefault: true,
+        locked: true,
+        interactive: false,
+        measurementStatus: "source-traced",
+      },
     },
   ];
 

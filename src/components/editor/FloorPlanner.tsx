@@ -29,6 +29,7 @@ export function FloorPlanner({ venue, levelVenues, locationName, inventory }: Pr
   const defaultLevelId = venue.levelId;
   const [activeLevelId, setActiveLevelId] = useState(defaultLevelId);
   const activeVenue = availableLevels.find((candidate) => candidate.levelId === activeLevelId) ?? venue;
+  const hasToggleableReference = Boolean(activeVenue.referenceAsset && activeVenue.referenceAsset.visualRole !== "architectural-base");
   const activeLayout = useMemo(() => isMultiLevel ? {
     ...editor.layout,
     objects: editor.layout.objects.filter(
@@ -276,7 +277,7 @@ export function FloorPlanner({ venue, levelVenues, locationName, inventory }: Pr
             canUndo={editor.canUndo}
             canRedo={editor.canRedo}
             hasSelection={Boolean(selectedId)}
-            hasReference={Boolean(activeVenue.referenceAsset)}
+            hasReference={hasToggleableReference}
             showReference={showReference}
             onModeChange={setMode}
             onUndo={editor.undo}

@@ -128,9 +128,42 @@ describe("hall venue template", () => {
 
     expect(levels.map((level) => level.levelId)).toEqual(["level-1-main-floor", "level-2-balcony"]);
     expect(mainFloor.levelName).toBe("Level 1 — Main Floor");
+    expect(mainFloor).toMatchObject({
+      coordinateUnit: "inches",
+      physicalWidthInches: 1840,
+      physicalHeightInches: 980,
+      hall: { x: 760, y: 72, width: 660, height: 828 },
+    });
+    expect(mainFloor.referenceAsset).toMatchObject({
+      source: "/floorplans/cypress/main-floor.jpg",
+      visualRole: "architectural-base",
+      x: 1.5,
+      y: 17.5,
+      width: 1837,
+      height: 945,
+      locked: true,
+      interactive: false,
+    });
+    expect(mainFloor.referenceAsset!.width / mainFloor.referenceAsset!.height).toBeCloseTo(1837 / 945, 12);
     expect(mainFloor.elements.some((element) => element.id === "chateau-stage")).toBe(true);
     expect(mainFloor.elements.some((element) => element.id.startsWith("chateau-balcony-"))).toBe(false);
     expect(balcony.levelName).toBe("Level 2 — Balcony");
+    expect(balcony).toMatchObject({
+      coordinateUnit: "inches",
+      physicalWidthInches: 1840,
+      physicalHeightInches: 980,
+    });
+    expect(balcony.referenceAsset).toMatchObject({
+      source: "/floorplans/cypress/balcony.jpg",
+      visualRole: "architectural-base",
+      x: 0,
+      y: 10,
+      width: 1840,
+      height: 960,
+      locked: true,
+      interactive: false,
+    });
+    expect(balcony.referenceAsset!.width / balcony.referenceAsset!.height).toBeCloseTo(1840 / 960, 12);
     expect(balcony.elements.some((element) => element.id === "chateau-stage")).toBe(false);
     expect(balcony.voidAreas?.map((region) => region.id)).toEqual([
       "chateau-level-2-rotunda-void",

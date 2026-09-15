@@ -53,7 +53,7 @@ describe("location catalog", () => {
       ["level-1-main-floor", "main-floor", "Level 1 — Main Floor"],
       ["level-2-balcony", "balcony", "Level 2 — Balcony"],
     ]);
-    expect(levels.every((level) => level.physicalWidthInches === 1740 && level.physicalHeightInches === 980)).toBe(true);
+    expect(levels.every((level) => level.physicalWidthInches === 1840 && level.physicalHeightInches === 980)).toBe(true);
 
     const mainFloor = levels.find((level) => level.id === "level-1-main-floor");
     if (!mainFloor) throw new Error("Cypress main-floor level missing");
@@ -89,9 +89,26 @@ describe("location catalog", () => {
     expect(elements.some((element) => element.id.includes("balcony-overhead"))).toBe(false);
     expect(elements.find((element) => element.id === "chateau-west-restrooms")).toBeUndefined();
     expect(elements.find((element) => element.id === "chateau-east-meeting-office")).toBeUndefined();
-    expect(mainFloor.floorplanAsset).toBeNull();
+    expect(mainFloor.floorplanAsset).toMatchObject({
+      source: "/floorplans/cypress/main-floor.jpg",
+      sourceDocument: "Main Floor.jpg",
+      visualRole: "architectural-base",
+      visibleByDefault: true,
+      locked: true,
+      interactive: false,
+    });
+    expect(mainFloor.floorplanAsset!.width / mainFloor.floorplanAsset!.height).toBeCloseTo(1837 / 945, 8);
 
     const balcony = levels.find((level) => level.id === "level-2-balcony");
+    expect(balcony?.floorplanAsset).toMatchObject({
+      source: "/floorplans/cypress/balcony.jpg",
+      sourceDocument: "Balcony.jpg",
+      visualRole: "architectural-base",
+      visibleByDefault: true,
+      locked: true,
+      interactive: false,
+    });
+    expect(balcony!.floorplanAsset!.width / balcony!.floorplanAsset!.height).toBeCloseTo(1840 / 960, 8);
     expect(balcony?.usableAreas?.find((region) => region.id === "chateau-level-2-main-balcony-north")).toMatchObject({
       kind: "usable-floor",
       placementBehavior: "allowed",
