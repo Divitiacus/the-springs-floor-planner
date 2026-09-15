@@ -47,10 +47,10 @@ export function createMagnoliaManorConfiguration(): HallConfiguration {
     ),
 
     // Confirmed permanent service fixtures.
-    area(common, "magnolia-manor-bar-counter", "bar", "Permanent Bar · 16′2″ × 3′9″", 118, 158, 194, 45, "blocked", "confirmed"),
+    area(common, "magnolia-manor-bar-counter", "bar", "Bar", 118, 158, 194, 45, "blocked", "confirmed"),
     areaWithoutLabel(common, "magnolia-manor-bar-top", "bar", "Bar Top · 21″ Deep", 118, 158, 194, 21, "blocked", "confirmed"),
     areaWithoutLabel(common, "magnolia-manor-bar-sink", "bar", "Back Sink · 6′4″ × 2′", 177, 203, 76, 24, "blocked", "confirmed"),
-    area(common, "magnolia-manor-buffet", "buffet", "Permanent Buffet · 14′ × 4′", 626, 158, 168, 48, "blocked", "confirmed"),
+    area(common, "magnolia-manor-buffet", "buffet", "Buffet", 626, 158, 168, 48, "blocked", "confirmed"),
 
     ...createFirstFloorStaircase(common),
     ...createFirstFloorPillars(common),
@@ -69,10 +69,7 @@ export function createMagnoliaManorConfiguration(): HallConfiguration {
 
     // The second-floor balcony is displayed beside the planning floor so its
     // architecture remains legible without overlapping first-floor objects.
-    areaWithoutLabel(common, "magnolia-manor-second-floor-north", "second-floor", "Second Floor · 12′ Wide", SECOND_FLOOR_X, FLOOR_Y, HALL_SIZE, BALCONY_WIDTH, "restricted", "confirmed"),
-    areaWithoutLabel(common, "magnolia-manor-second-floor-south", "second-floor", "Second Floor · 12′ Wide", SECOND_FLOOR_X, FLOOR_Y + HALL_SIZE - BALCONY_WIDTH, HALL_SIZE, BALCONY_WIDTH, "restricted", "confirmed"),
-    areaWithoutLabel(common, "magnolia-manor-second-floor-west", "second-floor", "Second Floor · 12′ Wide", SECOND_FLOOR_X, FLOOR_Y + BALCONY_WIDTH, BALCONY_WIDTH, OPENING_SIZE, "restricted", "confirmed"),
-    areaWithoutLabel(common, "magnolia-manor-second-floor-east", "second-floor", "Second Floor · 12′ Wide", SECOND_FLOOR_X + HALL_SIZE - BALCONY_WIDTH, FLOOR_Y + BALCONY_WIDTH, BALCONY_WIDTH, OPENING_SIZE, "restricted", "confirmed"),
+    areaWithoutLabel(common, "magnolia-manor-second-floor", "second-floor", "Second Floor · 12′ Wide", SECOND_FLOOR_X, FLOOR_Y, HALL_SIZE, HALL_SIZE, "restricted", "confirmed"),
     area(common, "magnolia-manor-open-to-below", "open-to-below", "Open to Floor Below", SECOND_FLOOR_X + BALCONY_WIDTH, FLOOR_Y + BALCONY_WIDTH, OPENING_SIZE, OPENING_SIZE, "blocked", "confirmed"),
     area(common, "magnolia-manor-second-floor-balcony", "porch", "Balcony · 7′8″ Deep", SECOND_FLOOR_X, FLOOR_Y + HALL_SIZE, HALL_SIZE, PORCH_DEPTH, "restricted", "confirmed"),
     ...createSecondFloorStaircase(common),
@@ -86,6 +83,7 @@ export function createMagnoliaManorConfiguration(): HallConfiguration {
       "blocked",
     ),
     ...createSecondFloorWalls(common),
+    ...createSecondFloorDoors(common),
     label(common, "magnolia-manor-second-floor-label", "SECOND FLOOR · BALCONY", 1205, 100, 360, 13),
   ];
 
@@ -103,9 +101,9 @@ export function createMagnoliaManorConfiguration(): HallConfiguration {
 function createFirstFloorStaircase(common: Common): FixedArchitectureElement[] {
   return [
     area(common, "magnolia-manor-stair-landing", "landing", "Landing · 6′8″ × 6′7″", 415, 178, 80, 79, "blocked", "confirmed"),
-    stairs(common, "magnolia-manor-bottom-flight", "Bottom Stair Flight · 9′5″ Wide", 399, 257, 113, 132, "vertical", 9, "Confirmed 113-inch width with 132-inch bottom-flight railings."),
-    stairs(common, "magnolia-manor-west-flight", "Side Stair Flight", 317, 178, 98, 79, "horizontal", 8, "Confirmed 98-inch side-flight railings."),
-    stairs(common, "magnolia-manor-east-flight", "Side Stair Flight", 495, 178, 98, 79, "horizontal", 8, "Confirmed 98-inch side-flight railings."),
+    stairs(common, "magnolia-manor-bottom-flight", "Bottom Stair Flight · 9′5″ Wide", 399, 257, 113, 132, "vertical", 9, "Confirmed 113-inch width with 132-inch bottom-flight railings.", "y", true),
+    stairs(common, "magnolia-manor-west-flight", "Side Stair Flight", 317, 178, 98, 79, "horizontal", 8, "Confirmed 98-inch side-flight railings.", "x"),
+    stairs(common, "magnolia-manor-east-flight", "Side Stair Flight", 495, 178, 98, 79, "horizontal", 8, "Confirmed 98-inch side-flight railings.", "x"),
     railing(common, "magnolia-manor-top-railing", "Top Railing · 21′8″", [325, 171, 585, 171], "Confirmed 260-inch straight railing."),
     railing(common, "magnolia-manor-bottom-railing-west", "Bottom Flight Railing · 11′", [399, 257, 399, 389], "Confirmed 132-inch railing."),
     railing(common, "magnolia-manor-bottom-railing-east", "Bottom Flight Railing · 11′", [512, 257, 512, 389], "Confirmed 132-inch railing."),
@@ -121,9 +119,9 @@ function createSecondFloorStaircase(common: Common): FixedArchitectureElement[] 
   const dx = SECOND_FLOOR_X - FLOOR_X;
   return [
     area(common, "magnolia-manor-second-floor-stair-landing", "landing", "Landing · 6′8″ × 6′7″", 415 + dx, 178, 80, 79, "blocked", "confirmed"),
-    stairs(common, "magnolia-manor-second-floor-bottom-flight", "Stair Opening · 9′5″ Wide", 399 + dx, 257, 113, 132, "vertical", 9, "Confirmed 113-inch width with 132-inch bottom-flight railings."),
-    stairs(common, "magnolia-manor-second-floor-west-flight", "Side Stair Flight", 317 + dx, 178, 98, 79, "horizontal", 8, "Confirmed 98-inch side-flight railings."),
-    stairs(common, "magnolia-manor-second-floor-east-flight", "Side Stair Flight", 495 + dx, 178, 98, 79, "horizontal", 8, "Confirmed 98-inch side-flight railings."),
+    stairs(common, "magnolia-manor-second-floor-bottom-flight", "Stair Opening · 9′5″ Wide", 399 + dx, 257, 113, 132, "vertical", 9, "Confirmed 113-inch width with 132-inch bottom-flight railings.", "y", true),
+    stairs(common, "magnolia-manor-second-floor-west-flight", "Side Stair Flight", 317 + dx, 178, 98, 79, "horizontal", 8, "Confirmed 98-inch side-flight railings.", "x"),
+    stairs(common, "magnolia-manor-second-floor-east-flight", "Side Stair Flight", 495 + dx, 178, 98, 79, "horizontal", 8, "Confirmed 98-inch side-flight railings.", "x"),
     railing(common, "magnolia-manor-second-floor-top-railing", "Top Railing · 21′8″", [325 + dx, 171, 585 + dx, 171], "Confirmed 260-inch straight railing."),
   ];
 }
@@ -136,14 +134,10 @@ function createFirstFloorPillars(common: Common): FixedArchitectureElement[] {
 }
 
 function createSecondFloorPillars(common: Common): FixedArchitectureElement[] {
-  return createFirstFloorPillars(common).map((element, index) => {
-    if (element.kind !== "area" || element.shape.type !== "rectangle") return element;
-    return {
-      ...element,
-      id: `magnolia-manor-second-floor-pillar-${index + 1}`,
-      shape: { ...element.shape, x: element.shape.x + SECOND_FLOOR_X - FLOOR_X },
-    };
-  });
+  const positions = [[1100, 340], [1652, 340], [1100, 650], [1652, 650], [1215, 760], [1505, 760]];
+  return positions.map(([x, y], index) =>
+    areaWithNote(common, `magnolia-manor-second-floor-pillar-${index + 1}`, "pillar", "Pillar", x, y, 18, 18, "blocked", "source-traced", "Pillar footprint and source-plan position are traced. Confirmed layout relationship: 10 feet pillar-to-wall and 24 feet 2 inches between pillars on each side."),
+  );
 }
 
 function createFirstFloorWalls(common: Common): FixedArchitectureElement[] {
@@ -177,11 +171,19 @@ function createSecondFloorWalls(common: Common): FixedArchitectureElement[] {
 function createFirstFloorDoors(common: Common): FixedArchitectureElement[] {
   return [
     door(common, "magnolia-manor-north-door", 530, FLOOR_Y, 48, 180, "clockwise"),
-    door(common, "magnolia-manor-west-upper-door", FLOOR_X, 400, 48, 90, "clockwise"),
-    door(common, "magnolia-manor-west-lower-door", FLOOR_X, 555, 48, 90, "counterclockwise"),
+    door(common, "magnolia-manor-west-double-door-upper", FLOOR_X, 437, 48, 90, "clockwise"),
+    door(common, "magnolia-manor-west-double-door-lower", FLOOR_X, 533, 48, -90, "counterclockwise"),
     door(common, "magnolia-manor-suite-door", FLOOR_X + HALL_SIZE, 238, 48, 90, "counterclockwise"),
-    door(common, "magnolia-manor-south-door-a", 425, FLOOR_Y + HALL_SIZE, 48, 0, "clockwise"),
-    door(common, "magnolia-manor-south-door-b", 473, FLOOR_Y + HALL_SIZE, 48, 180, "counterclockwise"),
+    door(common, "magnolia-manor-south-double-door-west", 407, FLOOR_Y + HALL_SIZE, 48, 0, "clockwise"),
+    door(common, "magnolia-manor-south-double-door-east", 503, FLOOR_Y + HALL_SIZE, 48, 180, "counterclockwise"),
+  ];
+}
+
+function createSecondFloorDoors(common: Common): FixedArchitectureElement[] {
+  const center = SECOND_FLOOR_X + HALL_SIZE / 2;
+  return [
+    door(common, "magnolia-manor-balcony-double-door-west", center - 48, FLOOR_Y + HALL_SIZE, 48, 0, "clockwise"),
+    door(common, "magnolia-manor-balcony-double-door-east", center + 48, FLOOR_Y + HALL_SIZE, 48, 180, "counterclockwise"),
   ];
 }
 
@@ -261,8 +263,10 @@ function stairs(
   orientation: "horizontal" | "vertical",
   treadCount: number,
   physicalNote: string,
+  treadAxis?: "x" | "y",
+  curvedBottom = false,
 ): FixedArchitectureElement {
-  return { ...common, id, kind: "stairs", label: stairLabel, physicalNote, placementBehavior: "blocked", measurementStatus: "confirmed", x, y, width, height, orientation, treadCount };
+  return { ...common, id, kind: "stairs", label: stairLabel, physicalNote, placementBehavior: "blocked", measurementStatus: "confirmed", x, y, width, height, orientation, treadCount, treadAxis, curvedBottom, showLabel: false };
 }
 
 function door(

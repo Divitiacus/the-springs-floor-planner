@@ -203,16 +203,50 @@ describe("location catalog", () => {
     const elements = hall.configuration.fixedArchitecturalElements;
     const secondFloor = elements.filter((element) => element.kind === "area" && element.role === "second-floor");
 
-    expect(secondFloor).toHaveLength(4);
-    expect(secondFloor).toEqual(expect.arrayContaining([
-      expect.objectContaining({ shape: expect.objectContaining({ width: 810, height: 144 }) }),
-      expect.objectContaining({ shape: expect.objectContaining({ width: 144, height: 522 }) }),
-    ]));
+    expect(secondFloor).toHaveLength(1);
+    expect(secondFloor[0]).toMatchObject({
+      showLabel: false,
+      shape: { type: "rectangle", x: 980, y: 80, width: 810, height: 810 },
+    });
     expect(elements.find((element) => element.id === "magnolia-manor-open-to-below")).toMatchObject({
       placementBehavior: "blocked",
       measurementStatus: "confirmed",
       shape: { type: "rectangle", width: 522, height: 522 },
     });
+  });
+
+  it("uses connected outward-swinging double doors and keeps second-floor pillars on the balcony", () => {
+    const location = getLocationBySlug("angleton");
+    const hall = getHallBySlug(location, "magnolia-manor");
+    if (!hall?.configuration) throw new Error("Magnolia Manor configuration missing");
+    const elements = hall.configuration.fixedArchitecturalElements;
+
+    expect(elements.filter((element) => element.id.startsWith("magnolia-manor-west-double-door"))).toMatchObject([
+      { x: 50, y: 437, width: 48, rotation: 90, swingDirection: "clockwise" },
+      { x: 50, y: 533, width: 48, rotation: -90, swingDirection: "counterclockwise" },
+    ]);
+    expect(elements.filter((element) => element.id.startsWith("magnolia-manor-balcony-double-door"))).toMatchObject([
+      { x: 1337, y: 890, width: 48, rotation: 0, swingDirection: "clockwise" },
+      { x: 1433, y: 890, width: 48, rotation: 180, swingDirection: "counterclockwise" },
+    ]);
+
+    const rightPillars = [2, 4].map((number) =>
+      elements.find((element) => element.id === `magnolia-manor-second-floor-pillar-${number}`),
+    );
+    expect(rightPillars).toMatchObject([
+      { shape: { type: "rectangle", x: 1652, width: 18 } },
+      { shape: { type: "rectangle", x: 1652, width: 18 } },
+    ]);
+  });
+
+  it("renders Magnolia Manor's lower stair flight with a scaled curved profile", () => {
+    const location = getLocationBySlug("angleton");
+    const hall = getHallBySlug(location, "magnolia-manor");
+    if (!hall?.configuration) throw new Error("Magnolia Manor configuration missing");
+
+    expect(hall.configuration.fixedArchitecturalElements.find(
+      (element) => element.id === "magnolia-manor-bottom-flight",
+    )).toMatchObject({ treadAxis: "y", curvedBottom: true, showLabel: false });
   });
 
   it("configures Sycamore Grove with its exact floor scale and raised usable stage", () => {

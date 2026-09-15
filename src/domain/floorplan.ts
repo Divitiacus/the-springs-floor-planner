@@ -114,6 +114,9 @@ export type FixedArchitectureElement =
       height: number;
       orientation: "horizontal" | "vertical";
       treadCount: number;
+      treadAxis?: "x" | "y";
+      curvedBottom?: boolean;
+      showLabel?: boolean;
     })
   | (FixedArchitectureBase & {
       kind: "direction-label";
