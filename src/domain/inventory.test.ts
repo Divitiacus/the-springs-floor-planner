@@ -9,6 +9,7 @@ const noLimits: InventoryConfiguration = {
   "round-table-60": null,
   "rectangle-table-6": null,
   "rectangle-table-8": null,
+  "parson-table-7": null,
   "sweetheart-table": null,
   chairs: null,
 };
@@ -53,6 +54,17 @@ describe("inventory validation", () => {
     expect(validateLayoutInventory(duplicated, { "rectangle-table-6": 1 })).toMatchObject({
       valid: false,
       code: "table-limit",
+    });
+  });
+
+  it("tracks Parson Tables without adding chairs and enforces their hall availability", () => {
+    const layout = createLayoutWith("parson-table-7", 2);
+
+    expect(getInventoryUsage(layout)).toMatchObject({ "parson-table-7": 2, chairs: 0 });
+    expect(validateLayoutInventory(layout, { "parson-table-7": 1 })).toMatchObject({
+      valid: false,
+      code: "table-limit",
+      message: "All 1 available Parson tables are already in this floorplan.",
     });
   });
 

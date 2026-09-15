@@ -2,6 +2,7 @@ export type EventObjectType =
   | "round-table-60"
   | "rectangle-table-6"
   | "rectangle-table-8"
+  | "parson-table-7"
   | "sweetheart-table"
   | "cake-table"
   | "gift-table"

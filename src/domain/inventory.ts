@@ -5,6 +5,7 @@ export const INVENTORY_ITEM_TYPES = [
   "round-table-60",
   "rectangle-table-6",
   "rectangle-table-8",
+  "parson-table-7",
   "sweetheart-table",
   "chairs",
 ] as const;
@@ -38,14 +39,15 @@ export function getInventoryUsage(layout: FloorplanLayout): InventoryUsage {
     "round-table-60": 0,
     "rectangle-table-6": 0,
     "rectangle-table-8": 0,
+    "parson-table-7": 0,
     "sweetheart-table": 0,
     chairs: 0,
   };
 
   for (const object of layout.objects) {
-    if (isInventoryTable(object.type)) {
+    if (isInventoryObject(object.type)) {
       usage[object.type] += 1;
-      usage.chairs += object.seats ?? 0;
+      if (TABLE_TYPES.has(object.type)) usage.chairs += object.seats ?? 0;
     } else if (object.type === "chair") {
       usage.chairs += 1;
     }
@@ -72,7 +74,7 @@ export function validateLayoutInventory(
   }
 
   const usage = getInventoryUsage(layout);
-  for (const type of INVENTORY_ITEM_TYPES.slice(0, 4) as readonly Exclude<InventoryItemType, "chairs">[]) {
+  for (const type of INVENTORY_ITEM_TYPES.slice(0, -1) as readonly Exclude<InventoryItemType, "chairs">[]) {
     const limit = inventory[type];
     if (limit !== null && limit !== undefined && usage[type] > limit) {
       return {
@@ -95,6 +97,6 @@ export function validateLayoutInventory(
   return { valid: true };
 }
 
-function isInventoryTable(type: EventObjectType): type is Exclude<InventoryItemType, "chairs"> {
-  return TABLE_TYPES.has(type);
+function isInventoryObject(type: EventObjectType): type is Exclude<InventoryItemType, "chairs"> {
+  return (INVENTORY_ITEM_TYPES as readonly string[]).includes(type);
 }

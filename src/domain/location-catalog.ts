@@ -43,6 +43,7 @@ export const MAGNOLIA_INVENTORY: InventoryCatalog = {
     "round-table-60": 32,
     "rectangle-table-6": 4,
     "rectangle-table-8": 6,
+    "parson-table-7": 6,
     "sweetheart-table": 1,
     chairs: 320,
   },
@@ -51,12 +52,6 @@ export const MAGNOLIA_INVENTORY: InventoryCatalog = {
     note: "Table quantities come from the source workbook. The 320-chair total was confirmed separately for both Magnolia halls and is shared at the location level.",
   },
   additionalItems: [
-    {
-      sourceItemKey: "parson-table-7",
-      name: "7-foot Parson Table",
-      quantity: 6,
-      note: "Indoors only; decor purposes only; no liquids or hot foods.",
-    },
     {
       sourceItemKey: "cocktail-table-32",
       name: "32-inch Round Cocktail Table",
@@ -68,28 +63,28 @@ export const MAGNOLIA_INVENTORY: InventoryCatalog = {
 
 export const LAKE_CONROE_INVENTORY: InventoryCatalog = {
   scope: "location-shared",
-  limits: { chairs: 320 },
+  limits: { "parson-table-7": 6, chairs: 320 },
   source: {
-    fileName: "user-confirmed",
-    note: "The 320-chair total was confirmed for both Lake Conroe halls; table quantities are not yet configured.",
+    fileName: "the_springs_table_chair_inventory_from_powerpoints.xlsx",
+    note: "The source workbook confirms 6 Parson tables for each Lake Conroe hall. The 320-chair total was confirmed separately.",
   },
 };
 
 export const KATY_INVENTORY: InventoryCatalog = {
   scope: "location-shared",
-  limits: { chairs: 320 },
+  limits: { "parson-table-7": 5, chairs: 320 },
   source: {
-    fileName: "user-confirmed",
-    note: "The 320-chair total was confirmed for both Katy halls; table quantities are not yet configured.",
+    fileName: "the_springs_table_chair_inventory_from_powerpoints.xlsx",
+    note: "The source workbook confirms 5 Parson tables shared across both Katy halls. The 320-chair total was confirmed separately.",
   },
 };
 
 export const ANGLETON_INVENTORY: InventoryCatalog = {
   scope: "location-shared",
-  limits: { chairs: 320 },
+  limits: { "parson-table-7": 6, chairs: 320 },
   source: {
-    fileName: "user-confirmed",
-    note: "The 320-chair total was confirmed for Sycamore Grove; table quantities are not yet configured.",
+    fileName: "the_springs_table_chair_inventory_from_powerpoints.xlsx",
+    note: "The source workbook confirms 6 Parson tables for Sycamore Grove. The 320-chair total was confirmed separately.",
   },
 };
 

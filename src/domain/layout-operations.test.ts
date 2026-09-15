@@ -60,6 +60,36 @@ describe("floorplan object operations", () => {
     expect(OBJECT_DEFINITIONS["rectangle-table-8"].height).toBe(OBJECT_DEFINITIONS["rectangle-table-6"].height);
   });
 
+  it("creates a fixed-size, non-seating Parson Table from its inventory key", () => {
+    const parson = createEventObject("parson-table-7", { x: 0, y: 0 }, [], "parson");
+    const resized = updateObject(addObject(createEmptyLayout(), parson), parson.id, {
+      width: 120,
+      height: 48,
+    });
+
+    expect(OBJECT_DEFINITIONS["parson-table-7"]).toMatchObject({
+      name: "Parson Table",
+      width: 84,
+      height: 22,
+      resizable: false,
+      physicalDimensions: {
+        status: "confirmed",
+        shape: "rectangle",
+        widthInches: 84,
+        depthInches: 22,
+      },
+    });
+    expect(parson).toMatchObject({
+      type: "parson-table-7",
+      label: "Parson",
+      width: 84,
+      height: 22,
+    });
+    expect(parson.tableNumber).toBeUndefined();
+    expect(parson.seats).toBeUndefined();
+    expect(resized.objects[0]).toMatchObject({ width: 84, height: 22 });
+  });
+
   it("uses the confirmed DJ and Photo Booth footprints", () => {
     const dj = createEventObject("dj", { x: 0, y: 0 }, [], "dj");
     const photoBooth = createEventObject("photo-booth", { x: 0, y: 0 }, [], "photo-booth");
@@ -173,6 +203,22 @@ describe("persistence", () => {
         height: 144,
         physicalDimensions: { widthInches: 144, depthInches: 144 },
       }],
+    });
+  });
+
+  it("round-trips a Parson Table through the compact editable file", () => {
+    const parson = createEventObject("parson-table-7", { x: 220, y: 180 }, [], "parson");
+    const layout = addObject(
+      { ...createEmptyLayout("hall_sycamore_grove"), name: "Parson Layout" },
+      parson,
+    );
+    const reopened = deserializeFloorplan(serializePortableFloorplan(layout));
+
+    expect(reopened.objects[0]).toMatchObject({
+      type: "parson-table-7",
+      width: 84,
+      height: 22,
+      physicalDimensions: { widthInches: 84, depthInches: 22 },
     });
   });
 

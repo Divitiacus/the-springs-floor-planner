@@ -35,11 +35,11 @@ describe("location catalog", () => {
 
     expect(LAKE_CONROE_INVENTORY).toMatchObject({
       scope: "location-shared",
-      limits: { chairs: 320 },
+      limits: { "parson-table-7": 6, chairs: 320 },
     });
     for (const hall of location.halls) {
       expect(hall.configuration?.inventory).toBeUndefined();
-      expect(resolveInventoryConfiguration(location, hall)).toEqual({ chairs: 320 });
+      expect(resolveInventoryConfiguration(location, hall)).toEqual({ "parson-table-7": 6, chairs: 320 });
     }
   });
 
@@ -62,11 +62,11 @@ describe("location catalog", () => {
 
     expect(KATY_INVENTORY).toMatchObject({
       scope: "location-shared",
-      limits: { chairs: 320 },
+      limits: { "parson-table-7": 5, chairs: 320 },
     });
     for (const hall of location.halls) {
       expect(hall.configuration?.inventory).toBeUndefined();
-      expect(resolveInventoryConfiguration(location, hall)).toEqual({ chairs: 320 });
+      expect(resolveInventoryConfiguration(location, hall)).toEqual({ "parson-table-7": 5, chairs: 320 });
     }
   });
 
@@ -78,17 +78,17 @@ describe("location catalog", () => {
     ]);
   });
 
-  it("applies Angleton's confirmed 320-chair inventory without inventing table quantities", () => {
+  it("applies Angleton's confirmed chair and Parson Table inventory", () => {
     const location = getLocationBySlug("angleton");
     const hall = getHallBySlug(location, "sycamore-grove");
     if (!location || !hall) throw new Error("Sycamore Grove catalog entry missing");
 
     expect(ANGLETON_INVENTORY).toMatchObject({
       scope: "location-shared",
-      limits: { chairs: 320 },
+      limits: { "parson-table-7": 6, chairs: 320 },
     });
     expect(hall.configuration?.inventory).toBeUndefined();
-    expect(resolveInventoryConfiguration(location, hall)).toEqual({ chairs: 320 });
+    expect(resolveInventoryConfiguration(location, hall)).toEqual({ "parson-table-7": 6, chairs: 320 });
   });
 
   it("configures Sycamore Grove with its exact floor scale and raised usable stage", () => {
@@ -211,7 +211,7 @@ describe("location catalog", () => {
       measurementStatus: "confirmed",
       shape: { type: "rectangle", x: 167, y: 60, width: 960, height: 720 },
     });
-    expect(resolveInventoryConfiguration(location, hall)).toEqual({ chairs: 320 });
+    expect(resolveInventoryConfiguration(location, hall)).toEqual({ "parson-table-7": 6, chairs: 320 });
   });
 
   it("traces Heritage Pine's identified fixed architecture without a reference image", () => {
@@ -271,6 +271,7 @@ describe("location catalog", () => {
       "round-table-60": 32,
       "rectangle-table-6": 4,
       "rectangle-table-8": 6,
+      "parson-table-7": 6,
       "sweetheart-table": 1,
       chairs: 320,
     };
@@ -286,9 +287,8 @@ describe("location catalog", () => {
     }
   });
 
-  it("preserves unsupported Magnolia inventory rows with provenance", () => {
+  it("preserves the remaining unsupported Magnolia inventory row with provenance", () => {
     expect(MAGNOLIA_INVENTORY.additionalItems).toEqual([
-      expect.objectContaining({ sourceItemKey: "parson-table-7", quantity: 6 }),
       expect.objectContaining({ sourceItemKey: "cocktail-table-32", quantity: 6 }),
     ]);
   });
@@ -313,6 +313,7 @@ describe("location catalog", () => {
       "round-table-60": 12,
       "rectangle-table-6": 4,
       "rectangle-table-8": 6,
+      "parson-table-7": 6,
       "sweetheart-table": 1,
       chairs: 320,
     });
