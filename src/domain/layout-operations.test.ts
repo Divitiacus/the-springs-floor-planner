@@ -40,6 +40,10 @@ describe("floorplan object operations", () => {
       label: "Table 1",
       seats: 8,
     });
+    expect(OBJECT_DEFINITIONS["round-table-60"]).toMatchObject({
+      defaultSeats: 8,
+      maximumSeats: 10,
+    });
   });
 
   it("increments table numbers based on existing guest tables", () => {

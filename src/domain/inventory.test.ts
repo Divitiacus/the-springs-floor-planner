@@ -89,7 +89,7 @@ describe("inventory validation", () => {
   });
 
   it.each([
-    ["round-table-60", 8],
+    ["round-table-60", 10],
     ["rectangle-table-6", 8],
     ["rectangle-table-8", 10],
     ["sweetheart-table", 2],

@@ -29,7 +29,7 @@ export type ObjectDefinition = {
 };
 
 export const OBJECT_CATALOG: ObjectDefinition[] = [
-  { type: "round-table-60", name: "60-inch Round Table", shortLabel: "60\" Round", category: "Tables", width: 60, height: 60, defaultSeats: 8, maximumSeats: 8, inventoryLabel: "60-inch round tables", physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: 60 }, resizable: false, icon: "round" },
+  { type: "round-table-60", name: "60-inch Round Table", shortLabel: "60\" Round", category: "Tables", width: 60, height: 60, defaultSeats: 8, maximumSeats: 10, inventoryLabel: "60-inch round tables", physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: 60 }, resizable: false, icon: "round" },
   { type: "rectangle-table-6", name: "6-foot Rectangle Table", shortLabel: "6' Rectangle", category: "Tables", width: 72, height: 36, defaultSeats: 8, maximumSeats: 8, inventoryLabel: "6-foot rectangle tables", physicalDimensions: { status: "partial", shape: "rectangle", lengthInches: 72, depthInches: null }, resizable: false, icon: "rectangle" },
   { type: "rectangle-table-8", name: "8-foot Rectangle Table", shortLabel: "8' Rectangle", category: "Tables", width: 96, height: 36, defaultSeats: 10, maximumSeats: 10, inventoryLabel: "8-foot rectangle tables", physicalDimensions: { status: "partial", shape: "rectangle", lengthInches: 96, depthInches: null }, resizable: false, icon: "rectangle" },
   { type: "sweetheart-table", name: "Sweetheart Table", shortLabel: "Sweetheart", category: "Tables", width: 72, height: 36, defaultSeats: 2, maximumSeats: 2, inventoryLabel: "sweetheart tables", physicalDimensions: { status: "unconfigured", shape: "rectangle", widthInches: null, depthInches: null }, resizable: false, icon: "heart" },
