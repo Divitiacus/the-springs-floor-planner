@@ -43,4 +43,18 @@ describe("hall venue template", () => {
     expect(venue.hall.height).toBe(720);
     expect(table.width / venue.hall.width).toBe(1 / 16);
   });
+
+  it("loads Heritage Pine at the confirmed 80-by-60-foot scale", () => {
+    const location = getLocationBySlug("lake-conroe");
+    const hall = getHallBySlug(location, "heritage-pine");
+    if (!location || !hall) throw new Error("Heritage Pine catalog entry missing");
+
+    const venue = createHallVenueTemplate(location, hall);
+    const table = createEventObject("round-table-60", { x: 647, y: 420 }, [], "heritage-scale");
+
+    expect(venue.hall).toEqual({ x: 167, y: 60, width: 960, height: 720 });
+    expect(venue.referenceAsset).toBeNull();
+    expect(venue.elements.length).toBeGreaterThan(20);
+    expect(table.width / venue.hall.width).toBe(1 / 16);
+  });
 });

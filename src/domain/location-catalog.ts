@@ -4,6 +4,7 @@ import type {
   ReferenceFloorplanAsset,
 } from "@/domain/floorplan";
 import type { InventoryCatalog, InventoryConfiguration } from "@/domain/inventory";
+import { createHeritagePineConfiguration } from "@/domain/venues/heritage-pine";
 import { createHiddenMagnoliaConfiguration } from "@/domain/venues/hidden-magnolia";
 
 export type HallConfiguration = {
@@ -97,7 +98,7 @@ export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
         id: "hall_heritage_pine",
         slug: "heritage-pine",
         name: "Heritage Pine",
-        configuration: null,
+        configuration: createHeritagePineConfiguration(),
       },
     ],
   },
