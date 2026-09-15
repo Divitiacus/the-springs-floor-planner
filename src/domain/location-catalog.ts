@@ -7,6 +7,8 @@ import type { InventoryCatalog, InventoryConfiguration } from "@/domain/inventor
 import { createHeritagePineConfiguration } from "@/domain/venues/heritage-pine";
 import { createHiddenMagnoliaConfiguration } from "@/domain/venues/hidden-magnolia";
 import { createStonebrookConfiguration } from "@/domain/venues/stonebrook";
+import { createStonecreekReserveConfiguration } from "@/domain/venues/stonecreek-reserve";
+import { createVillaTuscanaConfiguration } from "@/domain/venues/villa-tuscana";
 
 export type HallConfiguration = {
   physicalWidthInches: number;
@@ -72,6 +74,15 @@ export const LAKE_CONROE_INVENTORY: InventoryCatalog = {
   },
 };
 
+export const KATY_INVENTORY: InventoryCatalog = {
+  scope: "location-shared",
+  limits: { chairs: 320 },
+  source: {
+    fileName: "user-confirmed",
+    note: "The 320-chair total was confirmed for both Katy halls; table quantities are not yet configured.",
+  },
+};
+
 export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
   {
     id: "location_magnolia",
@@ -110,6 +121,26 @@ export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
         slug: "heritage-pine",
         name: "Heritage Pine",
         configuration: createHeritagePineConfiguration(),
+      },
+    ],
+  },
+  {
+    id: "location_katy",
+    slug: "katy",
+    name: "Katy",
+    inventory: KATY_INVENTORY,
+    halls: [
+      {
+        id: "hall_stonecreek_reserve",
+        slug: "stonecreek-reserve",
+        name: "Stonecreek Reserve",
+        configuration: createStonecreekReserveConfiguration(),
+      },
+      {
+        id: "hall_villa_tuscana",
+        slug: "villa-tuscana",
+        name: "Villa Tuscana",
+        configuration: createVillaTuscanaConfiguration(),
       },
     ],
   },

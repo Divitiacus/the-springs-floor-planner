@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   getHallBySlug,
   getLocationBySlug,
+  KATY_INVENTORY,
   LAKE_CONROE_INVENTORY,
   MAGNOLIA_INVENTORY,
   resolveInventoryConfiguration,
@@ -10,7 +11,7 @@ import {
 
 describe("location catalog", () => {
   it("defines Magnolia with exactly its two confirmed halls", () => {
-    expect(SPRINGS_LOCATIONS).toHaveLength(2);
+    expect(SPRINGS_LOCATIONS).toHaveLength(3);
     expect(SPRINGS_LOCATIONS[0]).toMatchObject({ name: "Magnolia", slug: "magnolia" });
     expect(SPRINGS_LOCATIONS[0].halls.map((hall) => hall.name)).toEqual([
       "Pinehaven Terrace",
@@ -39,6 +40,74 @@ describe("location catalog", () => {
       expect(hall.configuration?.inventory).toBeUndefined();
       expect(resolveInventoryConfiguration(location, hall)).toEqual({ chairs: 320 });
     }
+  });
+
+  it("defines Katy with its two confirmed halls and stable route slugs", () => {
+    const location = getLocationBySlug("katy");
+    expect(location).toMatchObject({ id: "location_katy", name: "Katy" });
+    expect(location?.halls).toMatchObject([
+      {
+        id: "hall_stonecreek_reserve",
+        slug: "stonecreek-reserve",
+        name: "Stonecreek Reserve",
+      },
+      { id: "hall_villa_tuscana", slug: "villa-tuscana", name: "Villa Tuscana" },
+    ]);
+  });
+
+  it("shares the confirmed 320-chair Katy inventory across both halls", () => {
+    const location = getLocationBySlug("katy");
+    if (!location) throw new Error("Katy catalog entry missing");
+
+    expect(KATY_INVENTORY).toMatchObject({
+      scope: "location-shared",
+      limits: { chairs: 320 },
+    });
+    for (const hall of location.halls) {
+      expect(hall.configuration?.inventory).toBeUndefined();
+      expect(resolveInventoryConfiguration(location, hall)).toEqual({ chairs: 320 });
+    }
+  });
+
+  it.each([
+    ["stonecreek-reserve", "stonecreek-reserve", 192],
+    ["villa-tuscana", "villa-tuscana", 169],
+  ])("configures %s with an exact floor scale and raised usable stage", (hallSlug, idPrefix, x) => {
+    const location = getLocationBySlug("katy");
+    const hall = getHallBySlug(location, hallSlug);
+    if (!hall?.configuration) throw new Error(`${hallSlug} configuration missing`);
+    const elements = hall.configuration.fixedArchitecturalElements;
+    const mainFloor = elements.find(
+      (element) => element.kind === "area" && element.role === "main-floor",
+    );
+
+    expect(mainFloor).toMatchObject({
+      fixed: true,
+      placementBehavior: "allowed",
+      measurementStatus: "confirmed",
+      shape: { type: "rectangle", x, y: 60, width: 960, height: 720 },
+    });
+    expect(elements.find((element) => element.id === `${idPrefix}-stage`)).toMatchObject({
+      fixed: true,
+      placementBehavior: "allowed",
+      elevation: "raised",
+    });
+    expect(elements.find((element) => element.id === `${idPrefix}-stage-stairs`)).toMatchObject({
+      fixed: true,
+      placementBehavior: "blocked",
+    });
+    expect(elements.filter((element) => element.kind === "area" && element.role === "closet")).toHaveLength(2);
+    expect(elements.find((element) => element.kind === "area" && element.role === "bar")).toMatchObject({
+      fixed: true,
+      placementBehavior: "blocked",
+    });
+    expect(elements.find((element) => element.kind === "area" && element.role === "catering")).toMatchObject({
+      fixed: true,
+      placementBehavior: "blocked",
+    });
+    expect(elements.filter((element) => element.kind === "stairs")).toHaveLength(2);
+    expect(elements.filter((element) => element.kind === "door")).toHaveLength(10);
+    expect(hall.configuration.floorplanAsset).toBeNull();
   });
 
   it("configures Stonebrook with its confirmed floor scale and raised stage", () => {

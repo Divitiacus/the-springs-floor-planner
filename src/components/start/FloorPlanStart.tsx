@@ -137,7 +137,7 @@ export function FloorPlanStart() {
 
           <div className="mt-6 flex items-center justify-center gap-2 border-t border-[#edf0ef] pt-5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#9aa3a5]">
             <span className="size-1.5 rounded-full bg-[#b59a62]" />
-            Magnolia and Lake Conroe available
+            Magnolia, Lake Conroe, and Katy available
           </div>
         </div>
       </section>

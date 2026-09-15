@@ -71,4 +71,21 @@ describe("hall venue template", () => {
     expect(venue.elements.length).toBeGreaterThan(20);
     expect(table.width / venue.hall.width).toBe(1 / 16);
   });
+
+  it.each([
+    ["stonecreek-reserve", { x: 192, y: 60, width: 960, height: 720 }],
+    ["villa-tuscana", { x: 169, y: 60, width: 960, height: 720 }],
+  ])("loads Katy's %s at the confirmed 80-by-60-foot scale", (hallSlug, expectedHall) => {
+    const location = getLocationBySlug("katy");
+    const hall = getHallBySlug(location, hallSlug);
+    if (!location || !hall) throw new Error(`${hallSlug} catalog entry missing`);
+
+    const venue = createHallVenueTemplate(location, hall);
+    const table = createEventObject("round-table-60", { x: 660, y: 420 }, [], `${hallSlug}-scale`);
+
+    expect(venue.hall).toEqual(expectedHall);
+    expect(venue.referenceAsset).toBeNull();
+    expect(venue.elements.length).toBeGreaterThan(20);
+    expect(table.width / venue.hall.width).toBe(1 / 16);
+  });
 });
