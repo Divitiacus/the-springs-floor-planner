@@ -188,7 +188,7 @@ function ReferenceUnderlay({ asset }: { asset: ReferenceFloorplanAsset }) {
 
 function VenueLayer({ venue }: { venue: VenueTemplate }) {
   const grid = [];
-  const floorAreaRoles = new Set(["main-floor", "porch", "second-floor", "open-to-below"]);
+  const floorAreaRoles = new Set(["main-floor", "event-floor-extension", "porch", "second-floor", "open-to-below"]);
   for (let x = venue.hall.x + 60; x < venue.hall.x + venue.hall.width; x += 60) {
     grid.push(<Line key={`x-${x}`} points={[x, venue.hall.y, x, venue.hall.y + venue.hall.height]} stroke="#e7e9e5" strokeWidth={1} />);
   }
@@ -297,6 +297,7 @@ function FixedArchitectureNode({ element }: { element: FixedArchitectureElement 
 
   const colors = {
     "main-floor": { fill: "#fffdfa", stroke: "#526159" },
+    "event-floor-extension": { fill: "#fffdfa", stroke: "#526159" },
     stage: { fill: "#ddd4c4", stroke: "#8e7b61" },
     closet: { fill: "#e7e5df", stroke: "#858a84" },
     catering: { fill: "#ede8df", stroke: "#998e7f" },

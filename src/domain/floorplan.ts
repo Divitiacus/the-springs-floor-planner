@@ -71,6 +71,7 @@ export type FixedArchitectureElement =
       kind: "area";
       role:
         | "main-floor"
+        | "event-floor-extension"
         | "stage"
         | "closet"
         | "catering"

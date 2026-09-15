@@ -11,6 +11,7 @@ import { createStonebrookConfiguration } from "@/domain/venues/stonebrook";
 import { createStonecreekReserveConfiguration } from "@/domain/venues/stonecreek-reserve";
 import { createSycamoreGroveConfiguration } from "@/domain/venues/sycamore-grove";
 import { createVillaTuscanaConfiguration } from "@/domain/venues/villa-tuscana";
+import { createFarmhouseWallisvilleConfiguration } from "@/domain/venues/farmhouse-wallisville";
 
 export type HallConfiguration = {
   physicalWidthInches: number;
@@ -87,6 +88,15 @@ export const ANGLETON_INVENTORY: InventoryCatalog = {
   source: {
     fileName: "the_springs_table_chair_inventory_from_powerpoints.xlsx",
     note: "The source workbook confirms 6 Parson tables, 2 two-seat rounds, and 5 36-inch cocktail tables for Sycamore Grove. Sweetheart tables use the separately confirmed 36-inch round footprint. The 320-chair total was confirmed separately for Sycamore Grove. Magnolia Manor inventory is not yet configured.",
+  },
+};
+
+export const WALLISVILLE_FARMHOUSE_INVENTORY: InventoryCatalog = {
+  scope: "hall",
+  limits: { chairs: 250 },
+  source: {
+    fileName: "Wallisville Farmhouse floor plans supplied by the user",
+    note: "The user confirmed a 250-guest count for Farmhouse. Table inventory is not yet configured.",
   },
 };
 
@@ -193,6 +203,22 @@ export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
         slug: "magnolia-manor",
         name: "Magnolia Manor",
         configuration: createMagnoliaManorConfiguration(),
+      },
+    ],
+  },
+  {
+    id: "location_wallisville",
+    slug: "wallisville",
+    name: "Wallisville",
+    halls: [
+      {
+        id: "hall_farmhouse_wallisville",
+        slug: "farmhouse",
+        name: "Farmhouse",
+        configuration: {
+          ...createFarmhouseWallisvilleConfiguration(),
+          inventory: WALLISVILLE_FARMHOUSE_INVENTORY,
+        },
       },
     ],
   },

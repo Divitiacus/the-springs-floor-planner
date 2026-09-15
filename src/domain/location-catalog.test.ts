@@ -8,16 +8,57 @@ import {
   MAGNOLIA_INVENTORY,
   resolveInventoryConfiguration,
   SPRINGS_LOCATIONS,
+  WALLISVILLE_FARMHOUSE_INVENTORY,
 } from "@/domain/location-catalog";
 
 describe("location catalog", () => {
   it("defines Magnolia with exactly its two confirmed halls", () => {
-    expect(SPRINGS_LOCATIONS).toHaveLength(4);
+    expect(SPRINGS_LOCATIONS).toHaveLength(5);
     expect(SPRINGS_LOCATIONS[0]).toMatchObject({ name: "Magnolia", slug: "magnolia" });
     expect(SPRINGS_LOCATIONS[0].halls.map((hall) => hall.name)).toEqual([
       "Pinehaven Terrace",
       "The Hidden Magnolia",
     ]);
+  });
+
+  it("defines Wallisville Farmhouse with stable routing, confirmed scale, and a 250-guest planning limit", () => {
+    const location = getLocationBySlug("wallisville");
+    const hall = getHallBySlug(location, "farmhouse");
+    if (!location || !hall?.configuration) throw new Error("Wallisville Farmhouse configuration missing");
+
+    expect(location).toMatchObject({ id: "location_wallisville", name: "Wallisville" });
+    expect(hall).toMatchObject({ id: "hall_farmhouse_wallisville", name: "Farmhouse" });
+    expect(WALLISVILLE_FARMHOUSE_INVENTORY).toMatchObject({
+      scope: "hall",
+      limits: { chairs: 250 },
+    });
+    expect(resolveInventoryConfiguration(location, hall)).toEqual({ chairs: 250 });
+
+    const elements = hall.configuration.fixedArchitecturalElements;
+    expect(elements.find((element) => element.id === "farmhouse-wallisville-main-floor")).toMatchObject({
+      kind: "area",
+      role: "main-floor",
+      placementBehavior: "allowed",
+      measurementStatus: "confirmed",
+      shape: { type: "rectangle", width: 1056, height: 861 },
+    });
+    expect(elements.find((element) => element.id === "farmhouse-wallisville-upper-extension")).toMatchObject({
+      role: "event-floor-extension",
+      placementBehavior: "allowed",
+      shape: { type: "rectangle", width: 384, height: 336 },
+    });
+    expect(elements.find((element) => element.id === "farmhouse-wallisville-service-wing")).toMatchObject({
+      role: "catering",
+      placementBehavior: "blocked",
+      shape: { type: "rectangle", width: 336, height: 315 },
+    });
+    expect(elements.find((element) => element.id === "farmhouse-wallisville-stairs")).toMatchObject({
+      kind: "stairs",
+      placementBehavior: "blocked",
+      width: 72,
+      height: 192,
+    });
+    expect(hall.configuration.floorplanAsset).toBeNull();
   });
 
   it("defines Lake Conroe with its two confirmed halls and stable route slugs", () => {
