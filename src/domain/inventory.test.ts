@@ -8,6 +8,7 @@ import { feetToInches, inchesToFeet } from "@/domain/physical-units";
 const noLimits: InventoryConfiguration = {
   "round-table-48": null,
   "round-table-60": null,
+  "round-table-72": null,
   "rectangle-table-6": null,
   "rectangle-table-8": null,
   "farmhouse-table-6": null,
@@ -161,6 +162,7 @@ describe("inventory validation", () => {
   it.each([
     ["round-table-48", 6],
     ["round-table-60", 10],
+    ["round-table-72", 10],
     ["rectangle-table-6", 8],
     ["rectangle-table-8", 10],
     ["farmhouse-table-6", 8],

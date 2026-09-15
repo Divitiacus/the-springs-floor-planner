@@ -7,6 +7,7 @@ import {
   KATY_INVENTORY,
   LAKE_CONROE_INVENTORY,
   MAGNOLIA_INVENTORY,
+  MAGNOLIA_MANOR_INVENTORY,
   resolveInventoryConfiguration,
   SPRINGS_LOCATIONS,
   WALLISVILLE_FARMHOUSE_INVENTORY,
@@ -30,6 +31,7 @@ describe("location catalog", () => {
     expect(location).toMatchObject({ id: "location_cypress", name: "Cypress" });
     expect(hall).toMatchObject({ id: "hall_the_chateau_cypress", name: "The Chateau" });
     expect(CYPRESS_CHATEAU_INVENTORY.limits).toEqual({
+      "round-table-72": 30,
       "round-table-48": 2,
       "round-table-60": 20,
       "rectangle-table-6": 6,
@@ -84,7 +86,6 @@ describe("location catalog", () => {
         "rectangle-table-8": 4,
         "farmhouse-table-6": 5,
         "parson-table-7": 4,
-        "sweetheart-table": 4,
         "cocktail-table-32": 5,
         "cocktail-table-36": 2,
         chairs: 250,
@@ -97,7 +98,6 @@ describe("location catalog", () => {
       "rectangle-table-8": 4,
       "farmhouse-table-6": 5,
       "parson-table-7": 4,
-      "sweetheart-table": 4,
       "cocktail-table-32": 5,
       "cocktail-table-36": 2,
       chairs: 250,
@@ -144,30 +144,50 @@ describe("location catalog", () => {
     ]);
   });
 
-  it("shares the confirmed 320-chair Lake Conroe inventory across both halls", () => {
+  it("shares the Houston-region Lake Conroe inventory across both halls", () => {
     const location = getLocationBySlug("lake-conroe");
     if (!location) throw new Error("Lake Conroe catalog entry missing");
 
     expect(LAKE_CONROE_INVENTORY).toMatchObject({
       scope: "location-shared",
-      limits: { "parson-table-7": 6, "sweetheart-table": 2, chairs: 320 },
+      limits: {
+        "round-table-60": 40,
+        "rectangle-table-6": 2,
+        "rectangle-table-8": 6,
+        "farmhouse-table-6": 0,
+        "parson-table-7": 6,
+        "sweetheart-table": 2,
+        "cocktail-table-32": 0,
+        "cocktail-table-36": 5,
+        chairs: 320,
+      },
     });
     const stonebrook = getHallBySlug(location, "stonebrook")!;
     const heritagePine = getHallBySlug(location, "heritage-pine")!;
     expect(resolveInventoryConfiguration(location, stonebrook)).toEqual({
+      "round-table-60": 40,
+      "rectangle-table-6": 2,
+      "rectangle-table-8": 6,
+      "farmhouse-table-6": 0,
       "parson-table-7": 6,
       "sweetheart-table": 2,
-      chairs: 320,
-    });
-    expect(resolveInventoryConfiguration(location, heritagePine)).toEqual({
-      "parson-table-7": 6,
-      "sweetheart-table": 2,
+      "cocktail-table-32": 0,
       "cocktail-table-36": 5,
       chairs: 320,
     });
-    expect(stonebrook.configuration?.inventory?.additionalItems).toEqual([
-      expect.objectContaining({ sourceItemKey: "cocktail-table", quantity: 5 }),
-    ]);
+    expect(resolveInventoryConfiguration(location, heritagePine)).toEqual({
+      "round-table-60": 40,
+      "rectangle-table-6": 2,
+      "rectangle-table-8": 6,
+      "farmhouse-table-6": 0,
+      "parson-table-7": 6,
+      "sweetheart-table": 2,
+      "cocktail-table-32": 0,
+      "cocktail-table-36": 5,
+      chairs: 320,
+    });
+    expect(stonebrook.configuration?.inventory).toBeUndefined();
+    expect(heritagePine.configuration?.inventory).toBeUndefined();
   });
 
   it("defines Katy with its two confirmed halls and stable route slugs", () => {
@@ -183,22 +203,35 @@ describe("location catalog", () => {
     ]);
   });
 
-  it("shares the confirmed 320-chair Katy inventory across both halls", () => {
+  it("shares the Houston-region Katy inventory across both halls", () => {
     const location = getLocationBySlug("katy");
     if (!location) throw new Error("Katy catalog entry missing");
 
     expect(KATY_INVENTORY).toMatchObject({
       scope: "location-shared",
-      limits: { "parson-table-7": 5, "sweetheart-table": 2, chairs: 320 },
+      limits: {
+        "round-table-60": 32,
+        "rectangle-table-6": 2,
+        "rectangle-table-8": 6,
+        "farmhouse-table-6": 1,
+        "parson-table-7": 6,
+        "sweetheart-table": 2,
+        "cocktail-table-32": 0,
+        "cocktail-table-36": 5,
+        chairs: 320,
+      },
     });
-    expect(KATY_INVENTORY.additionalItems).toEqual([
-      expect.objectContaining({ sourceItemKey: "cocktail-table", quantity: 5 }),
-    ]);
     for (const hall of location.halls) {
       expect(hall.configuration?.inventory).toBeUndefined();
       expect(resolveInventoryConfiguration(location, hall)).toEqual({
-        "parson-table-7": 5,
+        "round-table-60": 32,
+        "rectangle-table-6": 2,
+        "rectangle-table-8": 6,
+        "farmhouse-table-6": 1,
+        "parson-table-7": 6,
         "sweetheart-table": 2,
+        "cocktail-table-32": 0,
+        "cocktail-table-36": 5,
         chairs: 320,
       });
     }
@@ -213,7 +246,7 @@ describe("location catalog", () => {
     ]);
   });
 
-  it("keeps Sycamore Grove inventory hall-specific until Magnolia Manor inventory is confirmed", () => {
+  it("keeps each confirmed Angleton hall inventory separate", () => {
     const location = getLocationBySlug("angleton");
     const sycamoreGrove = getHallBySlug(location, "sycamore-grove");
     const magnoliaManor = getHallBySlug(location, "magnolia-manor");
@@ -222,22 +255,41 @@ describe("location catalog", () => {
     expect(ANGLETON_INVENTORY).toMatchObject({
       scope: "hall",
       limits: {
+        "round-table-60": 40,
+        "rectangle-table-6": 2,
+        "rectangle-table-8": 6,
+        "farmhouse-table-6": 0,
         "parson-table-7": 6,
         "sweetheart-table": 2,
-        "cocktail-table-36": 5,
+        "cocktail-table-32": 5,
+        "cocktail-table-36": 0,
         chairs: 320,
       },
     });
     expect(location.inventory).toBeUndefined();
     expect(sycamoreGrove.configuration?.inventory).toBe(ANGLETON_INVENTORY);
     expect(resolveInventoryConfiguration(location, sycamoreGrove)).toEqual({
+      "round-table-60": 40,
+      "rectangle-table-6": 2,
+      "rectangle-table-8": 6,
+      "farmhouse-table-6": 0,
       "parson-table-7": 6,
       "sweetheart-table": 2,
-      "cocktail-table-36": 5,
+      "cocktail-table-32": 5,
+      "cocktail-table-36": 0,
       chairs: 320,
     });
-    expect(magnoliaManor.configuration?.inventory).toBeUndefined();
-    expect(resolveInventoryConfiguration(location, magnoliaManor)).toEqual({});
+    expect(magnoliaManor.configuration?.inventory).toBe(MAGNOLIA_MANOR_INVENTORY);
+    expect(resolveInventoryConfiguration(location, magnoliaManor)).toEqual({
+      "round-table-60": 40,
+      "rectangle-table-6": 2,
+      "rectangle-table-8": 6,
+      "parson-table-7": 6,
+      "sweetheart-table": 2,
+      "cocktail-table-32": 10,
+      "cocktail-table-36": 0,
+      chairs: 320,
+    });
   });
 
   it("models Magnolia Manor from its confirmed 67-foot-6-inch measurements", () => {
@@ -491,8 +543,13 @@ describe("location catalog", () => {
       shape: { type: "rectangle", x: 167, y: 60, width: 960, height: 720 },
     });
     expect(resolveInventoryConfiguration(location, hall)).toEqual({
+      "round-table-60": 40,
+      "rectangle-table-6": 2,
+      "rectangle-table-8": 6,
+      "farmhouse-table-6": 0,
       "parson-table-7": 6,
       "sweetheart-table": 2,
+      "cocktail-table-32": 0,
       "cocktail-table-36": 5,
       chairs: 320,
     });
@@ -555,16 +612,18 @@ describe("location catalog", () => {
       "round-table-60": 32,
       "rectangle-table-6": 4,
       "rectangle-table-8": 6,
+      "farmhouse-table-6": 0,
       "parson-table-7": 6,
       "sweetheart-table": 1,
       "cocktail-table-32": 6,
+      "cocktail-table-36": 0,
       chairs: 320,
     };
 
     expect(MAGNOLIA_INVENTORY).toMatchObject({
       scope: "location-shared",
       limits: expected,
-      source: { fileName: "the_springs_table_chair_inventory_from_powerpoints.xlsx" },
+      source: { fileName: "springs-inventory.xlsx" },
     });
     for (const hall of magnolia.halls) {
       expect(hall.configuration?.inventory).toBeUndefined();
@@ -597,9 +656,11 @@ describe("location catalog", () => {
       "round-table-60": 12,
       "rectangle-table-6": 4,
       "rectangle-table-8": 6,
+      "farmhouse-table-6": 0,
       "parson-table-7": 6,
       "sweetheart-table": 1,
       "cocktail-table-32": 6,
+      "cocktail-table-36": 0,
       chairs: 320,
     });
     expect(resolveInventoryConfiguration(magnolia, baseHall)["round-table-60"]).toBe(32);

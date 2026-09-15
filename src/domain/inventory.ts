@@ -4,6 +4,7 @@ import { OBJECT_DEFINITIONS, TABLE_TYPES } from "@/domain/object-catalog";
 export const INVENTORY_ITEM_TYPES = [
   "round-table-48",
   "round-table-60",
+  "round-table-72",
   "rectangle-table-6",
   "rectangle-table-8",
   "farmhouse-table-6",
@@ -42,6 +43,7 @@ export function getInventoryUsage(layout: FloorplanLayout): InventoryUsage {
   const usage: InventoryUsage = {
     "round-table-48": 0,
     "round-table-60": 0,
+    "round-table-72": 0,
     "rectangle-table-6": 0,
     "rectangle-table-8": 0,
     "farmhouse-table-6": 0,
@@ -124,6 +126,7 @@ function getInventoryObjectType(object: Pick<EventObject, "type" | "variant">): 
 const INVENTORY_LABELS: Record<Exclude<InventoryItemType, "chairs">, string> = {
   "round-table-48": OBJECT_DEFINITIONS["round-table-48"].inventoryLabel,
   "round-table-60": OBJECT_DEFINITIONS["round-table-60"].inventoryLabel,
+  "round-table-72": OBJECT_DEFINITIONS["round-table-72"].inventoryLabel,
   "rectangle-table-6": OBJECT_DEFINITIONS["rectangle-table-6"].inventoryLabel,
   "rectangle-table-8": OBJECT_DEFINITIONS["rectangle-table-8"].inventoryLabel,
   "farmhouse-table-6": OBJECT_DEFINITIONS["farmhouse-table-6"].inventoryLabel,

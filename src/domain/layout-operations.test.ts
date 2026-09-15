@@ -52,8 +52,7 @@ describe("floorplan object operations", () => {
     expect(second.tableNumber).toBe(2);
   });
 
-  it("offers distinct 6-foot and 8-foot rectangle tables without a 72-inch round", () => {
-    expect(OBJECT_CATALOG.map((definition) => definition.name)).not.toContain("72-inch Round Table");
+  it("offers distinct 6-foot and 8-foot rectangle tables", () => {
     expect(OBJECT_DEFINITIONS["rectangle-table-6"]).toMatchObject({
       width: 72,
       height: 30,
@@ -74,6 +73,27 @@ describe("floorplan object operations", () => {
     expect(sixFoot).toMatchObject({ width: 72, height: 30 });
     expect(eightFoot).toMatchObject({ width: 96, height: 30 });
     expect(resized.objects[0]).toMatchObject({ width: 72, height: 30 });
+  });
+
+  it("restores the confirmed Cypress-only 72-inch round table", () => {
+    expect(OBJECT_DEFINITIONS["round-table-72"]).toMatchObject({
+      width: 72,
+      height: 72,
+      defaultSeats: 10,
+      maximumSeats: 10,
+      inventoryOnly: true,
+      physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: 72 },
+    });
+    expect(isObjectAvailableForInventory(OBJECT_DEFINITIONS["round-table-72"], {})).toBe(false);
+    expect(isObjectAvailableForInventory(OBJECT_DEFINITIONS["round-table-72"], { "round-table-72": 30 })).toBe(true);
+  });
+
+  it("shows table choices only when the selected hall has positive inventory", () => {
+    expect(isObjectAvailableForInventory(OBJECT_DEFINITIONS["round-table-60"], {})).toBe(false);
+    expect(isObjectAvailableForInventory(OBJECT_DEFINITIONS["round-table-60"], { "round-table-60": 0 })).toBe(false);
+    expect(isObjectAvailableForInventory(OBJECT_DEFINITIONS["round-table-60"], { "round-table-60": 32 })).toBe(true);
+    expect(isObjectAvailableForInventory(OBJECT_DEFINITIONS["cocktail-table"], { "cocktail-table-32": 5 }, "32-round")).toBe(true);
+    expect(isObjectAvailableForInventory(OBJECT_DEFINITIONS["cocktail-table"], { "cocktail-table-32": 5 }, "36-round")).toBe(false);
   });
 
   it("defines Wallisville-only 48-inch round and wooden Farmhouse tables", () => {

@@ -46,49 +46,91 @@ export const MAGNOLIA_INVENTORY: InventoryCatalog = {
     "round-table-60": 32,
     "rectangle-table-6": 4,
     "rectangle-table-8": 6,
+    "farmhouse-table-6": 0,
     "parson-table-7": 6,
     "sweetheart-table": 1,
     "cocktail-table-32": 6,
+    "cocktail-table-36": 0,
     chairs: 320,
   },
   source: {
-    fileName: "the_springs_table_chair_inventory_from_powerpoints.xlsx",
-    note: "Table quantities come from the source workbook. Sweetheart tables use the separately confirmed 36-inch round footprint. The 320-chair total was confirmed separately for both Magnolia halls and is shared at the location level.",
+    fileName: "springs-inventory.xlsx",
+    note: "The Houston-region inventory workbook confirms the same table and chair quantities for both Magnolia halls.",
   },
 };
 
 export const LAKE_CONROE_INVENTORY: InventoryCatalog = {
   scope: "location-shared",
-  limits: { "parson-table-7": 6, "sweetheart-table": 2, chairs: 320 },
+  limits: {
+    "round-table-60": 40,
+    "rectangle-table-6": 2,
+    "rectangle-table-8": 6,
+    "farmhouse-table-6": 0,
+    "parson-table-7": 6,
+    "sweetheart-table": 2,
+    "cocktail-table-32": 0,
+    "cocktail-table-36": 5,
+    chairs: 320,
+  },
   source: {
-    fileName: "the_springs_table_chair_inventory_from_powerpoints.xlsx",
-    note: "The source workbook confirms 6 Parson tables and 2 sweetheart tables for each Lake Conroe hall. Sweetheart tables use the separately confirmed 36-inch round footprint. The 320-chair total was confirmed separately.",
+    fileName: "springs-inventory.xlsx",
+    note: "The Houston-region inventory workbook confirms the same table and chair quantities for Stonebrook and Heritage Pine.",
   },
 };
 
 export const KATY_INVENTORY: InventoryCatalog = {
   scope: "location-shared",
-  limits: { "parson-table-7": 5, "sweetheart-table": 2, chairs: 320 },
-  source: {
-    fileName: "the_springs_table_chair_inventory_from_powerpoints.xlsx",
-    note: "The source workbook confirms 5 Parson tables and 2 sweetheart tables shared across both Katy halls. Sweetheart tables use the separately confirmed 36-inch round footprint. Cocktail table quantity is confirmed, but its diameter is not stated. The 320-chair total was confirmed separately.",
+  limits: {
+    "round-table-60": 32,
+    "rectangle-table-6": 2,
+    "rectangle-table-8": 6,
+    "farmhouse-table-6": 1,
+    "parson-table-7": 6,
+    "sweetheart-table": 2,
+    "cocktail-table-32": 0,
+    "cocktail-table-36": 5,
+    chairs: 320,
   },
-  additionalItems: [
-    {
-      sourceItemKey: "cocktail-table",
-      name: "Cocktail Table",
-      quantity: 5,
-      note: "Physical size is not stated, so this quantity is not assigned to a scaled cocktail-table variant.",
-    },
-  ],
+  source: {
+    fileName: "springs-inventory.xlsx",
+    note: "The Houston-region inventory workbook confirms the same table and chair quantities for Stonecreek Reserve and Villa Tuscana.",
+  },
 };
 
 export const ANGLETON_INVENTORY: InventoryCatalog = {
   scope: "hall",
-  limits: { "parson-table-7": 6, "sweetheart-table": 2, "cocktail-table-36": 5, chairs: 320 },
+  limits: {
+    "round-table-60": 40,
+    "rectangle-table-6": 2,
+    "rectangle-table-8": 6,
+    "farmhouse-table-6": 0,
+    "parson-table-7": 6,
+    "sweetheart-table": 2,
+    "cocktail-table-32": 5,
+    "cocktail-table-36": 0,
+    chairs: 320,
+  },
   source: {
-    fileName: "the_springs_table_chair_inventory_from_powerpoints.xlsx",
-    note: "The source workbook confirms 6 Parson tables, 2 two-seat rounds, and 5 36-inch cocktail tables for Sycamore Grove. Sweetheart tables use the separately confirmed 36-inch round footprint. The 320-chair total was confirmed separately for Sycamore Grove. Magnolia Manor inventory is not yet configured.",
+    fileName: "springs-inventory.xlsx",
+    note: "The Houston-region inventory workbook confirms these quantities specifically for Sycamore Grove.",
+  },
+};
+
+export const MAGNOLIA_MANOR_INVENTORY: InventoryCatalog = {
+  scope: "hall",
+  limits: {
+    "round-table-60": 40,
+    "rectangle-table-6": 2,
+    "rectangle-table-8": 6,
+    "parson-table-7": 6,
+    "sweetheart-table": 2,
+    "cocktail-table-32": 10,
+    "cocktail-table-36": 0,
+    chairs: 320,
+  },
+  source: {
+    fileName: "springs-inventory.xlsx",
+    note: "The Houston-region inventory workbook confirms these quantities specifically for Magnolia Manor.",
   },
 };
 
@@ -101,20 +143,20 @@ export const WALLISVILLE_FARMHOUSE_INVENTORY: InventoryCatalog = {
     "rectangle-table-8": 4,
     "farmhouse-table-6": 5,
     "parson-table-7": 4,
-    "sweetheart-table": 4,
     "cocktail-table-32": 5,
     "cocktail-table-36": 2,
     chairs: 250,
   },
   source: {
-    fileName: "Wallisville inventory matrix and Farmhouse table reference supplied by the user",
-    note: "The supplied inventory row confirms the Wallisville table quantities and 250 chairs. The separate Farmhouse reference confirms five wooden 6-foot by 30-inch Farmhouse tables.",
+    fileName: "springs-inventory.xlsx",
+    note: "The Houston-region inventory workbook confirms the Wallisville Farmhouse table and chair quantities, including five wooden Farmhouse tables.",
   },
 };
 
 export const CYPRESS_CHATEAU_INVENTORY: InventoryCatalog = {
   scope: "hall",
   limits: {
+    "round-table-72": 30,
     "round-table-48": 2,
     "round-table-60": 20,
     "rectangle-table-6": 6,
@@ -124,35 +166,9 @@ export const CYPRESS_CHATEAU_INVENTORY: InventoryCatalog = {
     chairs: 320,
   },
   source: {
-    fileName: "Cypress inventory row supplied by the user",
-    note: "The supplied Cypress row confirms the selectable table quantities and 320 chairs for The Chateau. The 72-inch round column is intentionally excluded because the user previously confirmed that Springs guest-table catalog item is not offered.",
+    fileName: "springs-inventory.xlsx",
+    note: "The Houston-region inventory workbook confirms the selectable table quantities and 320 chairs for The Chateau, including 30 72-inch round tables.",
   },
-};
-
-const HERITAGE_PINE_INVENTORY: InventoryCatalog = {
-  scope: "hall",
-  limits: { "cocktail-table-36": 5 },
-  source: {
-    fileName: "the_springs_table_chair_inventory_from_powerpoints.xlsx",
-    note: "The source workbook confirms 5 36-inch round cocktail tables for Heritage Pine.",
-  },
-};
-
-const STONEBROOK_COCKTAIL_SOURCE: InventoryCatalog = {
-  scope: "hall",
-  limits: {},
-  source: {
-    fileName: "the_springs_table_chair_inventory_from_powerpoints.xlsx",
-    note: "The source workbook confirms 5 highboy cocktail tables for Stonebrook, but does not state their diameter.",
-  },
-  additionalItems: [
-    {
-      sourceItemKey: "cocktail-table",
-      name: "Highboy Cocktail Table",
-      quantity: 5,
-      note: "Physical size is not stated, so this quantity is not assigned to a scaled cocktail-table variant.",
-    },
-  ],
 };
 
 export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
@@ -186,13 +202,13 @@ export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
         id: "hall_stonebrook",
         slug: "stonebrook",
         name: "Stonebrook",
-        configuration: { ...createStonebrookConfiguration(), inventory: STONEBROOK_COCKTAIL_SOURCE },
+        configuration: createStonebrookConfiguration(),
       },
       {
         id: "hall_heritage_pine",
         slug: "heritage-pine",
         name: "Heritage Pine",
-        configuration: { ...createHeritagePineConfiguration(), inventory: HERITAGE_PINE_INVENTORY },
+        configuration: createHeritagePineConfiguration(),
       },
     ],
   },
@@ -231,7 +247,7 @@ export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
         id: "hall_magnolia_manor",
         slug: "magnolia-manor",
         name: "Magnolia Manor",
-        configuration: createMagnoliaManorConfiguration(),
+        configuration: { ...createMagnoliaManorConfiguration(), inventory: MAGNOLIA_MANOR_INVENTORY },
       },
     ],
   },

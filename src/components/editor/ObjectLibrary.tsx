@@ -44,7 +44,7 @@ export function ObjectLibrary({ onAdd, inventory, usage }: Props) {
               {OBJECT_CATALOG
                 .filter((item) => item.category === category && item.showInLibrary !== false)
                 .flatMap(getLibraryChoices)
-                .filter((choice) => isObjectAvailableForInventory(choice.definition, inventory))
+                .filter((choice) => isObjectAvailableForInventory(choice.definition, inventory, choice.selection.variant))
                 .map((choice) => {
                   const Icon = icons[choice.definition.icon];
                   return (
@@ -110,6 +110,7 @@ function InventorySummary({ inventory, usage }: Pick<Props, "inventory" | "usage
   const rows = [
     { type: "round-table-48" as const, label: '48" Round', inventoryOnly: true },
     { type: "round-table-60" as const, label: '60" Round' },
+    { type: "round-table-72" as const, label: '72" Round', inventoryOnly: true },
     { type: "rectangle-table-6" as const, label: "6' Rectangle" },
     { type: "rectangle-table-8" as const, label: "8' Rectangle" },
     { type: "farmhouse-table-6" as const, label: "Farmhouse", inventoryOnly: true },
@@ -124,7 +125,10 @@ function InventorySummary({ inventory, usage }: Pick<Props, "inventory" | "usage
     <section className="rounded-xl border border-[#dfe5e0] bg-[#f6f8f6] p-3" aria-labelledby="inventory-heading">
       <h3 id="inventory-heading" className="text-[10px] font-bold uppercase tracking-[0.13em] text-[#718078]">Inventory use</h3>
       <dl className="mt-2 space-y-1.5">
-        {rows.filter((row) => !row.inventoryOnly || Object.prototype.hasOwnProperty.call(inventory, row.type)).map((row) => (
+        {rows.filter((row) => {
+          const limit = inventory[row.type];
+          return typeof limit === "number" && limit > 0;
+        }).map((row) => (
           <div key={row.type} className="flex items-center justify-between gap-2 text-[10px]">
             <dt className="font-semibold text-[#536158]">{row.label}</dt>
             <dd className="tabular-nums text-[#75827b]">
