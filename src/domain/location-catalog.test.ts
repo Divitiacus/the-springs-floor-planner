@@ -246,9 +246,13 @@ describe("location catalog", () => {
     const hall = getHallBySlug(location, "magnolia-manor");
     if (!hall?.configuration) throw new Error("Magnolia Manor configuration missing");
 
-    expect(hall.configuration.fixedArchitecturalElements.find(
+    const elements = hall.configuration.fixedArchitecturalElements;
+    expect(elements.find(
       (element) => element.id === "magnolia-manor-bottom-flight",
     )).toMatchObject({ treadAxis: "y", curvedBottom: true, showLabel: false });
+    expect(elements.findIndex((element) => element.id === "magnolia-manor-open-north-rail")).toBeLessThan(
+      elements.findIndex((element) => element.id === "magnolia-manor-second-floor-bottom-flight"),
+    );
   });
 
   it("configures Sycamore Grove with its exact floor scale and raised usable stage", () => {

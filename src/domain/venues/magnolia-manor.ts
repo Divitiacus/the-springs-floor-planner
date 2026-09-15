@@ -69,6 +69,9 @@ export function createMagnoliaManorConfiguration(): HallConfiguration {
     areaWithoutLabel(common, "magnolia-manor-second-floor", "second-floor", "Second Floor · 12′ Wide", SECOND_FLOOR_X, FLOOR_Y, HALL_SIZE, HALL_SIZE, "restricted", "confirmed"),
     area(common, "magnolia-manor-open-to-below", "open-to-below", "Open to Floor Below", SECOND_FLOOR_X + BALCONY_WIDTH, FLOOR_Y + BALCONY_WIDTH, OPENING_SIZE, OPENING_SIZE, "blocked", "confirmed"),
     area(common, "magnolia-manor-second-floor-balcony", "porch", "Balcony · 7′8″ Deep", SECOND_FLOOR_X, FLOOR_Y + HALL_SIZE, HALL_SIZE, PORCH_DEPTH, "restricted", "confirmed"),
+    // Draw the balcony walls before the stairs so the stair footprint cleanly
+    // masks the otherwise-correct open-to-below edge running behind it.
+    ...createSecondFloorWalls(common),
     ...createSecondFloorStaircase(common),
     ...createSecondFloorPillars(common),
     areaPolygon(
@@ -79,7 +82,6 @@ export function createMagnoliaManorConfiguration(): HallConfiguration {
       [SECOND_FLOOR_X + HALL_SIZE, 424, SECOND_FLOOR_X + HALL_SIZE - 30, 424, SECOND_FLOOR_X + HALL_SIZE - 40, 448, SECOND_FLOOR_X + HALL_SIZE - 40, 496, SECOND_FLOOR_X + HALL_SIZE - 30, 520, SECOND_FLOOR_X + HALL_SIZE, 520],
       "blocked",
     ),
-    ...createSecondFloorWalls(common),
     ...createSecondFloorDoors(common),
     label(common, "magnolia-manor-second-floor-label", "SECOND FLOOR · BALCONY", 1205, 100, 360, 13),
   ];

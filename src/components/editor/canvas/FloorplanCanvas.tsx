@@ -188,6 +188,7 @@ function ReferenceUnderlay({ asset }: { asset: ReferenceFloorplanAsset }) {
 
 function VenueLayer({ venue }: { venue: VenueTemplate }) {
   const grid = [];
+  const floorAreaRoles = new Set(["main-floor", "porch", "second-floor", "open-to-below"]);
   for (let x = venue.hall.x + 60; x < venue.hall.x + venue.hall.width; x += 60) {
     grid.push(<Line key={`x-${x}`} points={[x, venue.hall.y, x, venue.hall.y + venue.hall.height]} stroke="#e7e9e5" strokeWidth={1} />);
   }
@@ -197,11 +198,20 @@ function VenueLayer({ venue }: { venue: VenueTemplate }) {
 
   return (
     <>
-      {venue.elements.filter((element) => element.kind === "area").map((element) => (
+      {venue.elements.filter((element) => element.kind === "area" && floorAreaRoles.has(element.role)).map((element) => (
         <FixedArchitectureNode key={element.id} element={element} />
       ))}
       {grid}
-      {venue.elements.filter((element) => element.kind !== "area").map((element) => (
+      {venue.elements.filter((element) => element.kind === "area" && !floorAreaRoles.has(element.role) && element.role !== "landing").map((element) => (
+        <FixedArchitectureNode key={element.id} element={element} />
+      ))}
+      {venue.elements.filter((element) => element.kind === "wall" || element.kind === "railing").map((element) => (
+        <FixedArchitectureNode key={element.id} element={element} />
+      ))}
+      {venue.elements.filter((element) => element.kind === "area" && element.role === "landing").map((element) => (
+        <FixedArchitectureNode key={element.id} element={element} />
+      ))}
+      {venue.elements.filter((element) => element.kind !== "area" && element.kind !== "wall" && element.kind !== "railing").map((element) => (
         <FixedArchitectureNode key={element.id} element={element} />
       ))}
       <Text x={venue.hall.x + 18} y={venue.hall.y + 16} text={venue.name.toUpperCase()} fontSize={11} fontStyle="bold" letterSpacing={1.8} fill="#8b968f" />
