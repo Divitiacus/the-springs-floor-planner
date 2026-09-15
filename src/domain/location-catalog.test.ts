@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  ANGLETON_INVENTORY,
   getHallBySlug,
   getLocationBySlug,
   KATY_INVENTORY,
@@ -11,7 +12,7 @@ import {
 
 describe("location catalog", () => {
   it("defines Magnolia with exactly its two confirmed halls", () => {
-    expect(SPRINGS_LOCATIONS).toHaveLength(3);
+    expect(SPRINGS_LOCATIONS).toHaveLength(4);
     expect(SPRINGS_LOCATIONS[0]).toMatchObject({ name: "Magnolia", slug: "magnolia" });
     expect(SPRINGS_LOCATIONS[0].halls.map((hall) => hall.name)).toEqual([
       "Pinehaven Terrace",
@@ -67,6 +68,66 @@ describe("location catalog", () => {
       expect(hall.configuration?.inventory).toBeUndefined();
       expect(resolveInventoryConfiguration(location, hall)).toEqual({ chairs: 320 });
     }
+  });
+
+  it("defines Angleton with Sycamore Grove and a stable route slug", () => {
+    const location = getLocationBySlug("angleton");
+    expect(location).toMatchObject({ id: "location_angleton", name: "Angleton" });
+    expect(location?.halls).toMatchObject([
+      { id: "hall_sycamore_grove", slug: "sycamore-grove", name: "Sycamore Grove" },
+    ]);
+  });
+
+  it("applies Angleton's confirmed 320-chair inventory without inventing table quantities", () => {
+    const location = getLocationBySlug("angleton");
+    const hall = getHallBySlug(location, "sycamore-grove");
+    if (!location || !hall) throw new Error("Sycamore Grove catalog entry missing");
+
+    expect(ANGLETON_INVENTORY).toMatchObject({
+      scope: "location-shared",
+      limits: { chairs: 320 },
+    });
+    expect(hall.configuration?.inventory).toBeUndefined();
+    expect(resolveInventoryConfiguration(location, hall)).toEqual({ chairs: 320 });
+  });
+
+  it("configures Sycamore Grove with its exact floor scale and raised usable stage", () => {
+    const location = getLocationBySlug("angleton");
+    const hall = getHallBySlug(location, "sycamore-grove");
+    if (!hall?.configuration) throw new Error("Sycamore Grove configuration missing");
+    const elements = hall.configuration.fixedArchitecturalElements;
+    const mainFloor = elements.find(
+      (element) => element.kind === "area" && element.role === "main-floor",
+    );
+
+    expect(mainFloor).toMatchObject({
+      fixed: true,
+      placementBehavior: "allowed",
+      measurementStatus: "confirmed",
+      shape: { type: "rectangle", x: 192, y: 60, width: 960, height: 720 },
+    });
+    expect(elements.find((element) => element.id === "sycamore-grove-stage")).toMatchObject({
+      fixed: true,
+      placementBehavior: "allowed",
+      elevation: "raised",
+    });
+    expect(elements.find((element) => element.id === "sycamore-grove-stage-stairs")).toMatchObject({
+      fixed: true,
+      placementBehavior: "blocked",
+    });
+    expect(elements.filter((element) => element.kind === "area" && element.role === "closet")).toHaveLength(2);
+    expect(elements.find((element) => element.kind === "area" && element.role === "bar")).toMatchObject({
+      fixed: true,
+      placementBehavior: "blocked",
+    });
+    expect(elements.find((element) => element.kind === "area" && element.role === "catering")).toMatchObject({
+      fixed: true,
+      placementBehavior: "blocked",
+    });
+    expect(elements.filter((element) => element.kind === "stairs")).toHaveLength(2);
+    expect(elements.filter((element) => element.kind === "door")).toHaveLength(10);
+    expect(elements.filter((element) => element.kind === "direction-label")).toHaveLength(2);
+    expect(hall.configuration.floorplanAsset).toBeNull();
   });
 
   it.each([

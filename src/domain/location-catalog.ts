@@ -8,6 +8,7 @@ import { createHeritagePineConfiguration } from "@/domain/venues/heritage-pine";
 import { createHiddenMagnoliaConfiguration } from "@/domain/venues/hidden-magnolia";
 import { createStonebrookConfiguration } from "@/domain/venues/stonebrook";
 import { createStonecreekReserveConfiguration } from "@/domain/venues/stonecreek-reserve";
+import { createSycamoreGroveConfiguration } from "@/domain/venues/sycamore-grove";
 import { createVillaTuscanaConfiguration } from "@/domain/venues/villa-tuscana";
 
 export type HallConfiguration = {
@@ -83,6 +84,15 @@ export const KATY_INVENTORY: InventoryCatalog = {
   },
 };
 
+export const ANGLETON_INVENTORY: InventoryCatalog = {
+  scope: "location-shared",
+  limits: { chairs: 320 },
+  source: {
+    fileName: "user-confirmed",
+    note: "The 320-chair total was confirmed for Sycamore Grove; table quantities are not yet configured.",
+  },
+};
+
 export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
   {
     id: "location_magnolia",
@@ -141,6 +151,20 @@ export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
         slug: "villa-tuscana",
         name: "Villa Tuscana",
         configuration: createVillaTuscanaConfiguration(),
+      },
+    ],
+  },
+  {
+    id: "location_angleton",
+    slug: "angleton",
+    name: "Angleton",
+    inventory: ANGLETON_INVENTORY,
+    halls: [
+      {
+        id: "hall_sycamore_grove",
+        slug: "sycamore-grove",
+        name: "Sycamore Grove",
+        configuration: createSycamoreGroveConfiguration(),
       },
     ],
   },

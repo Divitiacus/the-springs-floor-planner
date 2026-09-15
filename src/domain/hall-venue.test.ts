@@ -88,4 +88,18 @@ describe("hall venue template", () => {
     expect(venue.elements.length).toBeGreaterThan(20);
     expect(table.width / venue.hall.width).toBe(1 / 16);
   });
+
+  it("loads Sycamore Grove at the confirmed 80-by-60-foot scale", () => {
+    const location = getLocationBySlug("angleton");
+    const hall = getHallBySlug(location, "sycamore-grove");
+    if (!location || !hall) throw new Error("Sycamore Grove catalog entry missing");
+
+    const venue = createHallVenueTemplate(location, hall);
+    const table = createEventObject("round-table-60", { x: 672, y: 420 }, [], "sycamore-scale");
+
+    expect(venue.hall).toEqual({ x: 192, y: 60, width: 960, height: 720 });
+    expect(venue.referenceAsset).toBeNull();
+    expect(venue.elements.length).toBeGreaterThan(20);
+    expect(table.width / venue.hall.width).toBe(1 / 16);
+  });
 });
