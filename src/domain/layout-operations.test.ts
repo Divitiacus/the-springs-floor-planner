@@ -281,7 +281,10 @@ describe("persistence", () => {
   });
 
   it("creates a compact editable file and rebuilds derived object data when opened", () => {
-    const object = createEventObject("dance-floor", { x: 100, y: 120 }, [], "dance-floor", "12x12");
+    const object = {
+      ...createEventObject("dance-floor", { x: 100, y: 120 }, [], "dance-floor", "12x12"),
+      levelId: "level-2-balcony",
+    };
     const layout = addObject({ ...createEmptyLayout("hall_hidden_magnolia"), name: "Taylor Reception" }, object);
     const portable = serializePortableFloorplan(layout);
     const reopened = deserializeFloorplan(portable);
@@ -298,8 +301,18 @@ describe("persistence", () => {
         width: 144,
         height: 144,
         physicalDimensions: { widthInches: 144, depthInches: 144 },
+        levelId: "level-2-balcony",
       }],
     });
+  });
+
+  it("still opens version 3 compact files without a floor assignment", () => {
+    const reopened = deserializeFloorplan(
+      '{"v":3,"h":"hall_the_chateau_cypress","n":"Legacy Plan","o":[["dj",null,100,120,72,72,0,"DJ",null,null,1]]}',
+    );
+
+    expect(reopened.objects[0]).toMatchObject({ type: "dj", x: 100, y: 120 });
+    expect(reopened.objects[0].levelId).toBeUndefined();
   });
 
   it("round-trips a Parson Table through the compact editable file", () => {

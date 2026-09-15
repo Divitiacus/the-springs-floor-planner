@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { getHallBySlug, getLocationBySlug, resolveInventoryConfiguration } from "@/domain/location-catalog";
-import { createHallVenueTemplate } from "@/domain/hall-venue";
+import { createHallVenueTemplates } from "@/domain/hall-venue";
 import { FloorPlanner } from "@/components/editor/FloorPlanner";
 
 export const metadata: Metadata = {
@@ -22,9 +22,11 @@ export default async function FloorplanPage({ searchParams }: { searchParams: Se
   const hall = getHallBySlug(location, hallSlug);
 
   if (location && hall?.configuration) {
+    const levelVenues = createHallVenueTemplates(location, hall);
     return (
       <FloorPlanner
-        venue={createHallVenueTemplate(location, hall)}
+        venue={levelVenues[0]}
+        levelVenues={levelVenues}
         locationName={location.name}
         inventory={resolveInventoryConfiguration(location, hall)}
       />

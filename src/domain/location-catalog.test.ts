@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { isPositionOnFloor } from "@/domain/floor-regions";
 import {
   ANGLETON_INVENTORY,
   CYPRESS_CHATEAU_INVENTORY,
@@ -8,8 +9,11 @@ import {
   LAKE_CONROE_INVENTORY,
   MAGNOLIA_INVENTORY,
   MAGNOLIA_MANOR_INVENTORY,
+  isMultiLevelHallConfiguration,
   resolveInventoryConfiguration,
   SPRINGS_LOCATIONS,
+  type HallConfiguration,
+  type SingleLevelHallConfiguration,
   WALLISVILLE_FARMHOUSE_INVENTORY,
 } from "@/domain/location-catalog";
 
@@ -23,7 +27,7 @@ describe("location catalog", () => {
     ]);
   });
 
-  it("defines Cypress The Chateau with its confirmed hall scale, stage, curves, and inventory", () => {
+  it("defines Cypress The Chateau as two independent, equally scaled floor levels", () => {
     const location = getLocationBySlug("cypress");
     const hall = getHallBySlug(location, "the-chateau");
     if (!location || !hall?.configuration) throw new Error("Cypress The Chateau configuration missing");
@@ -42,12 +46,23 @@ describe("location catalog", () => {
     });
     expect(resolveInventoryConfiguration(location, hall)).toEqual(CYPRESS_CHATEAU_INVENTORY.limits);
 
-    const elements = hall.configuration.fixedArchitecturalElements;
+    if (!isMultiLevelHallConfiguration(hall.configuration)) throw new Error("Cypress must use multi-level configuration");
+    const levels = hall.configuration.levels;
+    expect(hall.configuration.defaultLevelId).toBe("level-1-main-floor");
+    expect(levels.map((level) => [level.id, level.slug, level.name])).toEqual([
+      ["level-1-main-floor", "main-floor", "Level 1 — Main Floor"],
+      ["level-2-balcony", "balcony", "Level 2 — Balcony"],
+    ]);
+    expect(levels.every((level) => level.physicalWidthInches === 1740 && level.physicalHeightInches === 980)).toBe(true);
+
+    const mainFloor = levels.find((level) => level.id === "level-1-main-floor");
+    if (!mainFloor) throw new Error("Cypress main-floor level missing");
+    const elements = mainFloor.fixedArchitecturalElements;
     expect(elements.find((element) => element.id === "chateau-main-floor")).toMatchObject({
       kind: "area",
       placementBehavior: "allowed",
       measurementStatus: "confirmed",
-      shape: { type: "rectangle", width: 828, height: 660 },
+      shape: { type: "rectangle", width: 660, height: 828 },
     });
     expect(elements.find((element) => element.id === "chateau-stage")).toMatchObject({
       kind: "path",
@@ -66,8 +81,35 @@ describe("location catalog", () => {
       placementBehavior: "blocked",
       shape: { type: "rectangle", width: 288, height: 228 },
     });
-    expect(elements.filter((element) => element.kind === "area" && element.role === "pillar")).toHaveLength(19);
-    expect(hall.configuration.floorplanAsset).toBeNull();
+    expect(elements.filter((element) => element.kind === "area" && element.role === "pillar")).toHaveLength(10);
+    expect(elements.find((element) => element.id === "chateau-rotunda-floor")).toMatchObject({
+      kind: "path",
+      placementBehavior: "allowed",
+    });
+    expect(elements.some((element) => element.id.includes("balcony-overhead"))).toBe(false);
+    expect(elements.find((element) => element.id === "chateau-west-restrooms")).toBeUndefined();
+    expect(elements.find((element) => element.id === "chateau-east-meeting-office")).toBeUndefined();
+    expect(mainFloor.floorplanAsset).toBeNull();
+
+    const balcony = levels.find((level) => level.id === "level-2-balcony");
+    expect(balcony?.usableAreas?.find((region) => region.id === "chateau-level-2-main-balcony-north")).toMatchObject({
+      kind: "usable-floor",
+      placementBehavior: "allowed",
+    });
+    expect(balcony?.voidAreas?.find((region) => region.id === "chateau-level-2-main-hall-void")).toMatchObject({
+      kind: "open-to-below",
+      placementBehavior: "blocked",
+    });
+    expect(balcony?.voidAreas?.find((region) => region.id === "chateau-level-2-rotunda-void")).toMatchObject({
+      kind: "open-to-below",
+      placementBehavior: "blocked",
+    });
+    expect(balcony?.fixedArchitecturalElements.some((element) => element.kind === "area" && element.role === "second-floor")).toBe(false);
+    expect(balcony?.fixedArchitecturalElements.some((element) => element.id === "chateau-stage")).toBe(false);
+    if (!balcony) throw new Error("Cypress balcony level missing");
+    expect(isPositionOnFloor({ x: 900, y: 145 }, balcony.usableAreas ?? [], balcony.voidAreas ?? [])).toBe(true);
+    expect(isPositionOnFloor({ x: 1100, y: 450 }, balcony.usableAreas ?? [], balcony.voidAreas ?? [])).toBe(false);
+    expect(isPositionOnFloor({ x: 530, y: 365 }, balcony.usableAreas ?? [], balcony.voidAreas ?? [])).toBe(false);
   });
 
   it("defines Wallisville Farmhouse with stable routing, confirmed scale, and a 250-guest planning limit", () => {
@@ -103,7 +145,7 @@ describe("location catalog", () => {
       chairs: 250,
     });
 
-    const elements = hall.configuration.fixedArchitecturalElements;
+    const elements = singleLevel(hall.configuration).fixedArchitecturalElements;
     expect(elements.find((element) => element.id === "farmhouse-wallisville-main-floor")).toMatchObject({
       kind: "area",
       role: "main-floor",
@@ -132,7 +174,7 @@ describe("location catalog", () => {
       y: 709,
     });
     expect(hall.configuration).toMatchObject({ physicalHeightInches: 1256 });
-    expect(hall.configuration.floorplanAsset).toBeNull();
+    expect(singleLevel(hall.configuration).floorplanAsset).toBeNull();
   });
 
   it("defines Lake Conroe with its two confirmed halls and stable route slugs", () => {
@@ -296,7 +338,7 @@ describe("location catalog", () => {
     const location = getLocationBySlug("angleton");
     const hall = getHallBySlug(location, "magnolia-manor");
     if (!hall?.configuration) throw new Error("Magnolia Manor configuration missing");
-    const elements = hall.configuration.fixedArchitecturalElements;
+    const elements = singleLevel(hall.configuration).fixedArchitecturalElements;
 
     expect(elements.find((element) => element.id === "magnolia-manor-main-floor")).toMatchObject({
       kind: "area",
@@ -311,14 +353,14 @@ describe("location catalog", () => {
       measurementStatus: "confirmed",
       shape: { type: "rectangle", height: 92 },
     });
-    expect(hall.configuration.floorplanAsset).toBeNull();
+    expect(singleLevel(hall.configuration).floorplanAsset).toBeNull();
   });
 
   it("stores Magnolia Manor's confirmed permanent fixture dimensions", () => {
     const location = getLocationBySlug("angleton");
     const hall = getHallBySlug(location, "magnolia-manor");
     if (!hall?.configuration) throw new Error("Magnolia Manor configuration missing");
-    const elements = hall.configuration.fixedArchitecturalElements;
+    const elements = singleLevel(hall.configuration).fixedArchitecturalElements;
 
     expect(elements.find((element) => element.id === "magnolia-manor-bar-counter")).toMatchObject({
       placementBehavior: "blocked",
@@ -339,7 +381,7 @@ describe("location catalog", () => {
     const location = getLocationBySlug("angleton");
     const hall = getHallBySlug(location, "magnolia-manor");
     if (!hall?.configuration) throw new Error("Magnolia Manor configuration missing");
-    const elements = hall.configuration.fixedArchitecturalElements;
+    const elements = singleLevel(hall.configuration).fixedArchitecturalElements;
 
     expect(elements.find((element) => element.id === "magnolia-manor-stair-landing")).toMatchObject({
       measurementStatus: "confirmed",
@@ -361,7 +403,7 @@ describe("location catalog", () => {
     expect(elements.find((element) => element.id === "magnolia-manor-bottom-flight")?.physicalNote).toContain("53 inches tall");
     expect(elements.find((element) => element.id.startsWith("magnolia-manor-bottom-stair-pillar"))).toBeUndefined();
     expect(elements.find((element) => element.id === "magnolia-manor-stair-square")).toBeUndefined();
-    expect(hall.configuration.physicalDimensionNote).toContain("intentionally not modeled");
+    expect(singleLevel(hall.configuration).physicalDimensionNote).toContain("intentionally not modeled");
     expect(elements.find((element) => element.id === "magnolia-manor-suite-label")).toBeUndefined();
   });
 
@@ -369,7 +411,7 @@ describe("location catalog", () => {
     const location = getLocationBySlug("angleton");
     const hall = getHallBySlug(location, "magnolia-manor");
     if (!hall?.configuration) throw new Error("Magnolia Manor configuration missing");
-    const elements = hall.configuration.fixedArchitecturalElements;
+    const elements = singleLevel(hall.configuration).fixedArchitecturalElements;
     const secondFloor = elements.filter((element) => element.kind === "area" && element.role === "second-floor");
 
     expect(secondFloor).toHaveLength(1);
@@ -388,7 +430,7 @@ describe("location catalog", () => {
     const location = getLocationBySlug("angleton");
     const hall = getHallBySlug(location, "magnolia-manor");
     if (!hall?.configuration) throw new Error("Magnolia Manor configuration missing");
-    const elements = hall.configuration.fixedArchitecturalElements;
+    const elements = singleLevel(hall.configuration).fixedArchitecturalElements;
 
     expect(elements.filter((element) => element.id.startsWith("magnolia-manor-west-double-door"))).toMatchObject([
       { x: 50, y: 437, width: 48, rotation: 90, swingDirection: "clockwise" },
@@ -413,7 +455,7 @@ describe("location catalog", () => {
     const hall = getHallBySlug(location, "magnolia-manor");
     if (!hall?.configuration) throw new Error("Magnolia Manor configuration missing");
 
-    const elements = hall.configuration.fixedArchitecturalElements;
+    const elements = singleLevel(hall.configuration).fixedArchitecturalElements;
     expect(elements.find(
       (element) => element.id === "magnolia-manor-bottom-flight",
     )).toMatchObject({ treadAxis: "y", curvedBottom: true, showLabel: false });
@@ -426,7 +468,7 @@ describe("location catalog", () => {
     const location = getLocationBySlug("angleton");
     const hall = getHallBySlug(location, "sycamore-grove");
     if (!hall?.configuration) throw new Error("Sycamore Grove configuration missing");
-    const elements = hall.configuration.fixedArchitecturalElements;
+    const elements = singleLevel(hall.configuration).fixedArchitecturalElements;
     const mainFloor = elements.find(
       (element) => element.kind === "area" && element.role === "main-floor",
     );
@@ -458,7 +500,7 @@ describe("location catalog", () => {
     expect(elements.filter((element) => element.kind === "stairs")).toHaveLength(2);
     expect(elements.filter((element) => element.kind === "door")).toHaveLength(10);
     expect(elements.filter((element) => element.kind === "direction-label")).toHaveLength(2);
-    expect(hall.configuration.floorplanAsset).toBeNull();
+    expect(singleLevel(hall.configuration).floorplanAsset).toBeNull();
   });
 
   it.each([
@@ -468,7 +510,7 @@ describe("location catalog", () => {
     const location = getLocationBySlug("katy");
     const hall = getHallBySlug(location, hallSlug);
     if (!hall?.configuration) throw new Error(`${hallSlug} configuration missing`);
-    const elements = hall.configuration.fixedArchitecturalElements;
+    const elements = singleLevel(hall.configuration).fixedArchitecturalElements;
     const mainFloor = elements.find(
       (element) => element.kind === "area" && element.role === "main-floor",
     );
@@ -499,14 +541,14 @@ describe("location catalog", () => {
     });
     expect(elements.filter((element) => element.kind === "stairs")).toHaveLength(2);
     expect(elements.filter((element) => element.kind === "door")).toHaveLength(10);
-    expect(hall.configuration.floorplanAsset).toBeNull();
+    expect(singleLevel(hall.configuration).floorplanAsset).toBeNull();
   });
 
   it("configures Stonebrook with its confirmed floor scale and raised stage", () => {
     const location = getLocationBySlug("lake-conroe");
     const hall = getHallBySlug(location, "stonebrook");
     if (!hall?.configuration) throw new Error("Stonebrook configuration missing");
-    const elements = hall.configuration.fixedArchitecturalElements;
+    const elements = singleLevel(hall.configuration).fixedArchitecturalElements;
     const mainFloor = elements.find((element) => element.kind === "area" && element.role === "main-floor");
 
     expect(mainFloor).toMatchObject({
@@ -525,7 +567,7 @@ describe("location catalog", () => {
     });
     expect(elements.filter((element) => element.kind === "area" && element.role === "closet")).toHaveLength(2);
     expect(elements.filter((element) => element.kind === "door")).toHaveLength(10);
-    expect(hall.configuration.floorplanAsset).toBeNull();
+    expect(singleLevel(hall.configuration).floorplanAsset).toBeNull();
   });
 
   it("configures Heritage Pine with its confirmed floor scale and chair capacity", () => {
@@ -533,7 +575,7 @@ describe("location catalog", () => {
     const hall = getHallBySlug(location, "heritage-pine");
     if (!location || !hall?.configuration) throw new Error("Heritage Pine configuration missing");
 
-    const mainFloor = hall.configuration.fixedArchitecturalElements.find(
+    const mainFloor = singleLevel(hall.configuration).fixedArchitecturalElements.find(
       (element) => element.kind === "area" && element.role === "main-floor",
     );
 
@@ -559,9 +601,9 @@ describe("location catalog", () => {
     const location = getLocationBySlug("lake-conroe");
     const hall = getHallBySlug(location, "heritage-pine");
     if (!hall?.configuration) throw new Error("Heritage Pine configuration missing");
-    const elements = hall.configuration.fixedArchitecturalElements;
+    const elements = singleLevel(hall.configuration).fixedArchitecturalElements;
 
-    expect(hall.configuration.floorplanAsset).toBeNull();
+    expect(singleLevel(hall.configuration).floorplanAsset).toBeNull();
     expect(elements.filter((element) => element.kind === "area" && element.role === "closet")).toHaveLength(2);
     expect(elements.find((element) => element.id === "heritage-pine-buffet")).toMatchObject({
       fixed: true,
@@ -670,13 +712,13 @@ describe("location catalog", () => {
     const pinehaven = SPRINGS_LOCATIONS[0].halls[0].configuration!;
     const hiddenMagnolia = SPRINGS_LOCATIONS[0].halls[1].configuration!;
 
-    expect(pinehaven.floorplanAsset).toBeNull();
-    expect(hiddenMagnolia.floorplanAsset).toBeNull();
+    expect(singleLevel(pinehaven).floorplanAsset).toBeNull();
+    expect(singleLevel(hiddenMagnolia).floorplanAsset).toBeNull();
   });
 
   it("calibrates the Hidden Magnolia main floor to exact inch coordinates", () => {
     const hiddenMagnolia = SPRINGS_LOCATIONS[0].halls[1].configuration!;
-    const mainFloor = hiddenMagnolia.fixedArchitecturalElements.find(
+    const mainFloor = singleLevel(hiddenMagnolia).fixedArchitecturalElements.find(
       (element) => element.kind === "area" && element.role === "main-floor",
     );
 
@@ -689,7 +731,7 @@ describe("location catalog", () => {
   });
 
   it("models fixed architecture separately from placement behavior", () => {
-    const elements = SPRINGS_LOCATIONS[0].halls[1].configuration!.fixedArchitecturalElements;
+    const elements = singleLevel(SPRINGS_LOCATIONS[0].halls[1].configuration).fixedArchitecturalElements;
     const stage = elements.find((element) => element.kind === "area" && element.role === "stage");
     const closets = elements.filter((element) => element.kind === "area" && element.role === "closet");
     const catering = elements.find((element) => element.kind === "area" && element.role === "catering");
@@ -704,7 +746,7 @@ describe("location catalog", () => {
   });
 
   it("provides structured polygon, wall, door, and stair rendering inputs", () => {
-    const elements = SPRINGS_LOCATIONS[0].halls[1].configuration!.fixedArchitecturalElements;
+    const elements = singleLevel(SPRINGS_LOCATIONS[0].halls[1].configuration).fixedArchitecturalElements;
     const doors = elements.filter((element) => element.kind === "door");
     const stairs = elements.filter((element) => element.kind === "stairs");
 
@@ -717,7 +759,7 @@ describe("location catalog", () => {
   });
 
   it("matches the source-traced exterior door hinges and outward bottom swings", () => {
-    const doors = SPRINGS_LOCATIONS[0].halls[1].configuration!.fixedArchitecturalElements.filter(
+    const doors = singleLevel(SPRINGS_LOCATIONS[0].halls[1].configuration).fixedArchitecturalElements.filter(
       (element) => element.kind === "door",
     );
     const bottomDoors = doors.filter((door) => door.y === 780);
@@ -730,3 +772,10 @@ describe("location catalog", () => {
     ]);
   });
 });
+
+function singleLevel(configuration: HallConfiguration | null): SingleLevelHallConfiguration {
+  if (!configuration || isMultiLevelHallConfiguration(configuration)) {
+    throw new Error("Expected a configured single-level hall");
+  }
+  return configuration;
+}

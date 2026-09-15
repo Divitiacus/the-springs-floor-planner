@@ -2,6 +2,7 @@ import type {
   ArchitectureMeasurementStatus,
   FixedArchitectureElement,
   ReferenceFloorplanAsset,
+  VenueFloorRegion,
 } from "@/domain/floorplan";
 import type { InventoryCatalog, InventoryConfiguration } from "@/domain/inventory";
 import { createHeritagePineConfiguration } from "@/domain/venues/heritage-pine";
@@ -14,16 +15,50 @@ import { createVillaTuscanaConfiguration } from "@/domain/venues/villa-tuscana";
 import { createFarmhouseWallisvilleConfiguration } from "@/domain/venues/farmhouse-wallisville";
 import { createTheChateauCypressConfiguration } from "@/domain/venues/the-chateau-cypress";
 
-export type HallConfiguration = {
+export type HallLevelConfiguration = {
+  id: string;
+  slug: string;
+  name: string;
   physicalWidthInches: number;
   physicalHeightInches: number;
   physicalDimensionStatus: ArchitectureMeasurementStatus;
   physicalDimensionNote?: string;
   fixedArchitecturalElements: readonly FixedArchitectureElement[];
   floorplanAsset: ReferenceFloorplanAsset | null;
+  usableAreas?: readonly VenueFloorRegion[];
+  voidAreas?: readonly VenueFloorRegion[];
+  planningBounds?: { x: number; y: number; width: number; height: number };
+  defaultObjectPosition?: { x: number; y: number };
+};
+
+type HallConfigurationShared = {
   inventory?: InventoryCatalog;
   sampleLayoutIds?: readonly string[];
 };
+
+export type SingleLevelHallConfiguration = HallConfigurationShared & {
+  physicalWidthInches: number;
+  physicalHeightInches: number;
+  physicalDimensionStatus: ArchitectureMeasurementStatus;
+  physicalDimensionNote?: string;
+  fixedArchitecturalElements: readonly FixedArchitectureElement[];
+  floorplanAsset: ReferenceFloorplanAsset | null;
+  levels?: never;
+  defaultLevelId?: never;
+};
+
+export type MultiLevelHallConfiguration = HallConfigurationShared & {
+  levels: readonly HallLevelConfiguration[];
+  defaultLevelId: string;
+};
+
+export type HallConfiguration = SingleLevelHallConfiguration | MultiLevelHallConfiguration;
+
+export function isMultiLevelHallConfiguration(
+  configuration: HallConfiguration,
+): configuration is MultiLevelHallConfiguration {
+  return "levels" in configuration && Array.isArray(configuration.levels);
+}
 
 export type HallCatalogEntry = {
   id: string;

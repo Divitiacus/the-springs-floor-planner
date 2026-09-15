@@ -81,8 +81,11 @@ export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner 
   }, [commit, inventory, inventoryOwner]);
 
   const add = useCallback(
-    (selection: EventObjectSelection, position: { x: number; y: number }) => {
-      const object = createEventObject(selection.type, position, layout.objects, undefined, selection.variant);
+    (selection: EventObjectSelection, position: { x: number; y: number }, levelId?: string) => {
+      const object = {
+        ...createEventObject(selection.type, position, layout.objects, undefined, selection.variant),
+        ...(levelId ? { levelId } : {}),
+      };
       if (commitValidated(addObject(layout, object))) setSelectedId(object.id);
     },
     [commitValidated, layout],
@@ -122,6 +125,7 @@ export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner 
 
   const undo = useCallback(() => setHistory((current) => undoHistory(current)), []);
   const redo = useCallback(() => setHistory((current) => redoHistory(current)), []);
+  const showNotice = useCallback((message: string) => setNotice(message), []);
 
   const renameLayout = useCallback((name: string) => {
     const updatedAt = new Date().toISOString();
@@ -172,6 +176,7 @@ export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner 
     reorder,
     undo,
     redo,
+    showNotice,
     renameLayout,
     reset,
     importLayout,

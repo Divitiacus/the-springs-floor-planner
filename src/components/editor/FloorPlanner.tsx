@@ -1,11 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, Download, FileUp, Printer } from "lucide-react";
-import type { EventObjectSelection } from "@/domain/floorplan";
+import type { EventObject, EventObjectSelection } from "@/domain/floorplan";
 import type { VenueTemplate } from "@/domain/floorplan";
 import type { InventoryConfiguration } from "@/domain/inventory";
 import { getInventoryUsage } from "@/domain/inventory";
+import { isPositionOnFloor } from "@/domain/floor-regions";
+import { getLayoutStats } from "@/domain/layout-operations";
 import { deserializeFloorplan, serializePortableFloorplan } from "@/domain/persistence";
 import { useFloorplanEditor } from "@/hooks/useFloorplanEditor";
 import { EditorCanvas } from "@/components/editor/EditorCanvas";
@@ -15,39 +17,87 @@ import { EditorToolbar, type EditorMode } from "@/components/editor/EditorToolba
 
 type Props = {
   venue: VenueTemplate;
+  levelVenues?: VenueTemplate[];
   locationName: string;
   inventory: InventoryConfiguration;
 };
 
-export function FloorPlanner({ venue, locationName, inventory }: Props) {
+export function FloorPlanner({ venue, levelVenues, locationName, inventory }: Props) {
   const editor = useFloorplanEditor({ venueTemplateId: venue.id, inventory, inventoryOwner: locationName });
+  const availableLevels = useMemo(() => levelVenues?.length ? levelVenues : [venue], [levelVenues, venue]);
+  const isMultiLevel = availableLevels.length > 1;
+  const defaultLevelId = venue.levelId;
+  const [activeLevelId, setActiveLevelId] = useState(defaultLevelId);
+  const activeVenue = availableLevels.find((candidate) => candidate.levelId === activeLevelId) ?? venue;
+  const activeLayout = useMemo(() => isMultiLevel ? {
+    ...editor.layout,
+    objects: editor.layout.objects.filter(
+      (object) => resolveLevelId(object.levelId ?? object.floorLevelId ?? defaultLevelId) === activeLevelId,
+    ),
+  } : editor.layout, [activeLevelId, defaultLevelId, editor.layout, isMultiLevel]);
+  const activeStats = useMemo(() => getLayoutStats(activeLayout), [activeLayout]);
   const [mode, setMode] = useState<EditorMode>("select");
   const [zoom, setZoom] = useState(1);
-  const [showReference, setShowReference] = useState(venue.referenceAsset?.visibleByDefault ?? false);
+  const [showReference, setShowReference] = useState(activeVenue.referenceAsset?.visibleByDefault ?? false);
   const [resetViewKey, setResetViewKey] = useState(0);
   const [nameRequired, setNameRequired] = useState(false);
   const importInputRef = useRef<HTMLInputElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const addObject = editor.add;
-  const objectCount = editor.layout.objects.length;
-  const selectedId = editor.selectedId;
+  const objectCount = activeLayout.objects.length;
+  const selectedId = activeLayout.objects.some((object) => object.id === editor.selectedId) ? editor.selectedId : null;
   const removeObject = editor.remove;
+  const updateObject = editor.update;
   const duplicateObject = editor.duplicate;
+  const showNotice = editor.showNotice;
   const redo = editor.redo;
   const undo = editor.undo;
   const inventoryUsage = getInventoryUsage(editor.layout);
+  const addOnActiveLevel = useCallback(
+    (selection: EventObjectSelection, position: { x: number; y: number }) => {
+      if (activeVenue.usableAreas && !isPositionOnFloor(position, activeVenue.usableAreas, activeVenue.voidAreas ?? [])) {
+        showNotice("That area is open to the floor below or outside the balcony walkway.");
+        return;
+      }
+      addObject(selection, position, isMultiLevel ? activeLevelId : undefined);
+    },
+    [activeLevelId, activeVenue.usableAreas, activeVenue.voidAreas, addObject, isMultiLevel, showNotice],
+  );
+
+  const updateOnActiveLevel = useCallback((id: string, patch: Partial<EventObject>) => {
+    const object = activeLayout.objects.find((candidate) => candidate.id === id);
+    const position = { x: patch.x ?? object?.x, y: patch.y ?? object?.y };
+    if (activeVenue.usableAreas && position.x !== undefined && position.y !== undefined && !isPositionOnFloor(position as { x: number; y: number }, activeVenue.usableAreas, activeVenue.voidAreas ?? [])) {
+      showNotice("That area is open to the floor below or outside the balcony walkway.");
+      return;
+    }
+    updateObject(id, patch);
+  }, [activeLayout.objects, activeVenue.usableAreas, activeVenue.voidAreas, showNotice, updateObject]);
 
   const addCentered = useCallback(
     (selection: EventObjectSelection) => {
       const column = objectCount % 6;
       const row = Math.floor(objectCount / 6) % 4;
-      addObject(selection, {
-        x: venue.hall.x + venue.hall.width * 0.25 + column * 72,
-        y: venue.hall.y + venue.hall.height * 0.3 + row * 72,
+      const origin = activeVenue.defaultObjectPosition ?? {
+        x: activeVenue.hall.x + activeVenue.hall.width * 0.25,
+        y: activeVenue.hall.y + activeVenue.hall.height * 0.3,
+      };
+      addOnActiveLevel(selection, {
+        x: origin.x + column * 72,
+        y: origin.y + row * 72,
       });
     },
-    [addObject, objectCount, venue.hall.height, venue.hall.width, venue.hall.x, venue.hall.y],
+    [activeVenue.defaultObjectPosition, activeVenue.hall.height, activeVenue.hall.width, activeVenue.hall.x, activeVenue.hall.y, addOnActiveLevel, objectCount],
   );
+
+  const changeFloorLevel = (levelId: string) => {
+    setActiveLevelId(levelId);
+    editor.setSelectedId(null);
+    setZoom(1);
+    setResetViewKey((key) => key + 1);
+    const nextLevel = availableLevels.find((level) => level.levelId === levelId);
+    setShowReference(nextLevel?.referenceAsset?.visibleByDefault ?? false);
+  };
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -150,6 +200,7 @@ export function FloorPlanner({ venue, locationName, inventory }: Props) {
               />
               <span aria-hidden="true">·</span>
               <span>{venue.name}</span>
+              {isMultiLevel ? <><span aria-hidden="true">·</span><span>{activeVenue.levelName}</span></> : null}
               {nameRequired ? <span className="ml-1 font-semibold text-[#a1533d]">Enter a name to save</span> : null}
             </div>
           </div>
@@ -201,13 +252,31 @@ export function FloorPlanner({ venue, locationName, inventory }: Props) {
         </div>
 
         <section className="floor-planner-canvas flex min-w-0 flex-col border-x border-[#dce2dd]">
+          {isMultiLevel ? (
+            <div className="flex h-12 shrink-0 items-center justify-center border-b border-[#dce2dd] bg-[#f8f7f2] px-4">
+              <div className="inline-flex rounded-xl border border-[#cfd7d1] bg-white p-1 shadow-sm" role="tablist" aria-label="Floor level">
+                {availableLevels.map((level) => (
+                  <button
+                    key={level.levelId}
+                    type="button"
+                    role="tab"
+                    aria-selected={level.levelId === activeLevelId}
+                    className={`rounded-lg px-5 py-1.5 text-xs font-bold transition-colors ${level.levelId === activeLevelId ? "bg-[#294f3d] text-white shadow-sm" : "text-[#66736c] hover:bg-[#eef2ee]"}`}
+                    onClick={() => level.levelId && changeFloorLevel(level.levelId)}
+                  >
+                    {level.levelName}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
           <EditorToolbar
             mode={mode}
             zoom={zoom}
             canUndo={editor.canUndo}
             canRedo={editor.canRedo}
-            hasSelection={Boolean(editor.selectedId)}
-            hasReference={Boolean(venue.referenceAsset)}
+            hasSelection={Boolean(selectedId)}
+            hasReference={Boolean(activeVenue.referenceAsset)}
             showReference={showReference}
             onModeChange={setMode}
             onUndo={editor.undo}
@@ -219,33 +288,34 @@ export function FloorPlanner({ venue, locationName, inventory }: Props) {
             onToggleReference={() => setShowReference((visible) => !visible)}
           />
           <EditorCanvas
-            layout={editor.layout}
-            venue={venue}
-            selectedId={editor.selectedId}
+            layout={activeLayout}
+            venue={activeVenue}
+            selectedId={selectedId}
             mode={mode}
             zoom={zoom}
             showReference={showReference}
             resetViewKey={resetViewKey}
             onSelect={editor.setSelectedId}
-            onAdd={editor.add}
-            onChange={editor.update}
+            onAdd={addOnActiveLevel}
+            onChange={updateOnActiveLevel}
             onZoomChange={setZoom}
           />
           <div className="floor-planner-status flex h-9 shrink-0 items-center justify-between border-t border-[#dce2dd] bg-[#fffefa] px-4 text-[11px] text-[#6c7871]">
             <span>{mode === "pan" ? "Drag the canvas to pan" : "Click an object to select · Drag to move"}</span>
             <div className="flex items-center gap-4 font-semibold text-[#425148]">
-              <span>{editor.stats.objectCount} objects</span>
-              <span>{editor.stats.guestTables} guest tables</span>
-              <span>{editor.stats.seats} seats</span>
-              <span>{venue.physicalDimensionStatus === "confirmed" ? "Confirmed scale" : venue.physicalDimensionStatus === "source-traced" ? "Source-traced geometry" : "Provisional scale"}</span>
+              {isMultiLevel ? <span>{activeVenue.levelName}</span> : null}
+              <span>{activeStats.objectCount} objects</span>
+              <span>{activeStats.guestTables} guest tables</span>
+              <span>{activeStats.seats} seats</span>
+              <span>{activeVenue.physicalDimensionStatus === "confirmed" ? "Confirmed scale" : activeVenue.physicalDimensionStatus === "source-traced" ? "Source-traced geometry" : "Provisional scale"}</span>
             </div>
           </div>
         </section>
 
         <div className="floor-planner-properties min-h-0 overflow-hidden [&>aside]:h-full">
           <PropertiesPanel
-            object={editor.selectedObject}
-            onChange={editor.update}
+            object={selectedId ? editor.selectedObject : null}
+            onChange={updateOnActiveLevel}
             onDuplicate={() => editor.duplicate()}
             onDelete={() => editor.remove()}
             onReorder={editor.reorder}
@@ -260,6 +330,12 @@ export function FloorPlanner({ venue, locationName, inventory }: Props) {
       ) : null}
     </main>
   );
+}
+
+function resolveLevelId(levelId: string | undefined) {
+  if (levelId === "main-floor") return "level-1-main-floor";
+  if (levelId === "balcony") return "level-2-balcony";
+  return levelId;
 }
 
 function fileSlug(value: string) {

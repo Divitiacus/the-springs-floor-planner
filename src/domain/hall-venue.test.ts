@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createHallVenueTemplate } from "@/domain/hall-venue";
+import { createHallVenueTemplate, createHallVenueTemplates } from "@/domain/hall-venue";
 import { getHallBySlug, getLocationBySlug } from "@/domain/location-catalog";
 import { createEventObject } from "@/domain/layout-operations";
 
@@ -115,5 +115,27 @@ describe("hall venue template", () => {
     expect(venue.referenceAsset).toBeNull();
     expect(venue.elements.length).toBeGreaterThan(50);
     expect(table.width / venue.hall.width).toBe(2 / 27);
+  });
+
+  it("resolves Cypress as two independent venue templates without concatenating architecture", () => {
+    const location = getLocationBySlug("cypress");
+    const hall = getHallBySlug(location, "the-chateau");
+    if (!location || !hall) throw new Error("Cypress The Chateau catalog entry missing");
+
+    const mainFloor = createHallVenueTemplate(location, hall, "level-1-main-floor");
+    const balcony = createHallVenueTemplate(location, hall, "level-2-balcony");
+    const levels = createHallVenueTemplates(location, hall);
+
+    expect(levels.map((level) => level.levelId)).toEqual(["level-1-main-floor", "level-2-balcony"]);
+    expect(mainFloor.levelName).toBe("Level 1 — Main Floor");
+    expect(mainFloor.elements.some((element) => element.id === "chateau-stage")).toBe(true);
+    expect(mainFloor.elements.some((element) => element.id.startsWith("chateau-balcony-"))).toBe(false);
+    expect(balcony.levelName).toBe("Level 2 — Balcony");
+    expect(balcony.elements.some((element) => element.id === "chateau-stage")).toBe(false);
+    expect(balcony.voidAreas?.map((region) => region.id)).toEqual([
+      "chateau-level-2-rotunda-void",
+      "chateau-level-2-main-hall-void",
+    ]);
+    expect(() => createHallVenueTemplate(location, hall, "roof")).toThrow(/not configured/);
   });
 });

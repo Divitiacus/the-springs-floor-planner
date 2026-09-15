@@ -26,10 +26,11 @@ type PortableObject = [
   tableNumber: number | null,
   seats: number | null,
   zIndex: number,
+  levelId?: string | null,
 ];
 
 type PortableFloorplan = {
-  v: 3;
+  v: 3 | 4;
   h: string;
   n: string;
   o: PortableObject[];
@@ -40,7 +41,7 @@ export function serializePortableFloorplan(layout: FloorplanLayout): string {
   const name = layout.name.trim();
   if (!name) throw new Error("Enter an event or client name before saving.");
   const portable: PortableFloorplan = {
-    v: 3,
+    v: 4,
     h: layout.venueTemplateId,
     n: name,
     o: layout.objects.map((object) => [
@@ -55,6 +56,7 @@ export function serializePortableFloorplan(layout: FloorplanLayout): string {
       object.tableNumber ?? null,
       object.seats ?? null,
       object.zIndex,
+      object.levelId ?? object.floorLevelId ?? null,
     ]),
   };
   return JSON.stringify(portable);
@@ -74,7 +76,7 @@ function inflatePortableFloorplan(stored: PortableFloorplan): FloorplanLayout {
     venueTemplateId: stored.h,
     coordinateUnit: "inches",
     objects: stored.o.map((entry, index) => {
-      const [type, variant, x, y, width, height, rotation, label, tableNumber, seats, zIndex] = entry;
+      const [type, variant, x, y, width, height, rotation, label, tableNumber, seats, zIndex, levelId] = entry;
       const definition = OBJECT_DEFINITIONS[type];
       const variantDefinition = getObjectVariant(type, variant ?? undefined);
       const catalogWidth = variantDefinition?.width ?? definition.width;
@@ -94,6 +96,7 @@ function inflatePortableFloorplan(stored: PortableFloorplan): FloorplanLayout {
       if (variant) object.variant = variant;
       if (tableNumber !== null) object.tableNumber = tableNumber;
       if (seats !== null) object.seats = seats;
+      if (levelId) object.levelId = levelId;
       return object;
     }),
     updatedAt: new Date().toISOString(),
@@ -104,7 +107,7 @@ function isPortableFloorplan(value: unknown): value is PortableFloorplan {
   if (!value || typeof value !== "object") return false;
   const stored = value as Partial<PortableFloorplan>;
   return (
-    stored.v === 3 &&
+    (stored.v === 3 || stored.v === 4) &&
     typeof stored.h === "string" &&
     stored.h.length > 0 &&
     typeof stored.n === "string" &&
@@ -115,8 +118,8 @@ function isPortableFloorplan(value: unknown): value is PortableFloorplan {
 }
 
 function isPortableObject(value: unknown): value is PortableObject {
-  if (!Array.isArray(value) || value.length !== 11) return false;
-  const [type, variant, x, y, width, height, rotation, label, tableNumber, seats, zIndex] = value;
+  if (!Array.isArray(value) || (value.length !== 11 && value.length !== 12)) return false;
+  const [type, variant, x, y, width, height, rotation, label, tableNumber, seats, zIndex, levelId] = value;
   if (typeof type !== "string" || !(type in OBJECT_DEFINITIONS)) return false;
   if (variant !== null) {
     if (typeof variant !== "string") return false;
@@ -129,7 +132,8 @@ function isPortableObject(value: unknown): value is PortableObject {
     height > 0 &&
     typeof label === "string" &&
     (tableNumber === null || (typeof tableNumber === "number" && Number.isFinite(tableNumber))) &&
-    (seats === null || (typeof seats === "number" && Number.isFinite(seats)))
+    (seats === null || (typeof seats === "number" && Number.isFinite(seats))) &&
+    (levelId === undefined || levelId === null || typeof levelId === "string")
   );
 }
 
@@ -154,7 +158,9 @@ function isStoredFloorplan(value: unknown): value is StoredFloorplan {
           typeof object.width === "number" &&
           typeof object.height === "number" &&
           Boolean(object.physicalDimensions && typeof object.physicalDimensions === "object") &&
-          typeof object.rotation === "number",
+          typeof object.rotation === "number" &&
+          (object.levelId === undefined || typeof object.levelId === "string") &&
+          (object.floorLevelId === undefined || typeof object.floorLevelId === "string"),
       ),
     )
   );

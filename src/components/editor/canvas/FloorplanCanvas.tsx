@@ -9,6 +9,7 @@ import type {
   FixedArchitectureElement,
   FloorplanLayout,
   ReferenceFloorplanAsset,
+  VenueFloorRegion,
   VenueTemplate,
 } from "@/domain/floorplan";
 import { OBJECT_DEFINITIONS, isGuestTable } from "@/domain/object-catalog";
@@ -205,10 +206,15 @@ function VenueLayer({ venue }: { venue: VenueTemplate }) {
 
   return (
     <>
-      {venue.elements.filter((element) => element.kind === "area" && floorAreaRoles.has(element.role)).map((element) => (
+      {venue.usableAreas ? venue.usableAreas.map((region) => (
+        <FloorRegionNode key={region.id} region={region} />
+      )) : venue.elements.filter((element) => element.kind === "area" && floorAreaRoles.has(element.role)).map((element) => (
         <FixedArchitectureNode key={element.id} element={element} />
       ))}
-      {grid}
+      {venue.usableAreas ? null : grid}
+      {venue.voidAreas?.map((region) => (
+        <FloorRegionNode key={region.id} region={region} />
+      ))}
       {venue.elements.filter((element) => element.kind === "area" && !floorAreaRoles.has(element.role) && element.role !== "landing").map((element) => (
         <FixedArchitectureNode key={element.id} element={element} />
       ))}
@@ -222,9 +228,27 @@ function VenueLayer({ venue }: { venue: VenueTemplate }) {
         <FixedArchitectureNode key={element.id} element={element} />
       ))}
       <Text x={venue.hall.x + 18} y={venue.hall.y + 16} text={venue.name.toUpperCase()} fontSize={11} fontStyle="bold" letterSpacing={1.8} fill="#8b968f" />
-      <Text x={venue.hall.x + 18} y={venue.hall.y + 34} text={`${formatFeetAndInches(venue.hall.width)} × ${formatFeetAndInches(venue.hall.height)} MAIN FLOOR`} fontSize={9} fontStyle="bold" letterSpacing={1.1} fill="#9aa49e" />
+      <Text
+        x={venue.hall.x + 18}
+        y={venue.hall.y + 34}
+        text={`${formatFeetAndInches(venue.hall.width)} × ${formatFeetAndInches(venue.hall.height)} ${venue.levelName ? "LEVEL VIEW" : "MAIN FLOOR"}`}
+        fontSize={9}
+        fontStyle="bold"
+        letterSpacing={1.1}
+        fill="#9aa49e"
+      />
     </>
   );
+}
+
+function FloorRegionNode({ region }: { region: VenueFloorRegion }) {
+  const isVoid = region.kind === "open-to-below";
+  const fill = isVoid ? "#fffdfa" : "#eef0ec";
+  const stroke = isVoid ? "#8a958e" : "#526159";
+  if (region.shape.type === "rectangle") {
+    return <Rect {...region.shape} fill={fill} stroke={stroke} strokeWidth={isVoid ? 3 : 2} dash={isVoid ? [8, 7] : undefined} />;
+  }
+  return <Line points={region.shape.points} closed fill={fill} stroke={stroke} strokeWidth={isVoid ? 3 : 2} dash={isVoid ? [8, 7] : undefined} lineJoin="round" />;
 }
 
 function firstGridLineAfter(minimum: number, origin: number) {

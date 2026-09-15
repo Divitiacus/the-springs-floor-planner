@@ -36,6 +36,9 @@ export type EventObject = {
   id: string;
   type: EventObjectType;
   variant?: EventObjectVariant;
+  levelId?: string;
+  /** Compatibility for local files created during the initial multi-level prototype. */
+  floorLevelId?: string;
   x: number;
   y: number;
   width: number;
@@ -188,13 +191,30 @@ export type VenueElement =
 export type VenueTemplate = {
   id: string;
   name: string;
+  levelId?: string;
+  levelSlug?: string;
+  levelName?: string;
   coordinateUnit: "inches";
   physicalWidthInches: number;
   physicalHeightInches: number;
   physicalDimensionStatus: ArchitectureMeasurementStatus;
   hall: { x: number; y: number; width: number; height: number };
   elements: FixedArchitectureElement[];
+  usableAreas?: VenueFloorRegion[];
+  voidAreas?: VenueFloorRegion[];
+  defaultObjectPosition?: { x: number; y: number };
   referenceAsset: ReferenceFloorplanAsset | null;
+};
+
+export type VenueFloorRegion = {
+  id: string;
+  label: string;
+  kind: "usable-floor" | "open-to-below";
+  placementBehavior: "allowed" | "blocked";
+  measurementStatus: ArchitectureMeasurementStatus;
+  shape:
+    | { type: "rectangle"; x: number; y: number; width: number; height: number }
+    | { type: "polygon"; points: number[] };
 };
 
 export type LegacyVenueTemplate = {
