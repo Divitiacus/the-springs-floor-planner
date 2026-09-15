@@ -12,6 +12,7 @@ import { createStonecreekReserveConfiguration } from "@/domain/venues/stonecreek
 import { createSycamoreGroveConfiguration } from "@/domain/venues/sycamore-grove";
 import { createVillaTuscanaConfiguration } from "@/domain/venues/villa-tuscana";
 import { createFarmhouseWallisvilleConfiguration } from "@/domain/venues/farmhouse-wallisville";
+import { createTheChateauCypressConfiguration } from "@/domain/venues/the-chateau-cypress";
 
 export type HallConfiguration = {
   physicalWidthInches: number;
@@ -108,6 +109,23 @@ export const WALLISVILLE_FARMHOUSE_INVENTORY: InventoryCatalog = {
   source: {
     fileName: "Wallisville inventory matrix and Farmhouse table reference supplied by the user",
     note: "The supplied inventory row confirms the Wallisville table quantities and 250 chairs. The separate Farmhouse reference confirms five wooden 6-foot by 30-inch Farmhouse tables.",
+  },
+};
+
+export const CYPRESS_CHATEAU_INVENTORY: InventoryCatalog = {
+  scope: "hall",
+  limits: {
+    "round-table-48": 2,
+    "round-table-60": 20,
+    "rectangle-table-6": 6,
+    "rectangle-table-8": 12,
+    "sweetheart-table": 1,
+    "cocktail-table-36": 8,
+    chairs: 320,
+  },
+  source: {
+    fileName: "Cypress inventory row supplied by the user",
+    note: "The supplied Cypress row confirms the selectable table quantities and 320 chairs for The Chateau. The 72-inch round column is intentionally excluded because the user previously confirmed that Springs guest-table catalog item is not offered.",
   },
 };
 
@@ -229,6 +247,22 @@ export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
         configuration: {
           ...createFarmhouseWallisvilleConfiguration(),
           inventory: WALLISVILLE_FARMHOUSE_INVENTORY,
+        },
+      },
+    ],
+  },
+  {
+    id: "location_cypress",
+    slug: "cypress",
+    name: "Cypress",
+    halls: [
+      {
+        id: "hall_the_chateau_cypress",
+        slug: "the-chateau",
+        name: "The Chateau",
+        configuration: {
+          ...createTheChateauCypressConfiguration(),
+          inventory: CYPRESS_CHATEAU_INVENTORY,
         },
       },
     ],

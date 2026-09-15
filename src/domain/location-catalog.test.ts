@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   ANGLETON_INVENTORY,
+  CYPRESS_CHATEAU_INVENTORY,
   getHallBySlug,
   getLocationBySlug,
   KATY_INVENTORY,
@@ -13,12 +14,58 @@ import {
 
 describe("location catalog", () => {
   it("defines Magnolia with exactly its two confirmed halls", () => {
-    expect(SPRINGS_LOCATIONS).toHaveLength(5);
+    expect(SPRINGS_LOCATIONS).toHaveLength(6);
     expect(SPRINGS_LOCATIONS[0]).toMatchObject({ name: "Magnolia", slug: "magnolia" });
     expect(SPRINGS_LOCATIONS[0].halls.map((hall) => hall.name)).toEqual([
       "Pinehaven Terrace",
       "The Hidden Magnolia",
     ]);
+  });
+
+  it("defines Cypress The Chateau with its confirmed hall scale, stage, curves, and inventory", () => {
+    const location = getLocationBySlug("cypress");
+    const hall = getHallBySlug(location, "the-chateau");
+    if (!location || !hall?.configuration) throw new Error("Cypress The Chateau configuration missing");
+
+    expect(location).toMatchObject({ id: "location_cypress", name: "Cypress" });
+    expect(hall).toMatchObject({ id: "hall_the_chateau_cypress", name: "The Chateau" });
+    expect(CYPRESS_CHATEAU_INVENTORY.limits).toEqual({
+      "round-table-48": 2,
+      "round-table-60": 20,
+      "rectangle-table-6": 6,
+      "rectangle-table-8": 12,
+      "sweetheart-table": 1,
+      "cocktail-table-36": 8,
+      chairs: 320,
+    });
+    expect(resolveInventoryConfiguration(location, hall)).toEqual(CYPRESS_CHATEAU_INVENTORY.limits);
+
+    const elements = hall.configuration.fixedArchitecturalElements;
+    expect(elements.find((element) => element.id === "chateau-main-floor")).toMatchObject({
+      kind: "area",
+      placementBehavior: "allowed",
+      measurementStatus: "confirmed",
+      shape: { type: "rectangle", width: 828, height: 660 },
+    });
+    expect(elements.find((element) => element.id === "chateau-stage")).toMatchObject({
+      kind: "path",
+      placementBehavior: "allowed",
+      measurementStatus: "confirmed",
+      elevation: "raised",
+    });
+    expect(elements.filter((element) => element.kind === "path").length).toBeGreaterThan(20);
+    expect(elements.find((element) => element.id === "chateau-permanent-bar")).toMatchObject({
+      role: "bar",
+      placementBehavior: "blocked",
+      measurementStatus: "confirmed",
+    });
+    expect(elements.find((element) => element.id === "chateau-buffet-room")).toMatchObject({
+      role: "buffet",
+      placementBehavior: "blocked",
+      shape: { type: "rectangle", width: 228, height: 288 },
+    });
+    expect(elements.filter((element) => element.kind === "area" && element.role === "pillar")).toHaveLength(19);
+    expect(hall.configuration.floorplanAsset).toBeNull();
   });
 
   it("defines Wallisville Farmhouse with stable routing, confirmed scale, and a 250-guest planning limit", () => {

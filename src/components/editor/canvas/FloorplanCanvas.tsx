@@ -212,13 +212,13 @@ function VenueLayer({ venue }: { venue: VenueTemplate }) {
       {venue.elements.filter((element) => element.kind === "area" && !floorAreaRoles.has(element.role) && element.role !== "landing").map((element) => (
         <FixedArchitectureNode key={element.id} element={element} />
       ))}
-      {venue.elements.filter((element) => element.kind === "wall" || element.kind === "railing").map((element) => (
+      {venue.elements.filter((element) => element.kind === "wall" || element.kind === "railing" || element.kind === "path").map((element) => (
         <FixedArchitectureNode key={element.id} element={element} />
       ))}
       {venue.elements.filter((element) => element.kind === "area" && element.role === "landing").map((element) => (
         <FixedArchitectureNode key={element.id} element={element} />
       ))}
-      {venue.elements.filter((element) => element.kind !== "area" && element.kind !== "wall" && element.kind !== "railing").map((element) => (
+      {venue.elements.filter((element) => element.kind !== "area" && element.kind !== "wall" && element.kind !== "railing" && element.kind !== "path").map((element) => (
         <FixedArchitectureNode key={element.id} element={element} />
       ))}
       <Text x={venue.hall.x + 18} y={venue.hall.y + 16} text={venue.name.toUpperCase()} fontSize={11} fontStyle="bold" letterSpacing={1.8} fill="#8b968f" />
@@ -246,6 +246,24 @@ function FixedArchitectureNode({ element }: { element: FixedArchitectureElement 
 
   if (element.kind === "railing") {
     return <Line points={element.points} stroke="#78827c" strokeWidth={3} lineCap="square" lineJoin="miter" />;
+  }
+
+  if (element.kind === "path") {
+    return (
+      <Path
+        data={element.data}
+        fill={element.fill}
+        stroke={element.stroke ?? "#657169"}
+        strokeWidth={element.strokeWidth ?? 2}
+        dash={element.dash}
+        opacity={element.opacity ?? 1}
+        shadowColor={element.elevation === "raised" ? "#594b39" : undefined}
+        shadowBlur={element.elevation === "raised" ? 10 : 0}
+        shadowOffsetX={element.elevation === "raised" ? 5 : 0}
+        shadowOffsetY={element.elevation === "raised" ? 5 : 0}
+        shadowOpacity={element.elevation === "raised" ? 0.22 : 0}
+      />
+    );
   }
 
   if (element.kind === "door") {

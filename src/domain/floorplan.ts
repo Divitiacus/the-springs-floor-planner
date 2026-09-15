@@ -102,6 +102,16 @@ export type FixedArchitectureElement =
       points: number[];
     })
   | (FixedArchitectureBase & {
+      kind: "path";
+      data: string;
+      fill?: string;
+      stroke?: string;
+      strokeWidth?: number;
+      dash?: number[];
+      opacity?: number;
+      elevation?: "floor" | "raised";
+    })
+  | (FixedArchitectureBase & {
       kind: "door";
       x: number;
       y: number;

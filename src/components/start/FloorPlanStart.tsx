@@ -6,12 +6,14 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, Building2, ChevronDown, MapPin } from "lucide-react";
 import { SPRINGS_LOCATIONS } from "@/domain/location-catalog";
 
+const SORTED_SPRINGS_LOCATIONS = [...SPRINGS_LOCATIONS].sort((left, right) => left.name.localeCompare(right.name));
+
 export function FloorPlanStart() {
   const router = useRouter();
   const locationSelectRef = useRef<HTMLSelectElement>(null);
   const [locationSlug, setLocationSlug] = useState("");
   const [hallSlug, setHallSlug] = useState("");
-  const selectedLocation = SPRINGS_LOCATIONS.find((location) => location.slug === locationSlug);
+  const selectedLocation = SORTED_SPRINGS_LOCATIONS.find((location) => location.slug === locationSlug);
   const canOpen = Boolean(selectedLocation && hallSlug);
 
   const selectLocation = useCallback((slug: string) => {
@@ -25,7 +27,7 @@ export function FloorPlanStart() {
       if (
         restoredSlug &&
         restoredSlug !== locationSlug &&
-        SPRINGS_LOCATIONS.some((location) => location.slug === restoredSlug)
+        SORTED_SPRINGS_LOCATIONS.some((location) => location.slug === restoredSlug)
       ) {
         selectLocation(restoredSlug);
       }
@@ -104,7 +106,7 @@ export function FloorPlanStart() {
                 onChange={(event) => selectLocation(event.target.value)}
               >
                 <option value="">Select a location</option>
-                {SPRINGS_LOCATIONS.map((location) => (
+                {SORTED_SPRINGS_LOCATIONS.map((location) => (
                   <option key={location.id} value={location.slug}>{location.name}</option>
                 ))}
               </select>
@@ -137,7 +139,7 @@ export function FloorPlanStart() {
 
           <div className="mt-6 flex items-center justify-center gap-2 border-t border-[#edf0ef] pt-5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#9aa3a5]">
             <span className="size-1.5 rounded-full bg-[#b59a62]" />
-            Five Springs locations available
+            {SPRINGS_LOCATIONS.length} Springs locations available
           </div>
         </div>
       </section>
