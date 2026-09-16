@@ -38,7 +38,8 @@ export const OBJECT_CATALOG: ObjectDefinition[] = [
   { type: "rectangle-table-8", name: "8-foot Rectangle Table", shortLabel: "8' Rectangle", category: "Tables", width: 96, height: 30, defaultSeats: 10, maximumSeats: 10, inventoryLabel: "8-foot rectangle tables", physicalDimensions: { status: "confirmed", shape: "rectangle", widthInches: 96, depthInches: 30 }, resizable: false, icon: "rectangle" },
   { type: "farmhouse-table-6", name: "Wooden Farmhouse Table", shortLabel: "Farmhouse", category: "Tables", width: 72, height: 30, defaultSeats: 8, maximumSeats: 8, inventoryLabel: "wooden Farmhouse tables", physicalDimensions: { status: "confirmed", shape: "rectangle", widthInches: 72, depthInches: 30 }, resizable: false, inventoryOnly: true, icon: "rectangle" },
   { type: "parson-table-7", name: "Parson Table", shortLabel: "Parson", category: "Tables", width: 84, height: 22, inventoryLabel: "Parson tables", physicalDimensions: { status: "confirmed", shape: "rectangle", widthInches: 84, depthInches: 22 }, resizable: false, icon: "rectangle" },
-  { type: "sweetheart-table", name: "Sweetheart Table", shortLabel: "Sweetheart", category: "Tables", width: 36, height: 36, defaultSeats: 2, maximumSeats: 2, inventoryLabel: "sweetheart tables", physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: 36 }, resizable: false, icon: "heart" },
+  { type: "sweetheart-table", name: "36-inch Sweetheart Table", shortLabel: "36\" Sweetheart", category: "Tables", width: 36, height: 36, defaultSeats: 2, maximumSeats: 2, inventoryLabel: "36-inch sweetheart tables", physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: 36 }, resizable: false, icon: "heart" },
+  { type: "sweetheart-table-48", name: "48-inch Sweetheart Table", shortLabel: "48\" Sweetheart", category: "Tables", width: 48, height: 48, defaultSeats: 2, maximumSeats: 2, inventoryLabel: "48-inch sweetheart tables", physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: 48 }, resizable: false, inventoryOnly: true, icon: "heart" },
   {
     type: "cocktail-table",
     name: "Cocktail Table",
@@ -95,6 +96,7 @@ export const TABLE_TYPES = new Set<EventObjectType>([
   "rectangle-table-8",
   "farmhouse-table-6",
   "sweetheart-table",
+  "sweetheart-table-48",
 ]);
 
 export function isGuestTable(type: EventObjectType) {

@@ -10,6 +10,7 @@ export const INVENTORY_ITEM_TYPES = [
   "farmhouse-table-6",
   "parson-table-7",
   "sweetheart-table",
+  "sweetheart-table-48",
   "cocktail-table-32",
   "cocktail-table-36",
   "chairs",
@@ -49,6 +50,7 @@ export function getInventoryUsage(layout: FloorplanLayout): InventoryUsage {
     "farmhouse-table-6": 0,
     "parson-table-7": 0,
     "sweetheart-table": 0,
+    "sweetheart-table-48": 0,
     "cocktail-table-32": 0,
     "cocktail-table-36": 0,
     chairs: 0,
@@ -132,6 +134,7 @@ const INVENTORY_LABELS: Record<Exclude<InventoryItemType, "chairs">, string> = {
   "farmhouse-table-6": OBJECT_DEFINITIONS["farmhouse-table-6"].inventoryLabel,
   "parson-table-7": OBJECT_DEFINITIONS["parson-table-7"].inventoryLabel,
   "sweetheart-table": OBJECT_DEFINITIONS["sweetheart-table"].inventoryLabel,
+  "sweetheart-table-48": OBJECT_DEFINITIONS["sweetheart-table-48"].inventoryLabel,
   "cocktail-table-32": "32-inch cocktail tables",
   "cocktail-table-36": "36-inch cocktail tables",
 };

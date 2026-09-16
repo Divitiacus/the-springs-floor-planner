@@ -7,6 +7,7 @@ export type EventObjectType =
   | "farmhouse-table-6"
   | "parson-table-7"
   | "sweetheart-table"
+  | "sweetheart-table-48"
   | "cocktail-table"
   | "cake-table"
   | "gift-table"

@@ -103,6 +103,22 @@ describe("hall venue template", () => {
     expect(venue.elements.length).toBeGreaterThan(20);
   });
 
+  it("loads Denton's Oakview Lodge at the confirmed 111-foot-4-inch room length", () => {
+    const location = getLocationBySlug("denton");
+    const hall = getHallBySlug(location, "oakview-lodge");
+    if (!location || !hall) throw new Error("Oakview Lodge catalog entry missing");
+
+    const venue = createHallVenueTemplate(location, hall);
+    const table = createEventObject("round-table-60", { x: 720, y: 460 }, [], "oakview-scale");
+
+    expect(venue.id).toBe("location_denton:hall_oakview_lodge");
+    expect(venue.name).toBe("Denton · Oakview Lodge");
+    expect(venue.hall).toEqual({ x: 40, y: 160, width: 1336, height: 600 });
+    expect(venue.physicalDimensionStatus).toBe("provisional");
+    expect(venue.referenceAsset).toBeNull();
+    expect(table.width / venue.hall.width).toBeCloseTo(60 / 1336, 12);
+  });
+
   it("loads Rockwall's Poetry Springs with the Heritage Pine footprint and its own identity", () => {
     const location = getLocationBySlug("rockwall");
     const hall = getHallBySlug(location, "poetry-springs");

@@ -14,6 +14,7 @@ const noLimits: InventoryConfiguration = {
   "farmhouse-table-6": null,
   "parson-table-7": null,
   "sweetheart-table": null,
+  "sweetheart-table-48": null,
   "cocktail-table-32": null,
   "cocktail-table-36": null,
   chairs: null,
@@ -167,6 +168,7 @@ describe("inventory validation", () => {
     ["rectangle-table-8", 10],
     ["farmhouse-table-6", 8],
     ["sweetheart-table", 2],
+    ["sweetheart-table-48", 2],
   ] as const)("enforces the %s seating maximum", (type, maximum) => {
     const table = createEventObject(type, { x: 0, y: 0 }, [], "table");
     const layout = addObject(createEmptyLayout(), { ...table, seats: maximum + 1 });

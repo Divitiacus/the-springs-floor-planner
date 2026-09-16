@@ -179,6 +179,22 @@ describe("floorplan object operations", () => {
     expect(resized.objects[0]).toMatchObject({ width: 36, height: 36 });
   });
 
+  it("uses a distinct two-seat 48-inch Sweetheart Table footprint", () => {
+    const sweetheart = createEventObject("sweetheart-table-48", { x: 0, y: 0 }, [], "sweetheart-48");
+
+    expect(sweetheart).toMatchObject({
+      label: '48" Sweetheart',
+      width: 48,
+      height: 48,
+      seats: 2,
+      physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: 48 },
+    });
+    expect(OBJECT_DEFINITIONS["sweetheart-table-48"]).toMatchObject({
+      inventoryOnly: true,
+      maximumSeats: 2,
+    });
+  });
+
   it.each([
     ["32-round" as const, 32],
     ["36-round" as const, 36],

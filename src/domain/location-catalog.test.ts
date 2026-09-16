@@ -4,6 +4,7 @@ import {
   ANGLETON_INVENTORY,
   CYPRESS_CHATEAU_INVENTORY,
   DENTON_INVENTORY,
+  DENTON_OAKVIEW_LODGE_INVENTORY,
   getHallBySlug,
   getLocationBySlug,
   KATY_INVENTORY,
@@ -300,16 +301,22 @@ describe("location catalog", () => {
     }
   });
 
-  it("defines Denton with Hidden Springs Ranch and its stable route slugs", () => {
+  it("defines Denton with both halls and stable route slugs", () => {
     const location = getLocationBySlug("denton");
     const hall = getHallBySlug(location, "hidden-springs-ranch");
+    const oakview = getHallBySlug(location, "oakview-lodge");
 
     expect(location).toMatchObject({ id: "location_denton", name: "Denton" });
-    expect(location?.halls).toHaveLength(1);
+    expect(location?.halls).toHaveLength(2);
     expect(hall).toMatchObject({
       id: "hall_hidden_springs_ranch",
       slug: "hidden-springs-ranch",
       name: "Hidden Springs Ranch",
+    });
+    expect(oakview).toMatchObject({
+      id: "hall_oakview_lodge",
+      slug: "oakview-lodge",
+      name: "Oakview Lodge",
     });
   });
 
@@ -327,6 +334,57 @@ describe("location catalog", () => {
     const elements = singleLevel(hall.configuration).fixedArchitecturalElements;
     expect(elements.every((element) => element.id.startsWith("hidden-springs-ranch"))).toBe(true);
     expect(elements.some((element) => element.id.includes("stonecreek-reserve"))).toBe(false);
+  });
+
+  it("gives Oakview Lodge its confirmed 224-seat inventory and measured fixed features", () => {
+    const location = getLocationBySlug("denton");
+    const hall = getHallBySlug(location, "oakview-lodge");
+    if (!location || !hall?.configuration) throw new Error("Denton Oakview Lodge configuration missing");
+
+    expect(DENTON_OAKVIEW_LODGE_INVENTORY).toMatchObject({
+      scope: "hall",
+      limits: {
+        "round-table-60": 28,
+        "rectangle-table-6": 2,
+        "rectangle-table-8": 6,
+        "farmhouse-table-6": 0,
+        "parson-table-7": 5,
+        "sweetheart-table": 2,
+        "sweetheart-table-48": 1,
+        "cocktail-table-32": 6,
+        "cocktail-table-36": 0,
+        chairs: 224,
+      },
+    });
+    expect(resolveInventoryConfiguration(location, hall)).toEqual(DENTON_OAKVIEW_LODGE_INVENTORY.limits);
+
+    const configuration = singleLevel(hall.configuration);
+    const elements = configuration.fixedArchitecturalElements;
+    expect(configuration).toMatchObject({
+      physicalWidthInches: 1416,
+      physicalHeightInches: 920,
+      physicalDimensionStatus: "provisional",
+    });
+    expect(elements.every((element) => element.id.startsWith("oakview-lodge"))).toBe(true);
+    expect(elements.find((element) => element.id === "oakview-lodge-main-floor")).toMatchObject({
+      measurementStatus: "provisional",
+      shape: { type: "rectangle", x: 40, y: 160, width: 1336, height: 600 },
+    });
+    expect(elements.filter((element) => element.kind === "area" && element.role === "event-floor-extension")).toMatchObject([
+      { shape: { type: "rectangle", width: 374, height: 120 } },
+      { shape: { type: "rectangle", width: 374, height: 120 } },
+    ]);
+    expect(elements.find((element) => element.id === "oakview-lodge-grand-staircase")).toMatchObject({
+      kind: "stairs",
+      width: 200,
+      height: 81,
+    });
+    expect(elements.find((element) => element.id === "oakview-lodge-fireplace-stone")).toMatchObject({
+      shape: { type: "rectangle", width: 26, height: 122 },
+    });
+    expect(elements.find((element) => element.id === "oakview-lodge-mantle")).toMatchObject({
+      shape: { type: "rectangle", width: 14.5, height: 82.5 },
+    });
   });
 
   it("defines Rockwall with Poetry Springs and its stable route slugs", () => {

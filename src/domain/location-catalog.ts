@@ -9,6 +9,7 @@ import { createHeritagePineConfiguration } from "@/domain/venues/heritage-pine";
 import { createHiddenMagnoliaConfiguration } from "@/domain/venues/hidden-magnolia";
 import { createHiddenSpringsRanchConfiguration } from "@/domain/venues/hidden-springs-ranch";
 import { createMagnoliaManorConfiguration } from "@/domain/venues/magnolia-manor";
+import { createOakviewLodgeConfiguration } from "@/domain/venues/oakview-lodge";
 import { createParkerManorConfiguration } from "@/domain/venues/parker-manor";
 import { createPoetrySpringsConfiguration } from "@/domain/venues/poetry-springs";
 import { createStonebrookConfiguration } from "@/domain/venues/stonebrook";
@@ -142,6 +143,26 @@ export const DENTON_INVENTORY: InventoryCatalog = {
   source: {
     fileName: "user-confirmed",
     note: "Hidden Springs Ranch matches Stonecreek Reserve's planning inventory and 320-chair guest capacity.",
+  },
+};
+
+export const DENTON_OAKVIEW_LODGE_INVENTORY: InventoryCatalog = {
+  scope: "hall",
+  limits: {
+    "round-table-60": 28,
+    "rectangle-table-6": 2,
+    "rectangle-table-8": 6,
+    "farmhouse-table-6": 0,
+    "parson-table-7": 5,
+    "sweetheart-table": 2,
+    "sweetheart-table-48": 1,
+    "cocktail-table-32": 6,
+    "cocktail-table-36": 0,
+    chairs: 224,
+  },
+  source: {
+    fileName: "Measurements of The Lodge.pdf",
+    note: "Oakview Lodge quantities and 224-chair capacity are confirmed by the supplied measurement sheet and the user's corrected 8-foot-table count.",
   },
 };
 
@@ -319,6 +340,15 @@ export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
         configuration: {
           ...createHiddenSpringsRanchConfiguration(),
           inventory: DENTON_INVENTORY,
+        },
+      },
+      {
+        id: "hall_oakview_lodge",
+        slug: "oakview-lodge",
+        name: "Oakview Lodge",
+        configuration: {
+          ...createOakviewLodgeConfiguration(),
+          inventory: DENTON_OAKVIEW_LODGE_INVENTORY,
         },
       },
     ],
