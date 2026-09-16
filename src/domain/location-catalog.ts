@@ -15,6 +15,7 @@ import { createStonebrookConfiguration } from "@/domain/venues/stonebrook";
 import { createStonecreekReserveConfiguration } from "@/domain/venues/stonecreek-reserve";
 import { createSycamoreGroveConfiguration } from "@/domain/venues/sycamore-grove";
 import { createVillaTuscanaConfiguration } from "@/domain/venues/villa-tuscana";
+import { createWestwoodRanchConfiguration } from "@/domain/venues/westwood-ranch";
 import { createFarmhouseWallisvilleConfiguration } from "@/domain/venues/farmhouse-wallisville";
 import { createTheChateauCypressConfiguration } from "@/domain/venues/the-chateau-cypress";
 
@@ -199,6 +200,15 @@ export const WEATHERFORD_PARKER_MANOR_INVENTORY: InventoryCatalog = {
   },
 };
 
+export const WEATHERFORD_WESTWOOD_RANCH_INVENTORY: InventoryCatalog = {
+  scope: "hall",
+  limits: { ...KATY_INVENTORY.limits },
+  source: {
+    fileName: "user-confirmed",
+    note: "Westwood Ranch matches Stonecreek Reserve's planning inventory and 320-chair guest capacity.",
+  },
+};
+
 export const WALLISVILLE_FARMHOUSE_INVENTORY: InventoryCatalog = {
   scope: "hall",
   limits: {
@@ -360,6 +370,15 @@ export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
         configuration: {
           ...createParkerManorConfiguration(),
           inventory: WEATHERFORD_PARKER_MANOR_INVENTORY,
+        },
+      },
+      {
+        id: "hall_westwood_ranch",
+        slug: "westwood-ranch",
+        name: "Westwood Ranch",
+        configuration: {
+          ...createWestwoodRanchConfiguration(),
+          inventory: WEATHERFORD_WESTWOOD_RANCH_INVENTORY,
         },
       },
     ],

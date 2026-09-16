@@ -18,6 +18,7 @@ import {
   type SingleLevelHallConfiguration,
   WALLISVILLE_FARMHOUSE_INVENTORY,
   WEATHERFORD_PARKER_MANOR_INVENTORY,
+  WEATHERFORD_WESTWOOD_RANCH_INVENTORY,
 } from "@/domain/location-catalog";
 
 describe("location catalog", () => {
@@ -366,13 +367,40 @@ describe("location catalog", () => {
     ]);
   });
 
-  it("defines Weatherford with Parker Manor and its stable route slugs", () => {
+  it("defines Weatherford with both confirmed halls and stable route slugs", () => {
     const location = getLocationBySlug("weatherford");
-    const hall = getHallBySlug(location, "parker-manor");
 
     expect(location).toMatchObject({ id: "location_weatherford", name: "Weatherford" });
-    expect(location?.halls).toHaveLength(1);
-    expect(hall).toMatchObject({ id: "hall_parker_manor", slug: "parker-manor", name: "Parker Manor" });
+    expect(location?.halls).toMatchObject([
+      { id: "hall_parker_manor", slug: "parker-manor", name: "Parker Manor" },
+      { id: "hall_westwood_ranch", slug: "westwood-ranch", name: "Westwood Ranch" },
+    ]);
+  });
+
+  it("gives Westwood Ranch the Stonecreek footprint, inventory, and curved stage steps", () => {
+    const location = getLocationBySlug("weatherford");
+    const hall = getHallBySlug(location, "westwood-ranch");
+    if (!location || !hall?.configuration) throw new Error("Weatherford Westwood Ranch configuration missing");
+
+    expect(WEATHERFORD_WESTWOOD_RANCH_INVENTORY).toMatchObject({
+      scope: "hall",
+      limits: { ...KATY_INVENTORY.limits, chairs: 320 },
+    });
+    expect(resolveInventoryConfiguration(location, hall)).toEqual(KATY_INVENTORY.limits);
+
+    const configuration = singleLevel(hall.configuration);
+    const mainFloor = configuration.fixedArchitecturalElements.find(
+      (element) => element.kind === "area" && element.role === "main-floor",
+    );
+    const curvedSteps = configuration.fixedArchitecturalElements.filter(
+      (element) => element.kind === "path" && element.id.startsWith("westwood-ranch-curved-stage-step"),
+    );
+
+    expect(mainFloor).toMatchObject({ shape: { x: 192, y: 60, width: 960, height: 720 } });
+    expect(curvedSteps).toHaveLength(4);
+    expect(curvedSteps.every((element) => element.placementBehavior === "blocked")).toBe(true);
+    expect(configuration.fixedArchitecturalElements.some((element) => element.id.includes("stonecreek-reserve"))).toBe(false);
+    expect(configuration.fixedArchitecturalElements.some((element) => element.kind === "stairs" && element.id.includes("stage"))).toBe(false);
   });
 
   it("models Parker Manor's confirmed plan measurements and 320-seat inventory", () => {

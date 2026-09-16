@@ -172,6 +172,21 @@ describe("hall venue template", () => {
     expect(upstairs.referenceAsset).toBeNull();
   });
 
+  it("loads Weatherford's Westwood Ranch at the confirmed 80-by-60-foot scale", () => {
+    const location = getLocationBySlug("weatherford");
+    const hall = getHallBySlug(location, "westwood-ranch");
+    if (!location || !hall) throw new Error("Westwood Ranch catalog entry missing");
+
+    const venue = createHallVenueTemplate(location, hall);
+    const table = createEventObject("round-table-60", { x: 660, y: 420 }, [], "westwood-scale");
+
+    expect(venue.id).toBe("location_weatherford:hall_westwood_ranch");
+    expect(venue.name).toBe("Weatherford · Westwood Ranch");
+    expect(venue.hall).toEqual({ x: 192, y: 60, width: 960, height: 720 });
+    expect(venue.referenceAsset).toBeNull();
+    expect(table.width / venue.hall.width).toBe(1 / 16);
+  });
+
   it("resolves Cypress as two independent venue templates without concatenating architecture", () => {
     const location = getLocationBySlug("cypress");
     const hall = getHallBySlug(location, "the-chateau");
