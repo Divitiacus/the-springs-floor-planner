@@ -89,6 +89,20 @@ describe("hall venue template", () => {
     expect(table.width / venue.hall.width).toBe(1 / 16);
   });
 
+  it("loads Denton's Hidden Springs Ranch with the Stonecreek footprint and its own identity", () => {
+    const location = getLocationBySlug("denton");
+    const hall = getHallBySlug(location, "hidden-springs-ranch");
+    if (!location || !hall) throw new Error("Hidden Springs Ranch catalog entry missing");
+
+    const venue = createHallVenueTemplate(location, hall);
+
+    expect(venue.id).toBe("location_denton:hall_hidden_springs_ranch");
+    expect(venue.name).toBe("Denton · Hidden Springs Ranch");
+    expect(venue.hall).toEqual({ x: 192, y: 60, width: 960, height: 720 });
+    expect(venue.referenceAsset).toBeNull();
+    expect(venue.elements.length).toBeGreaterThan(20);
+  });
+
   it("loads Sycamore Grove at the confirmed 80-by-60-foot scale", () => {
     const location = getLocationBySlug("angleton");
     const hall = getHallBySlug(location, "sycamore-grove");

@@ -3,6 +3,7 @@ import { isPositionOnFloor } from "@/domain/floor-regions";
 import {
   ANGLETON_INVENTORY,
   CYPRESS_CHATEAU_INVENTORY,
+  DENTON_INVENTORY,
   getHallBySlug,
   getLocationBySlug,
   KATY_INVENTORY,
@@ -19,7 +20,7 @@ import {
 
 describe("location catalog", () => {
   it("defines Magnolia with exactly its two confirmed halls", () => {
-    expect(SPRINGS_LOCATIONS).toHaveLength(6);
+    expect(SPRINGS_LOCATIONS).toHaveLength(7);
     expect(SPRINGS_LOCATIONS[0]).toMatchObject({ name: "Magnolia", slug: "magnolia" });
     expect(SPRINGS_LOCATIONS[0].halls.map((hall) => hall.name)).toEqual([
       "Pinehaven Terrace",
@@ -294,6 +295,35 @@ describe("location catalog", () => {
         chairs: 320,
       });
     }
+  });
+
+  it("defines Denton with Hidden Springs Ranch and its stable route slugs", () => {
+    const location = getLocationBySlug("denton");
+    const hall = getHallBySlug(location, "hidden-springs-ranch");
+
+    expect(location).toMatchObject({ id: "location_denton", name: "Denton" });
+    expect(location?.halls).toHaveLength(1);
+    expect(hall).toMatchObject({
+      id: "hall_hidden_springs_ranch",
+      slug: "hidden-springs-ranch",
+      name: "Hidden Springs Ranch",
+    });
+  });
+
+  it("gives Hidden Springs Ranch the Stonecreek inventory and Denton-specific architecture IDs", () => {
+    const location = getLocationBySlug("denton");
+    const hall = getHallBySlug(location, "hidden-springs-ranch");
+    if (!location || !hall?.configuration) throw new Error("Denton Hidden Springs Ranch configuration missing");
+
+    expect(DENTON_INVENTORY).toMatchObject({
+      scope: "hall",
+      limits: { ...KATY_INVENTORY.limits, chairs: 320 },
+    });
+    expect(resolveInventoryConfiguration(location, hall)).toEqual(KATY_INVENTORY.limits);
+
+    const elements = singleLevel(hall.configuration).fixedArchitecturalElements;
+    expect(elements.every((element) => element.id.startsWith("hidden-springs-ranch"))).toBe(true);
+    expect(elements.some((element) => element.id.includes("stonecreek-reserve"))).toBe(false);
   });
 
   it("defines Angleton with both confirmed halls and stable route slugs", () => {

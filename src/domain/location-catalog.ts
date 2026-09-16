@@ -7,6 +7,7 @@ import type {
 import type { InventoryCatalog, InventoryConfiguration } from "@/domain/inventory";
 import { createHeritagePineConfiguration } from "@/domain/venues/heritage-pine";
 import { createHiddenMagnoliaConfiguration } from "@/domain/venues/hidden-magnolia";
+import { createHiddenSpringsRanchConfiguration } from "@/domain/venues/hidden-springs-ranch";
 import { createMagnoliaManorConfiguration } from "@/domain/venues/magnolia-manor";
 import { createStonebrookConfiguration } from "@/domain/venues/stonebrook";
 import { createStonecreekReserveConfiguration } from "@/domain/venues/stonecreek-reserve";
@@ -129,6 +130,15 @@ export const KATY_INVENTORY: InventoryCatalog = {
   source: {
     fileName: "springs-inventory.xlsx",
     note: "The Houston-region inventory workbook confirms the same table and chair quantities for Stonecreek Reserve and Villa Tuscana.",
+  },
+};
+
+export const DENTON_INVENTORY: InventoryCatalog = {
+  scope: "hall",
+  limits: { ...KATY_INVENTORY.limits },
+  source: {
+    fileName: "user-confirmed",
+    note: "Hidden Springs Ranch matches Stonecreek Reserve's planning inventory and 320-chair guest capacity.",
   },
 };
 
@@ -264,6 +274,22 @@ export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
         slug: "villa-tuscana",
         name: "Villa Tuscana",
         configuration: createVillaTuscanaConfiguration(),
+      },
+    ],
+  },
+  {
+    id: "location_denton",
+    slug: "denton",
+    name: "Denton",
+    halls: [
+      {
+        id: "hall_hidden_springs_ranch",
+        slug: "hidden-springs-ranch",
+        name: "Hidden Springs Ranch",
+        configuration: {
+          ...createHiddenSpringsRanchConfiguration(),
+          inventory: DENTON_INVENTORY,
+        },
       },
     ],
   },
