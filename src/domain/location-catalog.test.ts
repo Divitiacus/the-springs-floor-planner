@@ -17,11 +17,12 @@ import {
   type HallConfiguration,
   type SingleLevelHallConfiguration,
   WALLISVILLE_FARMHOUSE_INVENTORY,
+  WEATHERFORD_PARKER_MANOR_INVENTORY,
 } from "@/domain/location-catalog";
 
 describe("location catalog", () => {
   it("defines Magnolia with exactly its two confirmed halls", () => {
-    expect(SPRINGS_LOCATIONS).toHaveLength(8);
+    expect(SPRINGS_LOCATIONS).toHaveLength(9);
     expect(SPRINGS_LOCATIONS[0]).toMatchObject({ name: "Magnolia", slug: "magnolia" });
     expect(SPRINGS_LOCATIONS[0].halls.map((hall) => hall.name)).toEqual([
       "Pinehaven Terrace",
@@ -363,6 +364,35 @@ describe("location catalog", () => {
       { id: "hall_sycamore_grove", slug: "sycamore-grove", name: "Sycamore Grove" },
       { id: "hall_magnolia_manor", slug: "magnolia-manor", name: "Magnolia Manor" },
     ]);
+  });
+
+  it("defines Weatherford with Parker Manor and its stable route slugs", () => {
+    const location = getLocationBySlug("weatherford");
+    const hall = getHallBySlug(location, "parker-manor");
+
+    expect(location).toMatchObject({ id: "location_weatherford", name: "Weatherford" });
+    expect(location?.halls).toHaveLength(1);
+    expect(hall).toMatchObject({ id: "hall_parker_manor", slug: "parker-manor", name: "Parker Manor" });
+  });
+
+  it("models Parker Manor's confirmed plan measurements and 320-seat inventory", () => {
+    const location = getLocationBySlug("weatherford");
+    const hall = getHallBySlug(location, "parker-manor");
+    if (!location || !hall?.configuration) throw new Error("Weatherford Parker Manor configuration missing");
+
+    expect(WEATHERFORD_PARKER_MANOR_INVENTORY).toMatchObject({ scope: "hall", limits: { chairs: 320 } });
+    expect(resolveInventoryConfiguration(location, hall).chairs).toBe(320);
+
+    const elements = singleLevel(hall.configuration).fixedArchitecturalElements;
+    expect(elements.find((element) => element.id === "parker-manor-main-floor")).toMatchObject({
+      measurementStatus: "confirmed",
+      shape: { type: "rectangle", width: 810, height: 810 },
+    });
+    expect(elements.find((element) => element.id === "parker-manor-buffet")).toMatchObject({ shape: { width: 36, height: 192 } });
+    expect(elements.find((element) => element.id === "parker-manor-bar")).toMatchObject({ shape: { width: 48, height: 168 } });
+    expect(elements.find((element) => element.id === "parker-manor-downstairs-stairs")).toMatchObject({ width: 138, height: 277 });
+    expect(elements.find((element) => element.id === "parker-manor-mantle")).toMatchObject({ shape: { width: 14, height: 92 } });
+    expect(elements.every((element) => element.id.startsWith("parker-manor"))).toBe(true);
   });
 
   it("keeps each confirmed Angleton hall inventory separate", () => {

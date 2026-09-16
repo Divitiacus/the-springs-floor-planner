@@ -145,6 +145,20 @@ describe("hall venue template", () => {
     expect(table.width / venue.hall.width).toBe(2 / 27);
   });
 
+  it("loads Weatherford's Parker Manor at the confirmed 67-foot-6-inch square scale", () => {
+    const location = getLocationBySlug("weatherford");
+    const hall = getHallBySlug(location, "parker-manor");
+    if (!location || !hall) throw new Error("Parker Manor catalog entry missing");
+
+    const venue = createHallVenueTemplate(location, hall);
+
+    expect(venue.id).toBe("location_weatherford:hall_parker_manor");
+    expect(venue.name).toBe("Weatherford · Parker Manor");
+    expect(venue.hall).toEqual({ x: 50, y: 80, width: 810, height: 810 });
+    expect(venue.referenceAsset).toBeNull();
+    expect(venue.elements.length).toBeGreaterThan(35);
+  });
+
   it("resolves Cypress as two independent venue templates without concatenating architecture", () => {
     const location = getLocationBySlug("cypress");
     const hall = getHallBySlug(location, "the-chateau");

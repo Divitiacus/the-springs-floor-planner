@@ -9,6 +9,7 @@ import { createHeritagePineConfiguration } from "@/domain/venues/heritage-pine";
 import { createHiddenMagnoliaConfiguration } from "@/domain/venues/hidden-magnolia";
 import { createHiddenSpringsRanchConfiguration } from "@/domain/venues/hidden-springs-ranch";
 import { createMagnoliaManorConfiguration } from "@/domain/venues/magnolia-manor";
+import { createParkerManorConfiguration } from "@/domain/venues/parker-manor";
 import { createPoetrySpringsConfiguration } from "@/domain/venues/poetry-springs";
 import { createStonebrookConfiguration } from "@/domain/venues/stonebrook";
 import { createStonecreekReserveConfiguration } from "@/domain/venues/stonecreek-reserve";
@@ -189,6 +190,15 @@ export const MAGNOLIA_MANOR_INVENTORY: InventoryCatalog = {
   },
 };
 
+export const WEATHERFORD_PARKER_MANOR_INVENTORY: InventoryCatalog = {
+  scope: "hall",
+  limits: { ...MAGNOLIA_MANOR_INVENTORY.limits },
+  source: {
+    fileName: "user-confirmed",
+    note: "Parker Manor is a 320-guest Manor-style hall; its planning inventory follows Magnolia Manor pending Weatherford-specific counts.",
+  },
+};
+
 export const WALLISVILLE_FARMHOUSE_INVENTORY: InventoryCatalog = {
   scope: "hall",
   limits: {
@@ -335,6 +345,22 @@ export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
         slug: "magnolia-manor",
         name: "Magnolia Manor",
         configuration: { ...createMagnoliaManorConfiguration(), inventory: MAGNOLIA_MANOR_INVENTORY },
+      },
+    ],
+  },
+  {
+    id: "location_weatherford",
+    slug: "weatherford",
+    name: "Weatherford",
+    halls: [
+      {
+        id: "hall_parker_manor",
+        slug: "parker-manor",
+        name: "Parker Manor",
+        configuration: {
+          ...createParkerManorConfiguration(),
+          inventory: WEATHERFORD_PARKER_MANOR_INVENTORY,
+        },
       },
     ],
   },
