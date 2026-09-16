@@ -1399,10 +1399,13 @@ describe("location catalog", () => {
     });
     expect(upstairs).toMatchObject({
       id: "level-2-upstairs-balcony",
-      planningBounds: { x: 680, y: 210, width: 376, height: 360 },
+      planningBounds: { x: 184, y: 90, width: 376, height: 360 },
     });
-    expect(isPositionOnFloor({ x: 800, y: 350 }, upstairs.usableAreas ?? [], upstairs.voidAreas ?? [])).toBe(true);
-    expect(isPositionOnFloor({ x: 300, y: 350 }, upstairs.usableAreas ?? [], upstairs.voidAreas ?? [])).toBe(false);
+    expect(upstairs.voidAreas?.[0]).toMatchObject({
+      shape: { type: "rectangle", x: 560, y: 90, width: 720, height: 480 },
+    });
+    expect(isPositionOnFloor({ x: 300, y: 250 }, upstairs.usableAreas ?? [], upstairs.voidAreas ?? [])).toBe(true);
+    expect(isPositionOnFloor({ x: 800, y: 350 }, upstairs.usableAreas ?? [], upstairs.voidAreas ?? [])).toBe(false);
   });
 });
 

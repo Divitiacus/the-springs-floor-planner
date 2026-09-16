@@ -7,8 +7,11 @@ const HALL_X = 560;
 const HALL_Y = 90;
 const HALL_WIDTH = 720; // 60 feet
 const HALL_HEIGHT = 480; // 40 feet
-const BALCONY_X = 680;
-const BALCONY_Y = 210;
+// The supplied second-floor slide is rotated relative to the first floor.
+// These coordinates represent that level turned 180 degrees so the void and
+// connecting stairs align with the reception hall below.
+const BALCONY_X = HALL_X - 376;
+const BALCONY_Y = HALL_Y;
 const BALCONY_WIDTH = 376; // 31 feet 4 inches
 const BALCONY_HEIGHT = 360;
 
@@ -60,11 +63,11 @@ export function createWhiteSparrowConfiguration(): HallConfiguration {
       }, "confirmed")],
       voidAreas: [floorRegion("white-sparrow-reception-void", "Open to Reception Hall Below", "open-to-below", {
         type: "rectangle",
-        x: 40,
-        y: 50,
-        width: BALCONY_X - 40,
-        height: 520,
-      })],
+        x: HALL_X,
+        y: HALL_Y,
+        width: HALL_WIDTH,
+        height: HALL_HEIGHT,
+      }, "confirmed")],
       fixedArchitecturalElements: createUpstairsElements(common),
       floorplanAsset: null,
     },
@@ -100,22 +103,20 @@ function createDownstairsElements(common: Common): FixedArchitectureElement[] {
 function createUpstairsElements(common: Common): FixedArchitectureElement[] {
   return [
     floor(common, "white-sparrow-upstairs-balcony", "UPSTAIRS BALCONY · 31′4″", BALCONY_X, BALCONY_Y, BALCONY_WIDTH, BALCONY_HEIGHT, "confirmed"),
-    blockedArea(common, "white-sparrow-upstairs-suite-wing", "closet", "SUITES / SUPPORT AREA", BALCONY_X + BALCONY_WIDTH, 50, 224, 520, false),
-    stairs(common, "white-sparrow-upstairs-north-flight", BALCONY_X, 50, 62, 160, "vertical", 10, "y"),
-    stairs(common, "white-sparrow-upstairs-east-flight", BALCONY_X + 62, 50, 126, 62, "horizontal", 9, "x"),
-    blockedArea(common, "white-sparrow-upstairs-stair-landing", "landing", "STAIR LANDING", BALCONY_X + 62, 112, 126, 98, false),
-    railing(common, "white-sparrow-balcony-west-rail", [BALCONY_X, BALCONY_Y, BALCONY_X, BALCONY_Y + BALCONY_HEIGHT]),
+    blockedArea(common, "white-sparrow-upstairs-suite-wing", "closet", "SUITES / SUPPORT AREA", 40, HALL_Y, BALCONY_X - 40, HALL_HEIGHT, false),
+    blockedArea(common, "white-sparrow-upstairs-stair-landing", "landing", "STAIR LANDING", 430, 380, 75, 90, false),
+    stairs(common, "white-sparrow-upstairs-east-flight", 505, 380, 55, 90, "vertical", 7, "y"),
+    stairs(common, "white-sparrow-upstairs-south-flight", 430, 470, 130, 100, "horizontal", 10, "x"),
+    wall(common, "white-sparrow-balcony-west-wall", [BALCONY_X, BALCONY_Y, BALCONY_X, BALCONY_Y + BALCONY_HEIGHT]),
     railing(common, "white-sparrow-balcony-north-rail", [BALCONY_X, BALCONY_Y, BALCONY_X + BALCONY_WIDTH, BALCONY_Y]),
     railing(common, "white-sparrow-balcony-south-rail", [BALCONY_X, BALCONY_Y + BALCONY_HEIGHT, BALCONY_X + BALCONY_WIDTH, BALCONY_Y + BALCONY_HEIGHT]),
-    wall(common, "white-sparrow-balcony-east-wall", [BALCONY_X + BALCONY_WIDTH, BALCONY_Y, BALCONY_X + BALCONY_WIDTH, BALCONY_Y + BALCONY_HEIGHT]),
-    wall(common, "white-sparrow-upstairs-north-wall", [40, 50, BALCONY_X, 50]),
-    wall(common, "white-sparrow-upstairs-west-wall", [40, 50, 40, 570]),
-    wall(common, "white-sparrow-upstairs-south-wall", [40, 570, BALCONY_X, 570]),
-    wall(common, "white-sparrow-upstairs-suite-north-wall", [BALCONY_X + BALCONY_WIDTH, 50, 1280, 50]),
-    wall(common, "white-sparrow-upstairs-suite-east-wall", [1280, 50, 1280, 570]),
-    wall(common, "white-sparrow-upstairs-suite-south-wall", [BALCONY_X + BALCONY_WIDTH, 570, 1280, 570]),
-    label(common, "white-sparrow-open-below-label", "OPEN TO RECEPTION HALL BELOW", 180, 300, 380, 18),
-    label(common, "white-sparrow-balcony-label", "UPSTAIRS BALCONY\n31′4″", BALCONY_X + 60, 370, 256, 17),
+    railing(common, "white-sparrow-balcony-east-rail", [BALCONY_X + BALCONY_WIDTH, BALCONY_Y, BALCONY_X + BALCONY_WIDTH, BALCONY_Y + BALCONY_HEIGHT]),
+    wall(common, "white-sparrow-upstairs-north-wall", [40, HALL_Y, HALL_X + HALL_WIDTH, HALL_Y]),
+    wall(common, "white-sparrow-upstairs-west-wall", [40, HALL_Y, 40, HALL_Y + HALL_HEIGHT]),
+    wall(common, "white-sparrow-upstairs-south-wall", [40, HALL_Y + HALL_HEIGHT, HALL_X + HALL_WIDTH, HALL_Y + HALL_HEIGHT]),
+    wall(common, "white-sparrow-upstairs-east-wall", [HALL_X + HALL_WIDTH, HALL_Y, HALL_X + HALL_WIDTH, HALL_Y + HALL_HEIGHT]),
+    label(common, "white-sparrow-open-below-label", "OPEN TO RECEPTION HALL BELOW", HALL_X + 170, HALL_Y + 220, 380, 18),
+    label(common, "white-sparrow-balcony-label", "UPSTAIRS BALCONY\n31′4″", BALCONY_X + 60, BALCONY_Y + 150, 256, 17),
   ];
 }
 
