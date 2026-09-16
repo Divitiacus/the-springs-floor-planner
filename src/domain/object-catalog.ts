@@ -113,6 +113,10 @@ export function isGuestTable(type: EventObjectType) {
   return type === "round-table-48" || type === "round-table-60" || type === "round-table-72" || type === "rectangle-table-6" || type === "rectangle-table-8" || type === "farmhouse-table-6" || type === "farmhouse-table-8";
 }
 
+export function isLinkableSeatingObject(type: EventObjectType) {
+  return type === "chair" || type === "rectangle-table-6" || type === "rectangle-table-8" || type === "farmhouse-table-6" || type === "farmhouse-table-8";
+}
+
 export function getObjectVariant(type: EventObjectType, variant?: EventObjectVariant) {
   const variants = OBJECT_DEFINITIONS[type].variants;
   if (!variants) return undefined;

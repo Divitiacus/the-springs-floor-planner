@@ -26,10 +26,11 @@ type Props = {
   onSelect: (id: string | null) => void;
   onAdd: (selection: EventObjectSelection, position: { x: number; y: number }) => void;
   onChange: (id: string, patch: Partial<EventObject>) => void;
+  onOpenDetails: (id: string) => void;
   onZoomChange: (zoom: number) => void;
 };
 
-export function FloorplanCanvas({ layout, venue, selectedId, mode, zoom, showReference, onSelect, onAdd, onChange, onZoomChange }: Props) {
+export function FloorplanCanvas({ layout, venue, selectedId, mode, zoom, showReference, onSelect, onAdd, onChange, onOpenDetails, onZoomChange }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
@@ -136,6 +137,7 @@ export function FloorplanCanvas({ layout, venue, selectedId, mode, zoom, showRef
               }}
               onSelect={() => onSelect(object.id)}
               onChange={(patch) => onChange(object.id, patch)}
+              onOpenDetails={() => onOpenDetails(object.id)}
             />
           ))}
           <Transformer
@@ -475,9 +477,10 @@ type ObjectNodeProps = {
   setNode: (node: Konva.Group | null) => void;
   onSelect: () => void;
   onChange: (patch: Partial<EventObject>) => void;
+  onOpenDetails: () => void;
 };
 
-function EventObjectNode({ object, selected, canDrag, setNode, onSelect, onChange }: ObjectNodeProps) {
+function EventObjectNode({ object, selected, canDrag, setNode, onSelect, onChange, onOpenDetails }: ObjectNodeProps) {
   const isRound = object.physicalDimensions.shape === "circle";
   const isDance = object.type === "dance-floor";
   const isChair = object.type === "chair";
@@ -493,6 +496,13 @@ function EventObjectNode({ object, selected, canDrag, setNode, onSelect, onChang
       draggable={canDrag}
       onClick={onSelect}
       onTap={onSelect}
+      onContextMenu={(event) => {
+        event.evt.preventDefault();
+        if (object.seats !== undefined) {
+          onSelect();
+          onOpenDetails();
+        }
+      }}
       onDragEnd={(event) => onChange({ x: snap(event.target.x()), y: snap(event.target.y()) })}
       onTransformEnd={(event) => {
         const node = event.target;
@@ -515,7 +525,8 @@ function EventObjectNode({ object, selected, canDrag, setNode, onSelect, onChang
         <Rect x={-object.width / 2} y={-object.height / 2} width={object.width} height={object.height} fill={fill} stroke={stroke} strokeWidth={selected ? 2 : isChair ? 0 : 2} cornerRadius={isChair ? 2 : isDance ? 2 : 8} shadowColor="#405047" shadowBlur={selected ? 8 : isChair ? 0 : 3} shadowOpacity={0.14} />
       )}
       {isDance ? <DanceGrid width={object.width} height={object.height} /> : null}
-      {isGuestTable(object.type) ? <SeatMarkers object={object} /> : null}
+      {!isChair && object.seats !== undefined ? <SeatMarkers object={object} /> : null}
+      {isChair && object.seatAssignments?.[0] ? <SeatName x={0} y={-21} name={object.seatAssignments[0]} /> : null}
       {!isChair ? (
         <>
           <Text x={-object.width / 2 + 5} y={-8} width={object.width - 10} align="center" text={object.label} fontSize={Math.min(14, Math.max(10, object.width / 9))} fontStyle="bold" fill="#33473b" ellipsis />
@@ -533,7 +544,17 @@ function SeatMarkers({ object }: { object: EventObject }) {
     return <>{Array.from({ length: count }, (_, index) => {
       const angle = (Math.PI * 2 * index) / count;
       const radius = object.width / 2 + 8;
-      return <Circle key={index} x={Math.cos(angle) * radius} y={Math.sin(angle) * radius} radius={4.5} fill="#9aa99f" />;
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+      const nameRadius = radius + 14;
+      return (
+        <Group key={index}>
+          <Circle x={x} y={y} radius={4.5} fill="#9aa99f" />
+          {object.seatAssignments?.[index] ? (
+            <SeatName x={Math.cos(angle) * nameRadius} y={Math.sin(angle) * nameRadius} name={object.seatAssignments[index]} />
+          ) : null}
+        </Group>
+      );
     })}</>;
   }
   const perSide = Math.ceil(count / 2);
@@ -541,8 +562,25 @@ function SeatMarkers({ object }: { object: EventObject }) {
     const top = index < perSide;
     const sideIndex = top ? index : index - perSide;
     const sideCount = top ? perSide : count - perSide;
-    return <Rect key={index} x={-object.width / 2 + ((sideIndex + 1) * object.width) / (sideCount + 1) - 5} y={top ? -object.height / 2 - 9 : object.height / 2 + 2} width={10} height={7} cornerRadius={2} fill="#9aa99f" />;
+    const x = -object.width / 2 + ((sideIndex + 1) * object.width) / (sideCount + 1);
+    return (
+      <Group key={index}>
+        <Rect x={x - 5} y={top ? -object.height / 2 - 9 : object.height / 2 + 2} width={10} height={7} cornerRadius={2} fill="#9aa99f" />
+        {object.seatAssignments?.[index] ? (
+          <SeatName x={x} y={top ? -object.height / 2 - 20 : object.height / 2 + 17} name={object.seatAssignments[index]} />
+        ) : null}
+      </Group>
+    );
   })}</>;
+}
+
+function SeatName({ x, y, name }: { x: number; y: number; name: string }) {
+  return (
+    <Group x={x} y={y} listening={false}>
+      <Rect x={-34} y={-6} width={68} height={12} fill="#fffefa" opacity={0.9} cornerRadius={3} />
+      <Text x={-32} y={-4} width={64} height={9} align="center" text={name} fontSize={7} fontStyle="bold" fill="#3f5147" ellipsis />
+    </Group>
+  );
 }
 
 function DanceGrid({ width, height }: { width: number; height: number }) {

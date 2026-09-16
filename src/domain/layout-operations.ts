@@ -49,8 +49,17 @@ export function addObject(layout: FloorplanLayout, object: EventObject): Floorpl
 }
 
 export function updateObject(layout: FloorplanLayout, id: string, patch: Partial<EventObject>): FloorplanLayout {
+  const source = layout.objects.find((object) => object.id === id);
+  if (!source) return layout;
+  const deltaX = typeof patch.x === "number" ? patch.x - source.x : 0;
+  const deltaY = typeof patch.y === "number" ? patch.y - source.y : 0;
+
   return touch(layout, layout.objects.map((object) => {
-    if (object.id !== id) return object;
+    if (object.id !== id) {
+      return source.linkedGroupId && object.linkedGroupId === source.linkedGroupId && (deltaX || deltaY)
+        ? { ...object, x: object.x + deltaX, y: object.y + deltaY }
+        : object;
+    }
     const allowedPatch = { ...patch };
     if (!OBJECT_DEFINITIONS[object.type].resizable) {
       delete allowedPatch.width;
@@ -58,8 +67,40 @@ export function updateObject(layout: FloorplanLayout, id: string, patch: Partial
       delete allowedPatch.physicalDimensions;
       delete allowedPatch.variant;
     }
-    return constrainPhysicalFootprint({ ...object, ...allowedPatch, id });
+    const updated = constrainPhysicalFootprint({ ...object, ...allowedPatch, id });
+    return {
+      ...updated,
+      seatAssignments: normalizeSeatAssignments(updated.seatAssignments, updated.seats),
+    };
   }));
+}
+
+export function updateSeatingDetails(
+  layout: FloorplanLayout,
+  id: string,
+  seatAssignments: readonly string[],
+  linkedObjectIds: readonly string[],
+  groupId = crypto.randomUUID(),
+): FloorplanLayout {
+  const source = layout.objects.find((object) => object.id === id);
+  if (!source) return layout;
+
+  const requestedIds = new Set([id, ...linkedObjectIds]);
+  const targetGroupId = requestedIds.size > 1 ? groupId : undefined;
+  const previousGroupId = source.linkedGroupId;
+  const objects = layout.objects.map((object) => {
+    const wasInEditedGroup = Boolean(previousGroupId && object.linkedGroupId === previousGroupId);
+    const isRequested = requestedIds.has(object.id);
+    const next = {
+      ...object,
+      ...(wasInEditedGroup || isRequested ? { linkedGroupId: isRequested ? targetGroupId : undefined } : {}),
+    };
+    return object.id === id
+      ? { ...next, seatAssignments: normalizeSeatAssignments(seatAssignments, object.seats) }
+      : next;
+  });
+
+  return touch(layout, removeSingletonLinkGroups(objects));
 }
 
 export function normalizePhysicalFootprints(layout: FloorplanLayout): FloorplanLayout {
@@ -67,7 +108,7 @@ export function normalizePhysicalFootprints(layout: FloorplanLayout): FloorplanL
 }
 
 export function deleteObject(layout: FloorplanLayout, id: string): FloorplanLayout {
-  return touch(layout, layout.objects.filter((object) => object.id !== id));
+  return touch(layout, removeSingletonLinkGroups(layout.objects.filter((object) => object.id !== id)));
 }
 
 export function duplicateObject(layout: FloorplanLayout, id: string, newId = crypto.randomUUID()): FloorplanLayout {
@@ -84,6 +125,8 @@ export function duplicateObject(layout: FloorplanLayout, id: string, newId = cry
     zIndex: layout.objects.length,
     label: nextTableNumber ? `Table ${nextTableNumber}` : source.label.endsWith(" copy") ? source.label : `${source.label} copy`,
     tableNumber: nextTableNumber ?? source.tableNumber,
+    seatAssignments: undefined,
+    linkedGroupId: undefined,
   };
   return touch(layout, [...layout.objects, copy]);
 }
@@ -127,4 +170,19 @@ function constrainPhysicalFootprint(object: EventObject): EventObject {
     height: variantDefinition?.height ?? definition.height,
     physicalDimensions: variantDefinition?.physicalDimensions ?? definition.physicalDimensions,
   };
+}
+
+function normalizeSeatAssignments(assignments: readonly string[] | undefined, seats: number | undefined): string[] | undefined {
+  if (seats === undefined) return undefined;
+  return Array.from({ length: Math.max(0, Math.floor(seats)) }, (_, index) => assignments?.[index]?.slice(0, 80) ?? "");
+}
+
+function removeSingletonLinkGroups(objects: EventObject[]): EventObject[] {
+  const counts = new Map<string, number>();
+  for (const object of objects) {
+    if (object.linkedGroupId) counts.set(object.linkedGroupId, (counts.get(object.linkedGroupId) ?? 0) + 1);
+  }
+  return objects.map((object) => object.linkedGroupId && counts.get(object.linkedGroupId) === 1
+    ? { ...object, linkedGroupId: undefined }
+    : object);
 }

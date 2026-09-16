@@ -16,6 +16,7 @@ import { ObjectLibrary } from "@/components/editor/ObjectLibrary";
 import { PropertiesPanel } from "@/components/editor/PropertiesPanel";
 import { EditorToolbar, type EditorMode } from "@/components/editor/EditorToolbar";
 import { SpringsLogo } from "@/components/brand/SpringsLogo";
+import { SeatingDetailsDialog } from "@/components/editor/SeatingDetailsDialog";
 
 type Props = {
   venue: VenueTemplate;
@@ -44,6 +45,7 @@ export function FloorPlanner({ venue, levelVenues, locationName, inventory }: Pr
   const [showReference, setShowReference] = useState(activeVenue.referenceAsset?.visibleByDefault ?? false);
   const [resetViewKey, setResetViewKey] = useState(0);
   const [nameRequired, setNameRequired] = useState(false);
+  const [detailsObjectId, setDetailsObjectId] = useState<string | null>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const addObject = editor.add;
@@ -70,9 +72,21 @@ export function FloorPlanner({ venue, levelVenues, locationName, inventory }: Pr
   const updateOnActiveLevel = useCallback((id: string, patch: Partial<EventObject>) => {
     const object = activeLayout.objects.find((candidate) => candidate.id === id);
     const position = { x: patch.x ?? object?.x, y: patch.y ?? object?.y };
-    if (activeVenue.usableAreas && position.x !== undefined && position.y !== undefined && !isPositionOnFloor(position as { x: number; y: number }, activeVenue.usableAreas, activeVenue.voidAreas ?? [])) {
-      showNotice("That area is open to the floor below or outside the balcony walkway.");
-      return;
+    if (activeVenue.usableAreas && object && position.x !== undefined && position.y !== undefined) {
+      const deltaX = position.x - object.x;
+      const deltaY = position.y - object.y;
+      const movingObjects = object.linkedGroupId
+        ? activeLayout.objects.filter((candidate) => candidate.linkedGroupId === object.linkedGroupId)
+        : [object];
+      const allOnFloor = movingObjects.every((candidate) => isPositionOnFloor(
+        { x: candidate.x + deltaX, y: candidate.y + deltaY },
+        activeVenue.usableAreas ?? [],
+        activeVenue.voidAreas ?? [],
+      ));
+      if (!allOnFloor) {
+        showNotice("A linked object would move outside the usable floor area.");
+        return;
+      }
     }
     updateObject(id, patch);
   }, [activeLayout.objects, activeVenue.usableAreas, activeVenue.voidAreas, showNotice, updateObject]);
@@ -96,11 +110,16 @@ export function FloorPlanner({ venue, levelVenues, locationName, inventory }: Pr
   const changeFloorLevel = (levelId: string) => {
     setActiveLevelId(levelId);
     editor.setSelectedId(null);
+    setDetailsObjectId(null);
     setZoom(1);
     setResetViewKey((key) => key + 1);
     const nextLevel = availableLevels.find((level) => level.levelId === levelId);
     setShowReference(nextLevel?.referenceAsset?.visibleByDefault ?? false);
   };
+
+  const detailsObject = detailsObjectId
+    ? activeLayout.objects.find((object) => object.id === detailsObjectId) ?? null
+    : null;
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -307,10 +326,14 @@ export function FloorPlanner({ venue, levelVenues, locationName, inventory }: Pr
             onSelect={editor.setSelectedId}
             onAdd={addOnActiveLevel}
             onChange={updateOnActiveLevel}
+            onOpenDetails={(id) => {
+              editor.setSelectedId(id);
+              setDetailsObjectId(id);
+            }}
             onZoomChange={setZoom}
           />
           <div className="floor-planner-status flex h-9 shrink-0 items-center justify-between border-t border-[#dce2dd] bg-[#fffefa] px-4 text-[11px] text-[#6c7871]">
-            <span>{mode === "pan" ? "Drag the canvas to pan" : "Click an object to select · Drag to move"}</span>
+            <span>{mode === "pan" ? "Drag the canvas to pan" : "Click to select · Right-click a table or chair for guest names and linking"}</span>
             <div className="flex items-center gap-4 font-semibold text-[#425148]">
               {isMultiLevel ? <span>{activeVenue.levelName}</span> : null}
               <span>{activeStats.objectCount} objects</span>
@@ -328,6 +351,7 @@ export function FloorPlanner({ venue, levelVenues, locationName, inventory }: Pr
             onDuplicate={() => editor.duplicate()}
             onDelete={() => editor.remove()}
             onReorder={editor.reorder}
+            onEditSeating={() => selectedId && setDetailsObjectId(selectedId)}
           />
         </div>
       </div>
@@ -336,6 +360,19 @@ export function FloorPlanner({ venue, levelVenues, locationName, inventory }: Pr
         <div className="toast-in fixed bottom-12 left-1/2 z-50 -translate-x-1/2 rounded-full bg-[#1d2923] px-4 py-2 text-xs font-semibold text-white shadow-xl">
           {editor.notice}
         </div>
+      ) : null}
+
+      {detailsObject ? (
+        <SeatingDetailsDialog
+          key={detailsObject.id}
+          object={detailsObject}
+          candidates={activeLayout.objects.filter((object) => object.id !== detailsObject.id)}
+          onClose={() => setDetailsObjectId(null)}
+          onSave={(seatAssignments, linkedObjectIds) => {
+            editor.updateDetails(detailsObject.id, seatAssignments, linkedObjectIds);
+            setDetailsObjectId(null);
+          }}
+        />
       ) : null}
     </main>
   );

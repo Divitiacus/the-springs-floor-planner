@@ -12,6 +12,7 @@ import {
   getLayoutStats,
   normalizePhysicalFootprints,
   reorderObject,
+  updateSeatingDetails,
   updateObject,
 } from "@/domain/layout-operations";
 import { deserializeFloorplan, serializeFloorplan, STORAGE_KEY } from "@/domain/persistence";
@@ -123,6 +124,16 @@ export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner 
     [commit, layout, selectedId],
   );
 
+  const updateDetails = useCallback(
+    (id: string, seatAssignments: readonly string[], linkedObjectIds: readonly string[]) => {
+      const source = layout.objects.find((object) => object.id === id);
+      const groupId = source?.linkedGroupId ?? crypto.randomUUID();
+      commit(updateSeatingDetails(layout, id, seatAssignments, linkedObjectIds, groupId));
+      setNotice(linkedObjectIds.length ? "Guest names and linked objects saved" : "Guest names saved");
+    },
+    [commit, layout],
+  );
+
   const undo = useCallback(() => setHistory((current) => undoHistory(current)), []);
   const redo = useCallback(() => setHistory((current) => redoHistory(current)), []);
   const showNotice = useCallback((message: string) => setNotice(message), []);
@@ -174,6 +185,7 @@ export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner 
     remove,
     duplicate,
     reorder,
+    updateDetails,
     undo,
     redo,
     showNotice,

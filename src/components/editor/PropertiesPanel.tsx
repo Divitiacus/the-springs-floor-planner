@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDown, ArrowUp, Copy, MousePointer2, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Copy, MousePointer2, Trash2, UsersRound } from "lucide-react";
 import type { EventObject } from "@/domain/floorplan";
 import { describePhysicalDimensions, getObjectDisplayName, OBJECT_DEFINITIONS, TABLE_TYPES } from "@/domain/object-catalog";
 
@@ -10,9 +10,10 @@ type Props = {
   onDuplicate: () => void;
   onDelete: () => void;
   onReorder: (direction: "forward" | "backward") => void;
+  onEditSeating: () => void;
 };
 
-export function PropertiesPanel({ object, onChange, onDuplicate, onDelete, onReorder }: Props) {
+export function PropertiesPanel({ object, onChange, onDuplicate, onDelete, onReorder, onEditSeating }: Props) {
   const definition = object ? OBJECT_DEFINITIONS[object.type] : null;
   return (
     <aside className="subtle-scrollbar min-h-0 overflow-y-auto bg-[#fffefa] px-4 py-5">
@@ -51,6 +52,16 @@ export function PropertiesPanel({ object, onChange, onDuplicate, onDelete, onReo
                   </Field>
                 </div>
               </div>
+            ) : null}
+
+            {object.seats !== undefined ? (
+              <button
+                type="button"
+                className="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-[#bfcfc5] bg-[#edf3ef] text-xs font-bold text-[#385545] hover:bg-[#e3ece6]"
+                onClick={onEditSeating}
+              >
+                <UsersRound size={15} /> Guest names &amp; links
+              </button>
             ) : null}
 
             <div className="rounded-lg border border-[#e0e5e1] bg-[#f8f9f7] px-3 py-2.5">

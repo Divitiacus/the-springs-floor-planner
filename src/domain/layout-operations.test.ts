@@ -8,6 +8,7 @@ import {
   duplicateObject,
   getLayoutStats,
   normalizePhysicalFootprints,
+  updateSeatingDetails,
   updateObject,
 } from "@/domain/layout-operations";
 import { deserializeFloorplan, serializeFloorplan, serializePortableFloorplan } from "@/domain/persistence";
@@ -311,6 +312,45 @@ describe("floorplan object operations", () => {
     expect(deleteObject(layout, "first").objects.map((object) => object.id)).toEqual(["second"]);
   });
 
+  it("keeps linked rectangle tables and end chairs together when one object moves", () => {
+    const table = createEventObject("rectangle-table-8", { x: 200, y: 200 }, [], "table");
+    const chair = createEventObject("chair", { x: 255, y: 200 }, [table], "chair");
+    const unlinked = createEventObject("chair", { x: 400, y: 400 }, [table, chair], "unlinked");
+    let layout = addObject(addObject(addObject(createEmptyLayout(), table), chair), unlinked);
+
+    layout = updateSeatingDetails(layout, table.id, [], [chair.id], "linked-table-end-chair");
+    layout = updateObject(layout, table.id, { x: 230, y: 215 });
+
+    expect(layout.objects.find((object) => object.id === table.id)).toMatchObject({ x: 230, y: 215, linkedGroupId: "linked-table-end-chair" });
+    expect(layout.objects.find((object) => object.id === chair.id)).toMatchObject({ x: 285, y: 215, linkedGroupId: "linked-table-end-chair" });
+    const untouched = layout.objects.find((object) => object.id === unlinked.id);
+    expect(untouched).toMatchObject({ x: 400, y: 400 });
+    expect(untouched?.linkedGroupId).toBeUndefined();
+  });
+
+  it("stores exactly one guest-name slot per current seat and removes stale names when the count drops", () => {
+    const table = createEventObject("rectangle-table-8", { x: 200, y: 200 }, [], "table");
+    let layout = addObject(createEmptyLayout(), table);
+    layout = updateObject(layout, table.id, { seats: 7 });
+    layout = updateSeatingDetails(layout, table.id, ["A", "B", "C", "D", "E", "F", "G"], [], "unused");
+
+    expect(layout.objects[0].seatAssignments).toEqual(["A", "B", "C", "D", "E", "F", "G"]);
+
+    layout = updateObject(layout, table.id, { seats: 5 });
+    expect(layout.objects[0].seatAssignments).toEqual(["A", "B", "C", "D", "E"]);
+  });
+
+  it("duplicates seating objects without copying guest names or link membership", () => {
+    const table = {
+      ...createEventObject("rectangle-table-6", { x: 200, y: 200 }, [], "table"),
+      seatAssignments: ["Alex", "Bailey"],
+      linkedGroupId: "head-table",
+    };
+    const layout = duplicateObject(addObject(createEmptyLayout(), table), table.id, "copy");
+
+    expect(layout.objects[1]).toMatchObject({ id: "copy", seatAssignments: undefined, linkedGroupId: undefined });
+  });
+
   it("calculates guest table and seating totals", () => {
     const table = createEventObject("round-table-60", { x: 0, y: 0 }, [], "table");
     const sweetheart = createEventObject("sweetheart-table", { x: 0, y: 0 }, [table], "sweetheart");
@@ -415,6 +455,31 @@ describe("persistence", () => {
       height: 7,
     });
     expect(getLayoutStats(reopened).seats).toBe(1);
+  });
+
+  it("round-trips guest names and linked seating groups through version 5 editable files", () => {
+    const table = {
+      ...createEventObject("rectangle-table-8", { x: 220, y: 180 }, [], "table"),
+      seatAssignments: ["Alex", "Bailey", "Casey", "Dakota", "Emery", "Finley", "Gray", "Harper", "", ""],
+      linkedGroupId: "family-table",
+    };
+    const chair = {
+      ...createEventObject("chair", { x: 275, y: 180 }, [table], "chair"),
+      seatAssignments: ["Jordan"],
+      linkedGroupId: "family-table",
+    };
+    const layout = addObject(
+      addObject({ ...createEmptyLayout("hall_rockwall_manor"), name: "Named Seating" }, table),
+      chair,
+    );
+    const serialized = serializePortableFloorplan(layout);
+    const reopened = deserializeFloorplan(serialized);
+
+    expect(JSON.parse(serialized).v).toBe(5);
+    expect(reopened.objects).toMatchObject([
+      { seatAssignments: table.seatAssignments, linkedGroupId: "family-table" },
+      { seatAssignments: ["Jordan"], linkedGroupId: "family-table" },
+    ]);
   });
 
   it("reopens fixed rectangle tables at their current confirmed catalog size", () => {
