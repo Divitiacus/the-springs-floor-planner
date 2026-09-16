@@ -4,6 +4,7 @@ import { createParkerManorConfiguration } from "@/domain/venues/parker-manor";
 
 const HALL_RIGHT = 860;
 const HALL_TOP = 80;
+const HALL_CENTER_Y = 485;
 const FIREPLACE_WIDTH = 126; // 10′6″, called out on the supplied downstairs plan.
 const FIREPLACE_X = 455 - FIREPLACE_WIDTH / 2;
 
@@ -46,6 +47,12 @@ function createLevelElements(
     "parker-manor-upstairs-fireplace",
     "parker-manor-pavilion-door-west",
     "parker-manor-pavilion-door-east",
+    "parker-manor-main-entrance-west",
+    "parker-manor-main-entrance-east",
+    "parker-manor-reception-label",
+    "parker-manor-overhang-label",
+    "parker-manor-main-entrance-label",
+    "parker-manor-upstairs-label",
     "parker-manor-full-balcony",
     "parker-manor-juliet-balcony",
     "parker-manor-full-balcony-door-west",
@@ -63,7 +70,9 @@ function createLevelElements(
   return [
     ...(isUpstairs ? [roundedPorch(), porchDoor(), porchLabel()] : []),
     ...elements,
-    ...(isUpstairs ? [northFireplace("tuscany-hill-upstairs-fireplace")] : [northMantle(), northFireplace("tuscany-hill-fireplace")]),
+    ...(isUpstairs
+      ? [northFireplace("tuscany-hill-upstairs-fireplace", HALL_TOP - 22)]
+      : [northMantle(), northFireplace("tuscany-hill-fireplace", HALL_TOP + 14), ...rightEntranceDoors()]),
   ];
 }
 
@@ -73,7 +82,7 @@ function renameElement(element: FixedArchitectureElement): FixedArchitectureElem
 
 function relocateLevelLabel(element: FixedArchitectureElement): FixedArchitectureElement {
   if (element.kind !== "label") return element;
-  if (element.id === "tuscany-hill-downstairs-label" || element.id === "tuscany-hill-upstairs-label") {
+  if (element.id === "tuscany-hill-downstairs-label") {
     return { ...element, y: 150 };
   }
   return element;
@@ -86,7 +95,7 @@ function northMantle(): FixedArchitectureElement {
     id: "tuscany-hill-mantle",
     kind: "area",
     role: "fireplace",
-    label: "MANTLE · NORTH WALL",
+    label: "MANTLE",
     placementBehavior: "blocked",
     elevation: "floor",
     physicalNote: "Tuscany Hill's fireplace and mantle are centered on the north wall.",
@@ -94,18 +103,47 @@ function northMantle(): FixedArchitectureElement {
   };
 }
 
-function northFireplace(id: string): FixedArchitectureElement {
+function northFireplace(id: string, y: number): FixedArchitectureElement {
   return {
     fixed: true,
     measurementStatus: "source-traced",
     id,
     kind: "area",
     role: "fireplace",
-    label: "FIREPLACE · NORTH WALL",
+    label: "FIREPLACE",
     placementBehavior: "blocked",
     elevation: "floor",
     physicalNote: "The supplied Tuscany Hill plans place the fireplace at the center of the north wall.",
-    shape: { type: "rectangle", x: FIREPLACE_X, y: HALL_TOP + 14, width: FIREPLACE_WIDTH, height: 43 },
+    shape: { type: "rectangle", x: FIREPLACE_X, y, width: FIREPLACE_WIDTH, height: 43 },
+  };
+}
+
+function rightEntranceDoors(): FixedArchitectureElement[] {
+  return [
+    rightEntranceDoor("tuscany-hill-main-entrance-north", HALL_CENTER_Y, -90, "clockwise"),
+    rightEntranceDoor("tuscany-hill-main-entrance-south", HALL_CENTER_Y, 90, "counterclockwise"),
+  ];
+}
+
+function rightEntranceDoor(
+  id: string,
+  y: number,
+  rotation: number,
+  swingDirection: "clockwise" | "counterclockwise",
+): FixedArchitectureElement {
+  return {
+    fixed: true,
+    measurementStatus: "source-traced",
+    id,
+    kind: "door",
+    label: "Main entrance door",
+    placementBehavior: "restricted",
+    x: HALL_RIGHT,
+    y,
+    width: 48,
+    rotation,
+    swingDirection,
+    swingAngle: 42,
   };
 }
 

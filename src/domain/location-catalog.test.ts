@@ -378,12 +378,20 @@ describe("location catalog", () => {
     expect(downstairs.fixedArchitecturalElements.find((element) => element.id === "tuscany-hill-fireplace")).toMatchObject({
       kind: "area",
       role: "fireplace",
+      label: "FIREPLACE",
       shape: { type: "rectangle", x: 392, y: 94, width: 126, height: 43 },
     });
     expect(downstairs.fixedArchitecturalElements.find((element) => element.id === "tuscany-hill-mantle")).toMatchObject({
       shape: { type: "rectangle", x: 391, y: 80, width: 128, height: 14 },
     });
     expect(downstairs.fixedArchitecturalElements.some((element) => element.id.includes("pavilion-door"))).toBe(false);
+    expect(downstairs.fixedArchitecturalElements.some((element) => element.id.includes("main-entrance-label"))).toBe(false);
+    expect(downstairs.fixedArchitecturalElements.some((element) => element.id.includes("reception-label"))).toBe(false);
+    expect(downstairs.fixedArchitecturalElements.some((element) => element.id.includes("overhang-label"))).toBe(false);
+    expect(downstairs.fixedArchitecturalElements.filter((element) => element.id.startsWith("tuscany-hill-main-entrance-"))).toMatchObject([
+      { x: 860, y: 485, width: 48, rotation: -90, swingDirection: "clockwise" },
+      { x: 860, y: 485, width: 48, rotation: 90, swingDirection: "counterclockwise" },
+    ]);
     expect(downstairs.fixedArchitecturalElements.some((element) => element.id.includes("rounded-porch"))).toBe(false);
     expect(upstairs.physicalWidthInches).toBe(1040);
     expect(upstairs.fixedArchitecturalElements.find((element) => element.id === "tuscany-hill-upstairs-rounded-porch")).toMatchObject({
@@ -396,8 +404,10 @@ describe("location catalog", () => {
       rotation: 90,
     });
     expect(upstairs.fixedArchitecturalElements.find((element) => element.id === "tuscany-hill-upstairs-fireplace")).toMatchObject({
-      shape: { type: "rectangle", x: 392, y: 94, width: 126, height: 43 },
+      label: "FIREPLACE",
+      shape: { type: "rectangle", x: 392, y: 58, width: 126, height: 43 },
     });
+    expect(upstairs.fixedArchitecturalElements.some((element) => element.id === "tuscany-hill-upstairs-label")).toBe(false);
     expect(upstairs.fixedArchitecturalElements.some((element) => element.id.includes("full-balcony"))).toBe(false);
     expect(upstairs.fixedArchitecturalElements.some((element) => element.id.includes("juliet-balcony"))).toBe(false);
     expect(upstairs.voidAreas?.map((region) => region.id)).toEqual(["tuscany-hill-level-2-open-to-below"]);
