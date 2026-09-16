@@ -21,6 +21,7 @@ import { createValleyViewConfiguration } from "@/domain/venues/valley-view";
 import { createWestwoodRanchConfiguration } from "@/domain/venues/westwood-ranch";
 import { createFarmhouseWallisvilleConfiguration } from "@/domain/venues/farmhouse-wallisville";
 import { createTheChateauCypressConfiguration } from "@/domain/venues/the-chateau-cypress";
+import { createTuscanyHillConfiguration } from "@/domain/venues/tuscany-hill";
 
 export type HallLevelConfiguration = {
   id: string;
@@ -256,6 +257,15 @@ export const WEATHERFORD_PARKER_MANOR_INVENTORY: InventoryCatalog = {
   },
 };
 
+export const MCKINNEY_TUSCANY_HILL_INVENTORY: InventoryCatalog = {
+  scope: "hall",
+  limits: { ...WEATHERFORD_PARKER_MANOR_INVENTORY.limits },
+  source: {
+    fileName: "user-confirmed",
+    note: "Tuscany Hill matches Parker Manor's table inventory and 320-chair guest capacity.",
+  },
+};
+
 export const VALLEY_VIEW_INVENTORY: InventoryCatalog = {
   scope: "hall",
   limits: {
@@ -477,6 +487,15 @@ export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
         configuration: {
           ...createHavenstoneReserveConfiguration(),
           inventory: MCKINNEY_INVENTORY,
+        },
+      },
+      {
+        id: "hall_tuscany_hill",
+        slug: "tuscany-hill",
+        name: "Tuscany Hill",
+        configuration: {
+          ...createTuscanyHillConfiguration(),
+          inventory: MCKINNEY_TUSCANY_HILL_INVENTORY,
         },
       },
     ],

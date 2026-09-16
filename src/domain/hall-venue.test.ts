@@ -118,6 +118,24 @@ describe("hall venue template", () => {
     expect(venue.elements.every((element) => element.id.startsWith("havenstone-reserve"))).toBe(true);
   });
 
+  it("loads McKinney's Tuscany Hill as two Parker Manor-derived levels", () => {
+    const location = getLocationBySlug("mckinney");
+    const hall = getHallBySlug(location, "tuscany-hill");
+    if (!location || !hall) throw new Error("Tuscany Hill catalog entry missing");
+
+    const downstairs = createHallVenueTemplate(location, hall, "level-1-downstairs");
+    const upstairs = createHallVenueTemplate(location, hall, "level-2-upstairs");
+
+    expect(downstairs.id).toBe("location_mckinney:hall_tuscany_hill");
+    expect(downstairs.name).toBe("McKinney · Tuscany Hill");
+    expect(downstairs.hall).toEqual({ x: 50, y: 80, width: 810, height: 810 });
+    expect(downstairs.physicalWidthInches).toBe(910);
+    expect(upstairs.hall).toEqual({ x: 50, y: 80, width: 810, height: 810 });
+    expect(upstairs.physicalWidthInches).toBe(1040);
+    expect(upstairs.voidAreas?.map((region) => region.id)).toEqual(["tuscany-hill-level-2-open-to-below"]);
+    expect(upstairs.elements.some((element) => element.id === "tuscany-hill-upstairs-rounded-porch")).toBe(true);
+  });
+
   it("loads Denton's Oakview Lodge at the confirmed 111-foot-4-inch room length", () => {
     const location = getLocationBySlug("denton");
     const hall = getHallBySlug(location, "oakview-lodge");

@@ -12,6 +12,7 @@ import {
   MAGNOLIA_INVENTORY,
   MAGNOLIA_MANOR_INVENTORY,
   MCKINNEY_INVENTORY,
+  MCKINNEY_TUSCANY_HILL_INVENTORY,
   ROCKWALL_INVENTORY,
   isMultiLevelHallConfiguration,
   resolveInventoryConfiguration,
@@ -328,6 +329,10 @@ describe("location catalog", () => {
     if (!location || !hall?.configuration) throw new Error("McKinney Havenstone Reserve configuration missing");
 
     expect(location).toMatchObject({ id: "location_mckinney", slug: "mckinney", name: "McKinney" });
+    expect(location.halls.map((candidate) => [candidate.slug, candidate.name])).toEqual([
+      ["havenstone-reserve", "Havenstone Reserve"],
+      ["tuscany-hill", "Tuscany Hill"],
+    ]);
     expect(hall).toMatchObject({
       id: "hall_havenstone_reserve",
       slug: "havenstone-reserve",
@@ -354,6 +359,51 @@ describe("location catalog", () => {
     expect(configuration.fixedArchitecturalElements.every((element) => element.id.startsWith("havenstone-reserve"))).toBe(true);
     expect(configuration.fixedArchitecturalElements.some((element) => element.id.includes("villa-tuscana"))).toBe(false);
     expect(configuration.floorplanAsset).toBeNull();
+  });
+
+  it("defines McKinney Tuscany Hill with Parker Manor's inventory, a north fireplace, and rounded porch", () => {
+    const location = getLocationBySlug("mckinney");
+    const hall = getHallBySlug(location, "tuscany-hill");
+    if (!location || !hall?.configuration) throw new Error("McKinney Tuscany Hill configuration missing");
+
+    expect(hall).toMatchObject({ id: "hall_tuscany_hill", slug: "tuscany-hill", name: "Tuscany Hill" });
+    expect(MCKINNEY_TUSCANY_HILL_INVENTORY).toMatchObject({
+      scope: "hall",
+      limits: WEATHERFORD_PARKER_MANOR_INVENTORY.limits,
+    });
+    expect(resolveInventoryConfiguration(location, hall)).toEqual(WEATHERFORD_PARKER_MANOR_INVENTORY.limits);
+    if (!isMultiLevelHallConfiguration(hall.configuration)) throw new Error("Tuscany Hill must use multi-level configuration");
+
+    const [downstairs, upstairs] = hall.configuration.levels;
+    expect(downstairs.fixedArchitecturalElements.find((element) => element.id === "tuscany-hill-fireplace")).toMatchObject({
+      kind: "area",
+      role: "fireplace",
+      shape: { type: "rectangle", x: 392, y: 94, width: 126, height: 43 },
+    });
+    expect(downstairs.fixedArchitecturalElements.find((element) => element.id === "tuscany-hill-mantle")).toMatchObject({
+      shape: { type: "rectangle", x: 391, y: 80, width: 128, height: 14 },
+    });
+    expect(downstairs.fixedArchitecturalElements.some((element) => element.id.includes("pavilion-door"))).toBe(false);
+    expect(downstairs.fixedArchitecturalElements.some((element) => element.id.includes("rounded-porch"))).toBe(false);
+    expect(upstairs.physicalWidthInches).toBe(1040);
+    expect(upstairs.fixedArchitecturalElements.find((element) => element.id === "tuscany-hill-upstairs-rounded-porch")).toMatchObject({
+      kind: "path",
+      placementBehavior: "restricted",
+    });
+    expect(upstairs.fixedArchitecturalElements.find((element) => element.id === "tuscany-hill-upstairs-porch-door")).toMatchObject({
+      kind: "door",
+      x: 860,
+      rotation: 90,
+    });
+    expect(upstairs.fixedArchitecturalElements.find((element) => element.id === "tuscany-hill-upstairs-fireplace")).toMatchObject({
+      shape: { type: "rectangle", x: 392, y: 94, width: 126, height: 43 },
+    });
+    expect(upstairs.fixedArchitecturalElements.some((element) => element.id.includes("full-balcony"))).toBe(false);
+    expect(upstairs.fixedArchitecturalElements.some((element) => element.id.includes("juliet-balcony"))).toBe(false);
+    expect(upstairs.voidAreas?.map((region) => region.id)).toEqual(["tuscany-hill-level-2-open-to-below"]);
+    expect(hall.configuration.levels.every((level) =>
+      level.fixedArchitecturalElements.every((element) => element.id.startsWith("tuscany-hill")),
+    )).toBe(true);
   });
 
   it("defines Valley View with its traced floor shape and supplied table inventory", () => {
