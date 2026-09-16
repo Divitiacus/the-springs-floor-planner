@@ -12,6 +12,7 @@ import {
   getLayoutStats,
   normalizePhysicalFootprints,
   reorderObject,
+  updateGuestDetails,
   updateSeatingDetails,
   updateObject,
 } from "@/domain/layout-operations";
@@ -134,6 +135,13 @@ export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner 
     [commit, layout],
   );
 
+  const updateGuest = useCallback(
+    (id: string, seatIndex: number, patch: { name?: string; meal?: string; role?: string }) => {
+      commit(updateGuestDetails(layout, id, seatIndex, patch));
+    },
+    [commit, layout],
+  );
+
   const undo = useCallback(() => setHistory((current) => undoHistory(current)), []);
   const redo = useCallback(() => setHistory((current) => redoHistory(current)), []);
   const showNotice = useCallback((message: string) => setNotice(message), []);
@@ -186,6 +194,7 @@ export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner 
     duplicate,
     reorder,
     updateDetails,
+    updateGuest,
     undo,
     redo,
     showNotice,

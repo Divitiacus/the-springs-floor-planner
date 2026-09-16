@@ -70,6 +70,8 @@ export function updateObject(layout: FloorplanLayout, id: string, patch: Partial
       return {
         ...updatedSource,
         seatAssignments: normalizeSeatAssignments(updatedSource.seatAssignments, updatedSource.seats),
+        seatMeals: normalizeSeatField(updatedSource.seatMeals, updatedSource.seats),
+        seatRoles: normalizeSeatField(updatedSource.seatRoles, updatedSource.seats),
       };
     }
     if (!source.linkedGroupId || object.linkedGroupId !== source.linkedGroupId) return object;
@@ -116,8 +118,47 @@ export function updateSeatingDetails(
   return touch(layout, snapLinkedEndChairs(removeSingletonLinkGroups(objects)));
 }
 
+export type GuestDetailsPatch = {
+  name?: string;
+  meal?: string;
+  role?: string;
+};
+
+export function updateGuestDetails(
+  layout: FloorplanLayout,
+  id: string,
+  seatIndex: number,
+  patch: GuestDetailsPatch,
+): FloorplanLayout {
+  const source = layout.objects.find((object) => object.id === id);
+  const seatCount = Math.max(0, Math.floor(source?.seats ?? 0));
+  if (!source || !Number.isInteger(seatIndex) || seatIndex < 0 || seatIndex >= seatCount) return layout;
+
+  const seatAssignments = normalizeSeatAssignments(source.seatAssignments, seatCount) ?? [];
+  const seatMeals = normalizeSeatField(source.seatMeals, seatCount) ?? [];
+  const seatRoles = normalizeSeatField(source.seatRoles, seatCount) ?? [];
+  if (patch.name !== undefined) seatAssignments[seatIndex] = patch.name.slice(0, 80);
+  if (patch.meal !== undefined) seatMeals[seatIndex] = patch.meal.slice(0, 80);
+  if (patch.role !== undefined) seatRoles[seatIndex] = patch.role.slice(0, 80);
+
+  return touch(layout, layout.objects.map((object) => object.id === id
+    ? { ...object, seatAssignments, seatMeals, seatRoles }
+    : object));
+}
+
 export function normalizePhysicalFootprints(layout: FloorplanLayout): FloorplanLayout {
-  return { ...layout, objects: snapLinkedEndChairs(layout.objects.map(constrainPhysicalFootprint)) };
+  return {
+    ...layout,
+    objects: snapLinkedEndChairs(layout.objects.map((object) => {
+      const constrained = constrainPhysicalFootprint(object);
+      return {
+        ...constrained,
+        seatAssignments: normalizeSeatAssignments(constrained.seatAssignments, constrained.seats),
+        seatMeals: normalizeSeatField(constrained.seatMeals, constrained.seats),
+        seatRoles: normalizeSeatField(constrained.seatRoles, constrained.seats),
+      };
+    })),
+  };
 }
 
 export function deleteObject(layout: FloorplanLayout, id: string): FloorplanLayout {
@@ -139,6 +180,8 @@ export function duplicateObject(layout: FloorplanLayout, id: string, newId = cry
     label: nextTableNumber ? `Table ${nextTableNumber}` : source.label.endsWith(" copy") ? source.label : `${source.label} copy`,
     tableNumber: nextTableNumber ?? source.tableNumber,
     seatAssignments: undefined,
+    seatMeals: undefined,
+    seatRoles: undefined,
     linkedGroupId: undefined,
   };
   return touch(layout, [...layout.objects, copy]);
@@ -186,8 +229,12 @@ function constrainPhysicalFootprint(object: EventObject): EventObject {
 }
 
 function normalizeSeatAssignments(assignments: readonly string[] | undefined, seats: number | undefined): string[] | undefined {
+  return normalizeSeatField(assignments, seats);
+}
+
+function normalizeSeatField(values: readonly string[] | undefined, seats: number | undefined): string[] | undefined {
   if (seats === undefined) return undefined;
-  return Array.from({ length: Math.max(0, Math.floor(seats)) }, (_, index) => assignments?.[index]?.slice(0, 80) ?? "");
+  return Array.from({ length: Math.max(0, Math.floor(seats)) }, (_, index) => values?.[index]?.slice(0, 80) ?? "");
 }
 
 function removeSingletonLinkGroups(objects: EventObject[]): EventObject[] {

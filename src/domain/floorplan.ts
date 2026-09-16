@@ -58,6 +58,8 @@ export type EventObject = {
   tableNumber?: number;
   seats?: number;
   seatAssignments?: string[];
+  seatMeals?: string[];
+  seatRoles?: string[];
   linkedGroupId?: string;
   zIndex: number;
 };

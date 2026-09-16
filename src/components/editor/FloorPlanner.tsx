@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronDown, Download, FileUp, Printer } from "lucide-react";
+import { ChevronDown, ClipboardList, Download, FileUp, LayoutGrid, Printer } from "lucide-react";
 import type { EventObject, EventObjectSelection } from "@/domain/floorplan";
 import type { VenueTemplate } from "@/domain/floorplan";
 import type { InventoryConfiguration } from "@/domain/inventory";
@@ -17,6 +17,7 @@ import { PropertiesPanel } from "@/components/editor/PropertiesPanel";
 import { EditorToolbar, type EditorMode } from "@/components/editor/EditorToolbar";
 import { SpringsLogo } from "@/components/brand/SpringsLogo";
 import { SeatingDetailsDialog } from "@/components/editor/SeatingDetailsDialog";
+import { GuestListSheet } from "@/components/editor/GuestListSheet";
 
 type Props = {
   venue: VenueTemplate;
@@ -41,6 +42,7 @@ export function FloorPlanner({ venue, levelVenues, locationName, inventory }: Pr
   } : editor.layout, [activeLevelId, defaultLevelId, editor.layout, isMultiLevel]);
   const activeStats = useMemo(() => getLayoutStats(activeLayout), [activeLayout]);
   const [mode, setMode] = useState<EditorMode>("select");
+  const [workspaceView, setWorkspaceView] = useState<"floorplan" | "guest-list">("floorplan");
   const [zoom, setZoom] = useState(1);
   const [showReference, setShowReference] = useState(activeVenue.referenceAsset?.visibleByDefault ?? false);
   const [resetViewKey, setResetViewKey] = useState(0);
@@ -108,6 +110,7 @@ export function FloorPlanner({ venue, levelVenues, locationName, inventory }: Pr
   );
 
   const changeFloorLevel = (levelId: string) => {
+    setWorkspaceView("floorplan");
     setActiveLevelId(levelId);
     editor.setSelectedId(null);
     setDetailsObjectId(null);
@@ -274,30 +277,47 @@ export function FloorPlanner({ venue, levelVenues, locationName, inventory }: Pr
         </div>
       </header>
 
+      <nav className="flex h-12 shrink-0 items-center justify-center border-b border-[#dce2dd] bg-[#f8f7f2] px-4" aria-label="Planner view">
+        <div className="inline-flex rounded-xl border border-[#cfd7d1] bg-white p-1 shadow-sm" role="tablist">
+          {availableLevels.map((level) => (
+            <button
+              key={level.levelId ?? level.id}
+              type="button"
+              role="tab"
+              aria-selected={workspaceView === "floorplan" && level.levelId === activeLevelId}
+              className={`flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-xs font-bold transition-colors ${workspaceView === "floorplan" && level.levelId === activeLevelId ? "bg-[#294f3d] text-white shadow-sm" : "text-[#66736c] hover:bg-[#eef2ee]"}`}
+              onClick={() => changeFloorLevel(level.levelId ?? defaultLevelId ?? "")}
+            >
+              <LayoutGrid size={13} /> {isMultiLevel ? level.levelName : "Floor Plan"}
+            </button>
+          ))}
+          <button
+            type="button"
+            role="tab"
+            aria-selected={workspaceView === "guest-list"}
+            className={`flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-xs font-bold transition-colors ${workspaceView === "guest-list" ? "bg-[#294f3d] text-white shadow-sm" : "text-[#66736c] hover:bg-[#eef2ee]"}`}
+            onClick={() => {
+              setWorkspaceView("guest-list");
+              editor.setSelectedId(null);
+              setDetailsObjectId(null);
+            }}
+          >
+            <ClipboardList size={13} /> Guest List
+          </button>
+        </div>
+      </nav>
+
+      {workspaceView === "guest-list" ? (
+        <div className="floor-planner-workspace flex min-h-0 flex-1">
+          <GuestListSheet objects={editor.layout.objects} onUpdateGuest={editor.updateGuest} />
+        </div>
+      ) : (
       <div className="floor-planner-workspace grid min-h-0 flex-1 grid-cols-[258px_minmax(520px,1fr)_292px]">
         <div className="floor-planner-library min-h-0 overflow-hidden [&>aside]:h-full">
           <ObjectLibrary onAdd={addCentered} inventory={inventory} usage={inventoryUsage} />
         </div>
 
         <section className="floor-planner-canvas flex min-w-0 flex-col border-x border-[#dce2dd]">
-          {isMultiLevel ? (
-            <div className="flex h-12 shrink-0 items-center justify-center border-b border-[#dce2dd] bg-[#f8f7f2] px-4">
-              <div className="inline-flex rounded-xl border border-[#cfd7d1] bg-white p-1 shadow-sm" role="tablist" aria-label="Floor level">
-                {availableLevels.map((level) => (
-                  <button
-                    key={level.levelId}
-                    type="button"
-                    role="tab"
-                    aria-selected={level.levelId === activeLevelId}
-                    className={`rounded-lg px-5 py-1.5 text-xs font-bold transition-colors ${level.levelId === activeLevelId ? "bg-[#294f3d] text-white shadow-sm" : "text-[#66736c] hover:bg-[#eef2ee]"}`}
-                    onClick={() => level.levelId && changeFloorLevel(level.levelId)}
-                  >
-                    {level.levelName}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : null}
           <EditorToolbar
             mode={mode}
             zoom={zoom}
@@ -333,7 +353,7 @@ export function FloorPlanner({ venue, levelVenues, locationName, inventory }: Pr
             onZoomChange={setZoom}
           />
           <div className="floor-planner-status flex h-9 shrink-0 items-center justify-between border-t border-[#dce2dd] bg-[#fffefa] px-4 text-[11px] text-[#6c7871]">
-            <span>{mode === "pan" ? "Drag the canvas to pan" : "Click to select · Right-click a table or chair for guest names and linking"}</span>
+            <span>{mode === "pan" ? "Drag the canvas to pan" : "Click to select · Right-click a table or chair for guest details and linking"}</span>
             <div className="flex items-center gap-4 font-semibold text-[#425148]">
               {isMultiLevel ? <span>{activeVenue.levelName}</span> : null}
               <span>{activeStats.objectCount} objects</span>
@@ -355,6 +375,7 @@ export function FloorPlanner({ venue, levelVenues, locationName, inventory }: Pr
           />
         </div>
       </div>
+      )}
 
       {editor.notice ? (
         <div className="toast-in fixed bottom-12 left-1/2 z-50 -translate-x-1/2 rounded-full bg-[#1d2923] px-4 py-2 text-xs font-semibold text-white shadow-xl">

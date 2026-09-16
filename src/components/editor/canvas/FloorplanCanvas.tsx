@@ -526,7 +526,6 @@ function EventObjectNode({ object, selected, canDrag, setNode, onSelect, onChang
       )}
       {isDance ? <DanceGrid width={object.width} height={object.height} /> : null}
       {!isChair && object.seats !== undefined ? <SeatMarkers object={object} /> : null}
-      {isChair && object.seatAssignments?.[0] ? <SeatName x={0} y={-21} name={object.seatAssignments[0]} /> : null}
       {!isChair ? (
         <>
           <Text x={-object.width / 2 + 5} y={-8} width={object.width - 10} align="center" text={object.label} fontSize={Math.min(14, Math.max(10, object.width / 9))} fontStyle="bold" fill="#33473b" ellipsis />
@@ -546,14 +545,8 @@ function SeatMarkers({ object }: { object: EventObject }) {
       const radius = object.width / 2 + 8;
       const x = Math.cos(angle) * radius;
       const y = Math.sin(angle) * radius;
-      const nameRadius = radius + 14;
       return (
-        <Group key={index}>
-          <Circle x={x} y={y} radius={4.5} fill="#9aa99f" />
-          {object.seatAssignments?.[index] ? (
-            <SeatName x={Math.cos(angle) * nameRadius} y={Math.sin(angle) * nameRadius} name={object.seatAssignments[index]} />
-          ) : null}
-        </Group>
+        <Circle key={index} x={x} y={y} radius={4.5} fill="#9aa99f" />
       );
     })}</>;
   }
@@ -564,23 +557,9 @@ function SeatMarkers({ object }: { object: EventObject }) {
     const sideCount = top ? perSide : count - perSide;
     const x = -object.width / 2 + ((sideIndex + 1) * object.width) / (sideCount + 1);
     return (
-      <Group key={index}>
-        <Rect x={x - 5} y={top ? -object.height / 2 - 9 : object.height / 2 + 2} width={10} height={7} cornerRadius={2} fill="#9aa99f" />
-        {object.seatAssignments?.[index] ? (
-          <SeatName x={x} y={top ? -object.height / 2 - 20 : object.height / 2 + 17} name={object.seatAssignments[index]} />
-        ) : null}
-      </Group>
+      <Rect key={index} x={x - 5} y={top ? -object.height / 2 - 9 : object.height / 2 + 2} width={10} height={7} cornerRadius={2} fill="#9aa99f" />
     );
   })}</>;
-}
-
-function SeatName({ x, y, name }: { x: number; y: number; name: string }) {
-  return (
-    <Group x={x} y={y} listening={false}>
-      <Rect x={-34} y={-6} width={68} height={12} fill="#fffefa" opacity={0.9} cornerRadius={3} />
-      <Text x={-32} y={-4} width={64} height={9} align="center" text={name} fontSize={7} fontStyle="bold" fill="#3f5147" ellipsis />
-    </Group>
-  );
 }
 
 function DanceGrid({ width, height }: { width: number; height: number }) {

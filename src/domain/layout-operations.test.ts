@@ -8,6 +8,7 @@ import {
   duplicateObject,
   getLayoutStats,
   normalizePhysicalFootprints,
+  updateGuestDetails,
   updateSeatingDetails,
   updateObject,
 } from "@/domain/layout-operations";
@@ -386,11 +387,19 @@ describe("floorplan object operations", () => {
     const table = {
       ...createEventObject("rectangle-table-6", { x: 200, y: 200 }, [], "table"),
       seatAssignments: ["Alex", "Bailey"],
+      seatMeals: ["Chicken", "Vegetarian"],
+      seatRoles: ["VIP", "Wedding party"],
       linkedGroupId: "head-table",
     };
     const layout = duplicateObject(addObject(createEmptyLayout(), table), table.id, "copy");
 
-    expect(layout.objects[1]).toMatchObject({ id: "copy", seatAssignments: undefined, linkedGroupId: undefined });
+    expect(layout.objects[1]).toMatchObject({
+      id: "copy",
+      seatAssignments: undefined,
+      seatMeals: undefined,
+      seatRoles: undefined,
+      linkedGroupId: undefined,
+    });
   });
 
   it("calculates guest table and seating totals", () => {
@@ -499,10 +508,28 @@ describe("persistence", () => {
     expect(getLayoutStats(reopened).seats).toBe(1);
   });
 
-  it("round-trips guest names and linked seating groups through version 5 editable files", () => {
+  it("keeps each guest row tied to its exact object and seat", () => {
+    const table = createEventObject("rectangle-table-8", { x: 220, y: 180 }, [], "table");
+    const chair = createEventObject("chair", { x: 275, y: 180 }, [table], "chair");
+    let layout = addObject(addObject(createEmptyLayout("hall_rockwall_manor"), table), chair);
+
+    layout = updateGuestDetails(layout, table.id, 0, { name: "Jason", meal: "Chicken", role: "Best man" });
+    layout = updateGuestDetails(layout, chair.id, 0, { name: "Jordan", meal: "Vegetarian", role: "Vendor" });
+
+    expect(layout.objects.find((object) => object.id === table.id)).toMatchObject({
+      seatAssignments: ["Jason", "", "", "", "", "", "", "", "", ""],
+      seatMeals: ["Chicken", "", "", "", "", "", "", "", "", ""],
+      seatRoles: ["Best man", "", "", "", "", "", "", "", "", ""],
+    });
+    expect(layout.objects.find((object) => object.id === chair.id)).toMatchObject({ seatAssignments: ["Jordan"] });
+  });
+
+  it("round-trips guest spreadsheet details and linked seating groups through version 6 editable files", () => {
     const table = {
       ...createEventObject("rectangle-table-8", { x: 220, y: 180 }, [], "table"),
-      seatAssignments: ["Alex", "Bailey", "Casey", "Dakota", "Emery", "Finley", "Gray", "Harper", "", ""],
+      seatAssignments: ["Jason", "Bailey", "Casey", "Dakota", "Emery", "Finley", "Gray", "Harper", "", ""],
+      seatMeals: ["Chicken", "Vegetarian", "", "", "", "", "", "", "", ""],
+      seatRoles: ["Best man", "Mother of bride", "", "", "", "", "", "", "", ""],
       linkedGroupId: "family-table",
     };
     const chair = {
@@ -517,11 +544,24 @@ describe("persistence", () => {
     const serialized = serializePortableFloorplan(layout);
     const reopened = deserializeFloorplan(serialized);
 
-    expect(JSON.parse(serialized).v).toBe(5);
+    expect(JSON.parse(serialized).v).toBe(6);
     expect(reopened.objects).toMatchObject([
-      { seatAssignments: table.seatAssignments, linkedGroupId: "family-table" },
+      {
+        seatAssignments: table.seatAssignments,
+        seatMeals: table.seatMeals,
+        seatRoles: table.seatRoles,
+        linkedGroupId: "family-table",
+      },
       { seatAssignments: ["Jordan"], linkedGroupId: "family-table" },
     ]);
+  });
+
+  it("still opens version 5 named-seating files", () => {
+    const reopened = deserializeFloorplan(
+      '{"v":5,"h":"hall_rockwall_manor","n":"Named Seating","o":[["chair",null,220,180,10,7,0,"Chair",null,1,0,null,["Jason"],null]]}',
+    );
+
+    expect(reopened.objects[0]).toMatchObject({ type: "chair", seatAssignments: ["Jason"] });
   });
 
   it("reopens fixed rectangle tables at their current confirmed catalog size", () => {
