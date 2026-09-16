@@ -547,7 +547,7 @@ function EventObjectNode({ object, servicePlan, selected, canDrag, setNode, onSe
       {!isChair ? (
         <>
           <Text x={-object.width / 2 + 5} y={-8} width={object.width - 10} align="center" text={object.label} fontSize={Math.min(14, Math.max(10, object.width / 9))} fontStyle="bold" fill="#33473b" ellipsis />
-          {object.seats !== undefined ? <Text x={-object.width / 2 + 5} y={10} width={object.width - 10} align="center" text={`${object.seats} seats`} fontSize={9} fill="#79867e" /> : null}
+          {object.seats !== undefined ? <Text x={-object.width / 2 + 5} y={isRound ? 10 : 3} width={object.width - 10} height={10} align="center" verticalAlign="middle" text={`${object.seats} seats`} fontSize={9} fill="#79867e" /> : null}
         </>
       ) : null}
     </Group>
