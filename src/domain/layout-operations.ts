@@ -50,25 +50,120 @@ export function addObject(layout: FloorplanLayout, object: EventObject): Floorpl
 }
 
 export function updateObject(layout: FloorplanLayout, id: string, patch: Partial<EventObject>): FloorplanLayout {
-  return touch(layout, layout.objects.map((object) => {
-    if (object.id !== id) return object;
-    const allowedPatch = { ...patch };
-    if (!OBJECT_DEFINITIONS[object.type].resizable) {
-      delete allowedPatch.width;
-      delete allowedPatch.height;
-      delete allowedPatch.physicalDimensions;
-      delete allowedPatch.variant;
+  const source = layout.objects.find((object) => object.id === id);
+  if (!source) return layout;
+  const allowedPatch = { ...patch };
+  if (!OBJECT_DEFINITIONS[source.type].resizable) {
+    delete allowedPatch.width;
+    delete allowedPatch.height;
+    delete allowedPatch.physicalDimensions;
+    delete allowedPatch.variant;
+  }
+  const updatedSource = constrainPhysicalFootprint({ ...source, ...allowedPatch, id });
+  const deltaX = updatedSource.x - source.x;
+  const deltaY = updatedSource.y - source.y;
+  const deltaRotation = isRectangleLinkTable(source.type) && typeof patch.rotation === "number"
+    ? updatedSource.rotation - source.rotation
+    : 0;
+
+  const objects = layout.objects.map((object) => {
+    if (object.id === id) {
+      return {
+        ...updatedSource,
+        seatAssignments: normalizeSeatAssignments(updatedSource.seatAssignments, updatedSource.seats),
+        seatMeals: normalizeSeatField(updatedSource.seatMeals, updatedSource.seats),
+        seatRoles: normalizeSeatField(updatedSource.seatRoles, updatedSource.seats),
+      };
     }
-    return constrainPhysicalFootprint({ ...object, ...allowedPatch, id });
-  }));
+    if (!source.linkedGroupId || object.linkedGroupId !== source.linkedGroupId) return object;
+    if (deltaRotation) {
+      const rotated = rotatePoint(object.x - source.x, object.y - source.y, deltaRotation);
+      return {
+        ...object,
+        x: updatedSource.x + rotated.x,
+        y: updatedSource.y + rotated.y,
+        rotation: object.rotation + deltaRotation,
+      };
+    }
+    return deltaX || deltaY ? { ...object, x: object.x + deltaX, y: object.y + deltaY } : object;
+  });
+
+  return touch(layout, snapLinkedEndChairs(objects));
+}
+
+export function updateSeatingDetails(
+  layout: FloorplanLayout,
+  id: string,
+  seatAssignments: readonly string[],
+  linkedObjectIds: readonly string[],
+  groupId = crypto.randomUUID(),
+): FloorplanLayout {
+  const source = layout.objects.find((object) => object.id === id);
+  if (!source) return layout;
+
+  const requestedIds = new Set([id, ...linkedObjectIds]);
+  const targetGroupId = requestedIds.size > 1 ? groupId : undefined;
+  const previousGroupId = source.linkedGroupId;
+  const objects = layout.objects.map((object) => {
+    const wasInEditedGroup = Boolean(previousGroupId && object.linkedGroupId === previousGroupId);
+    const isRequested = requestedIds.has(object.id);
+    const next = {
+      ...object,
+      ...(wasInEditedGroup || isRequested ? { linkedGroupId: isRequested ? targetGroupId : undefined } : {}),
+    };
+    return object.id === id
+      ? { ...next, seatAssignments: normalizeSeatAssignments(seatAssignments, object.seats) }
+      : next;
+  });
+
+  return touch(layout, snapLinkedEndChairs(removeSingletonLinkGroups(objects)));
+}
+
+export type GuestDetailsPatch = {
+  name?: string;
+  meal?: string;
+  role?: string;
+};
+
+export function updateGuestDetails(
+  layout: FloorplanLayout,
+  id: string,
+  seatIndex: number,
+  patch: GuestDetailsPatch,
+): FloorplanLayout {
+  const source = layout.objects.find((object) => object.id === id);
+  const seatCount = Math.max(0, Math.floor(source?.seats ?? 0));
+  if (!source || !Number.isInteger(seatIndex) || seatIndex < 0 || seatIndex >= seatCount) return layout;
+
+  const seatAssignments = normalizeSeatAssignments(source.seatAssignments, seatCount) ?? [];
+  const seatMeals = normalizeSeatField(source.seatMeals, seatCount) ?? [];
+  const seatRoles = normalizeSeatField(source.seatRoles, seatCount) ?? [];
+  if (patch.name !== undefined) seatAssignments[seatIndex] = patch.name.slice(0, 80);
+  if (patch.meal !== undefined) seatMeals[seatIndex] = patch.meal.slice(0, 80);
+  if (patch.role !== undefined) seatRoles[seatIndex] = patch.role.slice(0, 80);
+
+  return touch(layout, layout.objects.map((object) => object.id === id
+    ? { ...object, seatAssignments, seatMeals, seatRoles }
+    : object));
 }
 
 export function normalizePhysicalFootprints(layout: FloorplanLayout): FloorplanLayout {
-  return { ...layout, objects: layout.objects.map(constrainPhysicalFootprint) };
+  return {
+    ...layout,
+    objects: snapLinkedEndChairs(layout.objects.map((object) => {
+      const constrained = constrainPhysicalFootprint(object);
+      return {
+        ...constrained,
+        seatAssignments: normalizeSeatAssignments(constrained.seatAssignments, constrained.seats),
+        seatMeals: normalizeSeatField(constrained.seatMeals, constrained.seats),
+        seatRoles: normalizeSeatField(constrained.seatRoles, constrained.seats),
+      };
+    })),
+  };
 }
 
 export function deleteObject(layout: FloorplanLayout, id: string): FloorplanLayout {
-  return touch(layout, layout.objects.filter((object) => object.id !== id));
+  return touch(layout, removeSingletonLinkGroups(layout.objects.filter((object) => object.id !== id)));
 }
 
 export function duplicateObject(layout: FloorplanLayout, id: string, newId = crypto.randomUUID()): FloorplanLayout {
@@ -85,6 +180,10 @@ export function duplicateObject(layout: FloorplanLayout, id: string, newId = cry
     zIndex: layout.objects.length,
     label: nextTableNumber ? `Table ${nextTableNumber}` : source.label.endsWith(" copy") ? source.label : `${source.label} copy`,
     tableNumber: nextTableNumber ?? source.tableNumber,
+    seatAssignments: undefined,
+    seatMeals: undefined,
+    seatRoles: undefined,
+    linkedGroupId: undefined,
   };
   return touch(layout, [...layout.objects, copy]);
 }
@@ -128,4 +227,92 @@ function constrainPhysicalFootprint(object: EventObject): EventObject {
     height: variantDefinition?.height ?? definition.height,
     physicalDimensions: variantDefinition?.physicalDimensions ?? definition.physicalDimensions,
   };
+}
+
+function normalizeSeatAssignments(assignments: readonly string[] | undefined, seats: number | undefined): string[] | undefined {
+  return normalizeSeatField(assignments, seats);
+}
+
+function normalizeSeatField(values: readonly string[] | undefined, seats: number | undefined): string[] | undefined {
+  if (seats === undefined) return undefined;
+  return Array.from({ length: Math.max(0, Math.floor(seats)) }, (_, index) => values?.[index]?.slice(0, 80) ?? "");
+}
+
+function removeSingletonLinkGroups(objects: EventObject[]): EventObject[] {
+  const counts = new Map<string, number>();
+  for (const object of objects) {
+    if (object.linkedGroupId) counts.set(object.linkedGroupId, (counts.get(object.linkedGroupId) ?? 0) + 1);
+  }
+  return objects.map((object) => object.linkedGroupId && counts.get(object.linkedGroupId) === 1
+    ? { ...object, linkedGroupId: undefined }
+    : object);
+}
+
+const END_CHAIR_GAP = 2;
+
+function snapLinkedEndChairs(objects: EventObject[]): EventObject[] {
+  const groups = new Map<string, EventObject[]>();
+  for (const object of objects) {
+    if (!object.linkedGroupId) continue;
+    const group = groups.get(object.linkedGroupId) ?? [];
+    group.push(object);
+    groups.set(object.linkedGroupId, group);
+  }
+
+  const snapped = new Map<string, EventObject>();
+  for (const group of groups.values()) {
+    const tables = group.filter((object) => isRectangleLinkTable(object.type));
+    const chairs = group.filter((object) => object.type === "chair");
+    if (!tables.length || !chairs.length) continue;
+
+    const endpoints = tables.flatMap((table) => ([-1, 1] as const).map((side) => ({
+      table,
+      ...tableEndPosition(table, OBJECT_DEFINITIONS.chair.width, side),
+    })));
+
+    for (const chair of chairs) {
+      if (!endpoints.length) break;
+      let nearestIndex = 0;
+      let nearestDistance = Number.POSITIVE_INFINITY;
+      endpoints.forEach((endpoint, index) => {
+        const distance = Math.hypot(chair.x - endpoint.x, chair.y - endpoint.y);
+        if (distance < nearestDistance) {
+          nearestDistance = distance;
+          nearestIndex = index;
+        }
+      });
+      const [endpoint] = endpoints.splice(nearestIndex, 1);
+      snapped.set(chair.id, {
+        ...chair,
+        x: endpoint.x,
+        y: endpoint.y,
+        rotation: endpoint.table.rotation,
+      });
+    }
+  }
+
+  return objects.map((object) => snapped.get(object.id) ?? object);
+}
+
+function tableEndPosition(table: EventObject, chairWidth: number, side: -1 | 1) {
+  const offset = side * (table.width / 2 + chairWidth / 2 + END_CHAIR_GAP);
+  const rotated = rotatePoint(offset, 0, table.rotation);
+  return { x: table.x + rotated.x, y: table.y + rotated.y };
+}
+
+function rotatePoint(x: number, y: number, degrees: number) {
+  const radians = degrees * Math.PI / 180;
+  const cosine = Math.cos(radians);
+  const sine = Math.sin(radians);
+  return {
+    x: x * cosine - y * sine,
+    y: x * sine + y * cosine,
+  };
+}
+
+function isRectangleLinkTable(type: EventObjectType) {
+  return type === "rectangle-table-6"
+    || type === "rectangle-table-8"
+    || type === "farmhouse-table-6"
+    || type === "farmhouse-table-8";
 }

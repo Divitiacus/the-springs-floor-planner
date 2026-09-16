@@ -8,6 +8,8 @@ import {
   duplicateObject,
   getLayoutStats,
   normalizePhysicalFootprints,
+  updateGuestDetails,
+  updateSeatingDetails,
   updateObject,
 } from "@/domain/layout-operations";
 import { deserializeFloorplan, serializeFloorplan, serializePortableFloorplan } from "@/domain/persistence";
@@ -341,6 +343,95 @@ describe("floorplan object operations", () => {
     expect(deleteObject(layout, "first").objects.map((object) => object.id)).toEqual(["second"]);
   });
 
+  it("keeps linked rectangle tables and end chairs together when one object moves", () => {
+    const table = createEventObject("rectangle-table-8", { x: 200, y: 200 }, [], "table");
+    const chair = createEventObject("chair", { x: 255, y: 200 }, [table], "chair");
+    const unlinked = createEventObject("chair", { x: 400, y: 400 }, [table, chair], "unlinked");
+    let layout = addObject(addObject(addObject(createEmptyLayout(), table), chair), unlinked);
+
+    layout = updateSeatingDetails(layout, table.id, [], [chair.id], "linked-table-end-chair");
+    layout = updateObject(layout, table.id, { x: 230, y: 215 });
+
+    expect(layout.objects.find((object) => object.id === table.id)).toMatchObject({ x: 230, y: 215, linkedGroupId: "linked-table-end-chair" });
+    expect(layout.objects.find((object) => object.id === chair.id)).toMatchObject({ x: 285, y: 215, linkedGroupId: "linked-table-end-chair" });
+    const untouched = layout.objects.find((object) => object.id === unlinked.id);
+    expect(untouched).toMatchObject({ x: 400, y: 400 });
+    expect(untouched?.linkedGroupId).toBeUndefined();
+  });
+
+  it("snaps a newly linked chair to the nearest table end with the table's rotation", () => {
+    const table = {
+      ...createEventObject("rectangle-table-8", { x: 200, y: 200 }, [], "table"),
+      rotation: -37,
+    };
+    const chair = createEventObject("chair", { x: 360, y: 260 }, [table], "chair");
+    let layout = addObject(addObject(createEmptyLayout(), table), chair);
+
+    layout = updateSeatingDetails(layout, table.id, [], [chair.id], "end-chair");
+
+    const linkedChair = layout.objects.find((object) => object.id === chair.id);
+    const radians = table.rotation * Math.PI / 180;
+    expect(linkedChair).toMatchObject({ rotation: -37, linkedGroupId: "end-chair" });
+    expect(linkedChair?.x).toBeCloseTo(table.x + 55 * Math.cos(radians));
+    expect(linkedChair?.y).toBeCloseTo(table.y + 55 * Math.sin(radians));
+  });
+
+  it("keeps an end chair aligned and equally spaced when its table rotates", () => {
+    const table = createEventObject("rectangle-table-8", { x: 200, y: 200 }, [], "table");
+    const chair = createEventObject("chair", { x: 400, y: 200 }, [table], "chair");
+    let layout = addObject(addObject(createEmptyLayout(), table), chair);
+
+    layout = updateSeatingDetails(layout, table.id, [], [chair.id], "rotating-table");
+    expect(layout.objects.find((object) => object.id === chair.id)).toMatchObject({ x: 255, y: 200, rotation: 0 });
+
+    layout = updateObject(layout, table.id, { rotation: 90 });
+    expect(layout.objects.find((object) => object.id === table.id)).toMatchObject({ x: 200, y: 200, rotation: 90 });
+    expect(layout.objects.find((object) => object.id === chair.id)).toMatchObject({ x: 200, y: 255, rotation: 90 });
+  });
+
+  it("places two linked chairs at opposite ends of one rectangle table", () => {
+    const table = createEventObject("rectangle-table-6", { x: 200, y: 200 }, [], "table");
+    const leftChair = createEventObject("chair", { x: 80, y: 200 }, [table], "left-chair");
+    const rightChair = createEventObject("chair", { x: 340, y: 200 }, [table, leftChair], "right-chair");
+    let layout = addObject(addObject(addObject(createEmptyLayout(), table), leftChair), rightChair);
+
+    layout = updateSeatingDetails(layout, table.id, [], [leftChair.id, rightChair.id], "two-end-chairs");
+
+    expect(layout.objects.find((object) => object.id === leftChair.id)).toMatchObject({ x: 157, y: 200, rotation: 0 });
+    expect(layout.objects.find((object) => object.id === rightChair.id)).toMatchObject({ x: 243, y: 200, rotation: 0 });
+  });
+
+  it("stores exactly one guest-name slot per current seat and removes stale names when the count drops", () => {
+    const table = createEventObject("rectangle-table-8", { x: 200, y: 200 }, [], "table");
+    let layout = addObject(createEmptyLayout(), table);
+    layout = updateObject(layout, table.id, { seats: 7 });
+    layout = updateSeatingDetails(layout, table.id, ["A", "B", "C", "D", "E", "F", "G"], [], "unused");
+
+    expect(layout.objects[0].seatAssignments).toEqual(["A", "B", "C", "D", "E", "F", "G"]);
+
+    layout = updateObject(layout, table.id, { seats: 5 });
+    expect(layout.objects[0].seatAssignments).toEqual(["A", "B", "C", "D", "E"]);
+  });
+
+  it("duplicates seating objects without copying guest names or link membership", () => {
+    const table = {
+      ...createEventObject("rectangle-table-6", { x: 200, y: 200 }, [], "table"),
+      seatAssignments: ["Alex", "Bailey"],
+      seatMeals: ["Chicken", "Vegetarian"],
+      seatRoles: ["VIP", "Wedding party"],
+      linkedGroupId: "head-table",
+    };
+    const layout = duplicateObject(addObject(createEmptyLayout(), table), table.id, "copy");
+
+    expect(layout.objects[1]).toMatchObject({
+      id: "copy",
+      seatAssignments: undefined,
+      seatMeals: undefined,
+      seatRoles: undefined,
+      linkedGroupId: undefined,
+    });
+  });
+
   it("calculates guest table and seating totals", () => {
     const table = createEventObject("round-table-60", { x: 0, y: 0 }, [], "table");
     const sweetheart = createEventObject("sweetheart-table", { x: 0, y: 0 }, [table], "sweetheart");
@@ -445,6 +536,62 @@ describe("persistence", () => {
       height: 7,
     });
     expect(getLayoutStats(reopened).seats).toBe(1);
+  });
+
+  it("keeps each guest row tied to its exact object and seat", () => {
+    const table = createEventObject("rectangle-table-8", { x: 220, y: 180 }, [], "table");
+    const chair = createEventObject("chair", { x: 275, y: 180 }, [table], "chair");
+    let layout = addObject(addObject(createEmptyLayout("hall_rockwall_manor"), table), chair);
+
+    layout = updateGuestDetails(layout, table.id, 0, { name: "Jason", meal: "Chicken", role: "Best man" });
+    layout = updateGuestDetails(layout, chair.id, 0, { name: "Jordan", meal: "Vegetarian", role: "Vendor" });
+
+    expect(layout.objects.find((object) => object.id === table.id)).toMatchObject({
+      seatAssignments: ["Jason", "", "", "", "", "", "", "", "", ""],
+      seatMeals: ["Chicken", "", "", "", "", "", "", "", "", ""],
+      seatRoles: ["Best man", "", "", "", "", "", "", "", "", ""],
+    });
+    expect(layout.objects.find((object) => object.id === chair.id)).toMatchObject({ seatAssignments: ["Jordan"] });
+  });
+
+  it("round-trips guest spreadsheet details and linked seating groups through version 6 editable files", () => {
+    const table = {
+      ...createEventObject("rectangle-table-8", { x: 220, y: 180 }, [], "table"),
+      seatAssignments: ["Jason", "Bailey", "Casey", "Dakota", "Emery", "Finley", "Gray", "Harper", "", ""],
+      seatMeals: ["Chicken", "Vegetarian", "", "", "", "", "", "", "", ""],
+      seatRoles: ["Best man", "Mother of bride", "", "", "", "", "", "", "", ""],
+      linkedGroupId: "family-table",
+    };
+    const chair = {
+      ...createEventObject("chair", { x: 275, y: 180 }, [table], "chair"),
+      seatAssignments: ["Jordan"],
+      linkedGroupId: "family-table",
+    };
+    const layout = addObject(
+      addObject({ ...createEmptyLayout("hall_rockwall_manor"), name: "Named Seating" }, table),
+      chair,
+    );
+    const serialized = serializePortableFloorplan(layout);
+    const reopened = deserializeFloorplan(serialized);
+
+    expect(JSON.parse(serialized).v).toBe(6);
+    expect(reopened.objects).toMatchObject([
+      {
+        seatAssignments: table.seatAssignments,
+        seatMeals: table.seatMeals,
+        seatRoles: table.seatRoles,
+        linkedGroupId: "family-table",
+      },
+      { seatAssignments: ["Jordan"], linkedGroupId: "family-table" },
+    ]);
+  });
+
+  it("still opens version 5 named-seating files", () => {
+    const reopened = deserializeFloorplan(
+      '{"v":5,"h":"hall_rockwall_manor","n":"Named Seating","o":[["chair",null,220,180,10,7,0,"Chair",null,1,0,null,["Jason"],null]]}',
+    );
+
+    expect(reopened.objects[0]).toMatchObject({ type: "chair", seatAssignments: ["Jason"] });
   });
 
   it("reopens fixed rectangle tables at their current confirmed catalog size", () => {

@@ -26,10 +26,11 @@ type Props = {
   onSelect: (id: string | null) => void;
   onAdd: (selection: EventObjectSelection, position: { x: number; y: number }) => void;
   onChange: (id: string, patch: Partial<EventObject>) => void;
+  onOpenDetails: (id: string) => void;
   onZoomChange: (zoom: number) => void;
 };
 
-export function FloorplanCanvas({ layout, venue, selectedId, mode, zoom, showReference, onSelect, onAdd, onChange, onZoomChange }: Props) {
+export function FloorplanCanvas({ layout, venue, selectedId, mode, zoom, showReference, onSelect, onAdd, onChange, onOpenDetails, onZoomChange }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
@@ -136,6 +137,7 @@ export function FloorplanCanvas({ layout, venue, selectedId, mode, zoom, showRef
               }}
               onSelect={() => onSelect(object.id)}
               onChange={(patch) => onChange(object.id, patch)}
+              onOpenDetails={() => onOpenDetails(object.id)}
             />
           ))}
           <Transformer
@@ -475,9 +477,10 @@ type ObjectNodeProps = {
   setNode: (node: Konva.Group | null) => void;
   onSelect: () => void;
   onChange: (patch: Partial<EventObject>) => void;
+  onOpenDetails: () => void;
 };
 
-function EventObjectNode({ object, selected, canDrag, setNode, onSelect, onChange }: ObjectNodeProps) {
+function EventObjectNode({ object, selected, canDrag, setNode, onSelect, onChange, onOpenDetails }: ObjectNodeProps) {
   const isRound = object.physicalDimensions.shape === "circle";
   const isDance = object.type === "dance-floor";
   const isChair = object.type === "chair";
@@ -494,6 +497,13 @@ function EventObjectNode({ object, selected, canDrag, setNode, onSelect, onChang
       draggable={canDrag}
       onClick={onSelect}
       onTap={onSelect}
+      onContextMenu={(event) => {
+        event.evt.preventDefault();
+        if (object.seats !== undefined) {
+          onSelect();
+          onOpenDetails();
+        }
+      }}
       onDragEnd={(event) => onChange({ x: snap(event.target.x()), y: snap(event.target.y()) })}
       onTransformEnd={(event) => {
         const node = event.target;
@@ -557,7 +567,11 @@ function SeatMarkers({ object }: { object: EventObject }) {
     return <>{Array.from({ length: count }, (_, index) => {
       const angle = (Math.PI * 2 * index) / count;
       const radius = object.width / 2 + 8;
-      return <Circle key={index} x={Math.cos(angle) * radius} y={Math.sin(angle) * radius} radius={4.5} fill="#9aa99f" />;
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+      return (
+        <Circle key={index} x={x} y={y} radius={4.5} fill="#9aa99f" />
+      );
     })}</>;
   }
   const perSide = Math.ceil(count / 2);
@@ -565,7 +579,10 @@ function SeatMarkers({ object }: { object: EventObject }) {
     const top = index < perSide;
     const sideIndex = top ? index : index - perSide;
     const sideCount = top ? perSide : count - perSide;
-    return <Rect key={index} x={-object.width / 2 + ((sideIndex + 1) * object.width) / (sideCount + 1) - 5} y={top ? -object.height / 2 - 9 : object.height / 2 + 2} width={10} height={7} cornerRadius={2} fill="#9aa99f" />;
+    const x = -object.width / 2 + ((sideIndex + 1) * object.width) / (sideCount + 1);
+    return (
+      <Rect key={index} x={x - 5} y={top ? -object.height / 2 - 9 : object.height / 2 + 2} width={10} height={7} cornerRadius={2} fill="#9aa99f" />
+    );
   })}</>;
 }
 
