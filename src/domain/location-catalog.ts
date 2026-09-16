@@ -14,6 +14,7 @@ import { createMagnoliaManorConfiguration } from "@/domain/venues/magnolia-manor
 import { createOakviewLodgeConfiguration } from "@/domain/venues/oakview-lodge";
 import { createParkerManorConfiguration } from "@/domain/venues/parker-manor";
 import { createPoetrySpringsConfiguration } from "@/domain/venues/poetry-springs";
+import { createRockwallManorConfiguration } from "@/domain/venues/rockwall-manor";
 import { createStonebrookConfiguration } from "@/domain/venues/stonebrook";
 import { createStonecreekReserveConfiguration } from "@/domain/venues/stonecreek-reserve";
 import { createSunsetPointeConfiguration } from "@/domain/venues/sunset-pointe";
@@ -279,6 +280,15 @@ export const WEATHERFORD_PARKER_MANOR_INVENTORY: InventoryCatalog = {
   },
 };
 
+export const ROCKWALL_MANOR_INVENTORY: InventoryCatalog = {
+  scope: "hall",
+  limits: { ...MAGNOLIA_MANOR_INVENTORY.limits },
+  source: {
+    fileName: "user-confirmed",
+    note: "Rockwall Manor matches Magnolia Manor's table inventory and 320-chair guest capacity.",
+  },
+};
+
 export const MCKINNEY_TUSCANY_HILL_INVENTORY: InventoryCatalog = {
   scope: "hall",
   limits: { ...WEATHERFORD_PARKER_MANOR_INVENTORY.limits },
@@ -495,6 +505,15 @@ export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
         configuration: {
           ...createPoetrySpringsConfiguration(),
           inventory: ROCKWALL_INVENTORY,
+        },
+      },
+      {
+        id: "hall_rockwall_manor",
+        slug: "rockwall-manor",
+        name: "Rockwall Manor",
+        configuration: {
+          ...createRockwallManorConfiguration(),
+          inventory: ROCKWALL_MANOR_INVENTORY,
         },
       },
     ],

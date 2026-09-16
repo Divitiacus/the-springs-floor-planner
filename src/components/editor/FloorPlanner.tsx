@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { ChevronDown, Download, FileUp, Printer } from "lucide-react";
 import type { EventObject, EventObjectSelection } from "@/domain/floorplan";
 import type { VenueTemplate } from "@/domain/floorplan";
@@ -14,6 +15,7 @@ import { EditorCanvas } from "@/components/editor/EditorCanvas";
 import { ObjectLibrary } from "@/components/editor/ObjectLibrary";
 import { PropertiesPanel } from "@/components/editor/PropertiesPanel";
 import { EditorToolbar, type EditorMode } from "@/components/editor/EditorToolbar";
+import { SpringsLogo } from "@/components/brand/SpringsLogo";
 
 type Props = {
   venue: VenueTemplate;
@@ -178,7 +180,13 @@ export function FloorPlanner({ venue, levelVenues, locationName, inventory }: Pr
     <main className="floor-planner-shell flex h-screen min-h-[720px] flex-col overflow-hidden bg-[#f6f4ef]">
       <header className="floor-planner-header flex h-[72px] shrink-0 items-center justify-between border-b border-[#dce2dd] bg-[#fffefa] px-5">
         <div className="flex items-center gap-4">
-          <div className="grid size-10 place-items-center rounded-full bg-[#294f3d] font-serif text-lg font-semibold text-white">S</div>
+          <Link
+            href="/"
+            className="rounded-full outline-none ring-[#8aa697] transition hover:scale-105 focus-visible:ring-2 focus-visible:ring-offset-2"
+            aria-label="Return to venue selection"
+          >
+            <SpringsLogo />
+          </Link>
           <div>
             <div className="flex items-center gap-2">
               <h1 className="font-serif text-[19px] font-semibold tracking-[-0.01em] text-[#1d2923]">The Springs Floor Planner</h1>

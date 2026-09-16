@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Building2, ChevronDown, MapPin } from "lucide-react";
+import { SpringsLogo } from "@/components/brand/SpringsLogo";
 import { SPRINGS_LOCATIONS } from "@/domain/location-catalog";
 
 const SORTED_SPRINGS_LOCATIONS = [...SPRINGS_LOCATIONS].sort((left, right) => left.name.localeCompare(right.name));
@@ -62,7 +63,7 @@ export function FloorPlanStart() {
 
       <header className="relative mx-auto flex w-full max-w-[1180px] items-center justify-between px-6 py-7 sm:px-10 lg:px-12">
         <Link href="/" className="flex items-center gap-3" aria-label="The Springs Floor Plan Designer home">
-          <span className="grid size-10 place-items-center rounded-full bg-[#334b59] font-serif text-lg font-semibold text-white shadow-sm">S</span>
+          <SpringsLogo />
           <span>
             <span className="block font-serif text-[17px] font-semibold tracking-[-0.01em] text-[#283942]">The Springs</span>
             <span className="block text-[9px] font-bold uppercase tracking-[0.22em] text-[#8b969b]">Events</span>

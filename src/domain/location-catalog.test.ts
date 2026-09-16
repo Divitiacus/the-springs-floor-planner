@@ -16,6 +16,7 @@ import {
   MCKINNEY_TUSCANY_HILL_INVENTORY,
   NORMAN_INVENTORY,
   ROCKWALL_INVENTORY,
+  ROCKWALL_MANOR_INVENTORY,
   isMultiLevelHallConfiguration,
   resolveInventoryConfiguration,
   SPRINGS_LOCATIONS,
@@ -646,12 +647,15 @@ describe("location catalog", () => {
     });
   });
 
-  it("defines Rockwall with Poetry Springs and its stable route slugs", () => {
+  it("defines Rockwall with both confirmed halls and stable route slugs", () => {
     const location = getLocationBySlug("rockwall");
     const hall = getHallBySlug(location, "poetry-springs");
 
     expect(location).toMatchObject({ id: "location_rockwall", name: "Rockwall" });
-    expect(location?.halls).toHaveLength(1);
+    expect(location?.halls).toMatchObject([
+      { id: "hall_poetry_springs", slug: "poetry-springs", name: "Poetry Springs" },
+      { id: "hall_rockwall_manor", slug: "rockwall-manor", name: "Rockwall Manor" },
+    ]);
     expect(hall).toMatchObject({
       id: "hall_poetry_springs",
       slug: "poetry-springs",
@@ -728,6 +732,38 @@ describe("location catalog", () => {
     expect(curvedSteps.every((element) => element.placementBehavior === "blocked")).toBe(true);
     expect(configuration.fixedArchitecturalElements.some((element) => element.id.includes("stonecreek-reserve"))).toBe(false);
     expect(configuration.fixedArchitecturalElements.some((element) => element.kind === "stairs" && element.id.includes("stage"))).toBe(false);
+  });
+
+  it("mirrors Magnolia Manor's architecture and inventory for Rockwall Manor", () => {
+    const location = getLocationBySlug("rockwall");
+    const hall = getHallBySlug(location, "rockwall-manor");
+    if (!location || !hall?.configuration) throw new Error("Rockwall Manor configuration missing");
+
+    expect(ROCKWALL_MANOR_INVENTORY).toMatchObject({
+      scope: "hall",
+      limits: { ...MAGNOLIA_MANOR_INVENTORY.limits, chairs: 320 },
+    });
+    expect(resolveInventoryConfiguration(location, hall)).toEqual(MAGNOLIA_MANOR_INVENTORY.limits);
+
+    const elements = singleLevel(hall.configuration).fixedArchitecturalElements;
+    expect(elements.every((element) => element.id.startsWith("rockwall-manor"))).toBe(true);
+    expect(elements.some((element) => element.id.includes("magnolia-manor"))).toBe(false);
+    expect(elements.find((element) => element.id === "rockwall-manor-bar-counter")).toMatchObject({
+      shape: { type: "rectangle", x: 598, width: 194 },
+    });
+    expect(elements.find((element) => element.id === "rockwall-manor-buffet")).toMatchObject({
+      shape: { type: "rectangle", x: 116, width: 168 },
+    });
+    expect(elements.find((element) => element.id === "rockwall-manor-fireplace")).toMatchObject({
+      shape: { type: "polygon", points: [50, 424, 80, 424, 90, 448, 90, 496, 80, 520, 50, 520] },
+    });
+    expect(elements.filter((element) => element.id.startsWith("rockwall-manor-east-double-door"))).toMatchObject([
+      { x: 860, y: 437, rotation: 90, swingDirection: "counterclockwise" },
+      { x: 860, y: 533, rotation: -90, swingDirection: "clockwise" },
+    ]);
+    expect(elements.find((element) => element.id === "rockwall-manor-second-floor-fireplace")).toMatchObject({
+      shape: { type: "polygon", points: [980, 424, 1010, 424, 1020, 448, 1020, 496, 1010, 520, 980, 520] },
+    });
   });
 
   it("defines Norman Aurora Grove with Westwood Ranch's inventory and curved stage steps", () => {
