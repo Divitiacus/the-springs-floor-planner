@@ -15,10 +15,12 @@ import { createParkerManorConfiguration } from "@/domain/venues/parker-manor";
 import { createPoetrySpringsConfiguration } from "@/domain/venues/poetry-springs";
 import { createStonebrookConfiguration } from "@/domain/venues/stonebrook";
 import { createStonecreekReserveConfiguration } from "@/domain/venues/stonecreek-reserve";
+import { createSunsetPointeConfiguration } from "@/domain/venues/sunset-pointe";
 import { createSycamoreGroveConfiguration } from "@/domain/venues/sycamore-grove";
 import { createVillaTuscanaConfiguration } from "@/domain/venues/villa-tuscana";
 import { createValleyViewConfiguration } from "@/domain/venues/valley-view";
 import { createWestwoodRanchConfiguration } from "@/domain/venues/westwood-ranch";
+import { createWillowbrookReserveConfiguration } from "@/domain/venues/willowbrook-reserve";
 import { createFarmhouseWallisvilleConfiguration } from "@/domain/venues/farmhouse-wallisville";
 import { createTheChateauCypressConfiguration } from "@/domain/venues/the-chateau-cypress";
 import { createTuscanyHillConfiguration } from "@/domain/venues/tuscany-hill";
@@ -170,6 +172,24 @@ export const MCKINNEY_INVENTORY: InventoryCatalog = {
   source: {
     fileName: "user-confirmed",
     note: "Havenstone Reserve matches Villa Tuscana's table inventory and 320-chair guest capacity.",
+  },
+};
+
+export const TULSA_INVENTORY: InventoryCatalog = {
+  scope: "hall",
+  limits: { ...KATY_INVENTORY.limits },
+  source: {
+    fileName: "user-confirmed",
+    note: "Sunset Pointe matches Stonecreek Reserve's table inventory and 320-chair guest capacity.",
+  },
+};
+
+export const EDMOND_INVENTORY: InventoryCatalog = {
+  scope: "hall",
+  limits: { ...KATY_INVENTORY.limits },
+  source: {
+    fileName: "user-confirmed",
+    note: "Willowbrook Reserve matches Stonecreek Reserve's table inventory and 320-chair guest capacity.",
   },
 };
 
@@ -496,6 +516,38 @@ export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
         configuration: {
           ...createTuscanyHillConfiguration(),
           inventory: MCKINNEY_TUSCANY_HILL_INVENTORY,
+        },
+      },
+    ],
+  },
+  {
+    id: "location_tulsa",
+    slug: "tulsa",
+    name: "Tulsa",
+    halls: [
+      {
+        id: "hall_sunset_pointe",
+        slug: "sunset-pointe",
+        name: "Sunset Pointe",
+        configuration: {
+          ...createSunsetPointeConfiguration(),
+          inventory: TULSA_INVENTORY,
+        },
+      },
+    ],
+  },
+  {
+    id: "location_edmond",
+    slug: "edmond",
+    name: "Edmond",
+    halls: [
+      {
+        id: "hall_willowbrook_reserve",
+        slug: "willowbrook-reserve",
+        name: "Willowbrook Reserve",
+        configuration: {
+          ...createWillowbrookReserveConfiguration(),
+          inventory: EDMOND_INVENTORY,
         },
       },
     ],

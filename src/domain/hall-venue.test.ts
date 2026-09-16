@@ -103,6 +103,27 @@ describe("hall venue template", () => {
     expect(venue.elements.length).toBeGreaterThan(20);
   });
 
+  it.each([
+    ["tulsa", "sunset-pointe", "location_tulsa:hall_sunset_pointe", "Tulsa · Sunset Pointe", "sunset-pointe"],
+    ["edmond", "willowbrook-reserve", "location_edmond:hall_willowbrook_reserve", "Edmond · Willowbrook Reserve", "willowbrook-reserve"],
+  ])(
+    "loads %s's Stonecreek-derived hall with its own identity",
+    (locationSlug, hallSlug, venueId, venueName, elementPrefix) => {
+      const location = getLocationBySlug(locationSlug);
+      const hall = getHallBySlug(location, hallSlug);
+      if (!location || !hall) throw new Error(`${hallSlug} catalog entry missing`);
+
+      const venue = createHallVenueTemplate(location, hall);
+
+      expect(venue.id).toBe(venueId);
+      expect(venue.name).toBe(venueName);
+      expect(venue.hall).toEqual({ x: 192, y: 60, width: 960, height: 720 });
+      expect(venue.referenceAsset).toBeNull();
+      expect(venue.elements.length).toBeGreaterThan(20);
+      expect(venue.elements.every((element) => element.id.startsWith(elementPrefix))).toBe(true);
+    },
+  );
+
   it("loads McKinney's Havenstone Reserve with the Villa Tuscana footprint and its own identity", () => {
     const location = getLocationBySlug("mckinney");
     const hall = getHallBySlug(location, "havenstone-reserve");

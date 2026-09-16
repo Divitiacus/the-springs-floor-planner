@@ -5,6 +5,7 @@ import {
   CYPRESS_CHATEAU_INVENTORY,
   DENTON_INVENTORY,
   DENTON_OAKVIEW_LODGE_INVENTORY,
+  EDMOND_INVENTORY,
   getHallBySlug,
   getLocationBySlug,
   KATY_INVENTORY,
@@ -17,6 +18,7 @@ import {
   isMultiLevelHallConfiguration,
   resolveInventoryConfiguration,
   SPRINGS_LOCATIONS,
+  TULSA_INVENTORY,
   type HallConfiguration,
   type SingleLevelHallConfiguration,
   VALLEY_VIEW_INVENTORY,
@@ -27,7 +29,7 @@ import {
 
 describe("location catalog", () => {
   it("defines Magnolia with exactly its two confirmed halls", () => {
-    expect(SPRINGS_LOCATIONS).toHaveLength(11);
+    expect(SPRINGS_LOCATIONS).toHaveLength(13);
     expect(SPRINGS_LOCATIONS[0]).toMatchObject({ name: "Magnolia", slug: "magnolia" });
     expect(SPRINGS_LOCATIONS[0].halls.map((hall) => hall.name)).toEqual([
       "Pinehaven Terrace",
@@ -322,6 +324,39 @@ describe("location catalog", () => {
       name: "Oakview Lodge",
     });
   });
+
+  it.each([
+    ["tulsa", "location_tulsa", "sunset-pointe", "hall_sunset_pointe", "Sunset Pointe", TULSA_INVENTORY, "sunset-pointe"],
+    ["edmond", "location_edmond", "willowbrook-reserve", "hall_willowbrook_reserve", "Willowbrook Reserve", EDMOND_INVENTORY, "willowbrook-reserve"],
+  ])(
+    "defines %s with an independent Stonecreek Reserve clone and Katy inventory",
+    (locationSlug, locationId, hallSlug, hallId, hallName, inventory, elementPrefix) => {
+      const location = getLocationBySlug(locationSlug);
+      const hall = getHallBySlug(location, hallSlug);
+      if (!location || !hall?.configuration) throw new Error(`${hallName} configuration missing`);
+
+      expect(location).toMatchObject({ id: locationId, slug: locationSlug });
+      expect(hall).toMatchObject({ id: hallId, slug: hallSlug, name: hallName });
+      expect(inventory).toMatchObject({ scope: "hall", limits: KATY_INVENTORY.limits });
+      expect(resolveInventoryConfiguration(location, hall)).toEqual(KATY_INVENTORY.limits);
+
+      const configuration = singleLevel(hall.configuration);
+      expect(configuration).toMatchObject({
+        physicalWidthInches: 1320,
+        physicalHeightInches: 840,
+        physicalDimensionStatus: "source-traced",
+      });
+      expect(configuration.fixedArchitecturalElements.find((element) => element.id === `${elementPrefix}-main-floor`)).toMatchObject({
+        kind: "area",
+        role: "main-floor",
+        measurementStatus: "confirmed",
+        shape: { type: "rectangle", x: 192, y: 60, width: 960, height: 720 },
+      });
+      expect(configuration.fixedArchitecturalElements.every((element) => element.id.startsWith(elementPrefix))).toBe(true);
+      expect(configuration.fixedArchitecturalElements.some((element) => element.id.includes("stonecreek-reserve"))).toBe(false);
+      expect(configuration.floorplanAsset).toBeNull();
+    },
+  );
 
   it("defines McKinney Havenstone Reserve with the Villa Tuscana footprint and inventory", () => {
     const location = getLocationBySlug("mckinney");
