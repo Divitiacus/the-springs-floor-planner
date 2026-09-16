@@ -64,7 +64,13 @@ export function ObjectLibrary({ onAdd, inventory, usage }: Props) {
                       <span className="min-w-0">
                         <span className="block truncate text-xs font-semibold text-[#35463c]">{choice.name}</span>
                         <span className="mt-0.5 block text-[10px] text-[#8a958e]">
-                          {choice.definition.defaultSeats ? `${choice.definition.defaultSeats} seats · ${describePhysicalDimensions(choice.physicalDimensions)}` : choice.definition.resizable ? "Resizable planning footprint" : describePhysicalDimensions(choice.physicalDimensions)}
+                          {choice.definition.type === "chair"
+                            ? "1 seat · matches table-chair size"
+                            : choice.definition.defaultSeats
+                              ? `${choice.definition.defaultSeats} seats · ${describePhysicalDimensions(choice.physicalDimensions)}`
+                              : choice.definition.resizable
+                                ? "Resizable planning footprint"
+                                : describePhysicalDimensions(choice.physicalDimensions)}
                         </span>
                       </span>
                     </button>

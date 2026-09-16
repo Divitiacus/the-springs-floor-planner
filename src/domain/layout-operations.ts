@@ -103,6 +103,8 @@ export function getLayoutStats(layout: FloorplanLayout) {
       if (isGuestTable(object.type)) {
         stats.guestTables += 1;
         stats.seats += object.seats ?? 0;
+      } else if (object.type === "chair") {
+        stats.seats += object.seats ?? 1;
       }
       return stats;
     },

@@ -476,7 +476,8 @@ type ObjectNodeProps = {
 function EventObjectNode({ object, selected, canDrag, setNode, onSelect, onChange }: ObjectNodeProps) {
   const isRound = object.physicalDimensions.shape === "circle";
   const isDance = object.type === "dance-floor";
-  const fill = isDance ? "#e6ded2" : object.type === "chair" ? "#60796b" : isGuestTable(object.type) ? "#fffdf7" : "#dce8e0";
+  const isChair = object.type === "chair";
+  const fill = isDance ? "#e6ded2" : isChair ? "#9aa99f" : isGuestTable(object.type) ? "#fffdf7" : "#dce8e0";
   const stroke = selected ? "#294f3d" : isDance ? "#9d8e7b" : "#5e7768";
 
   return (
@@ -503,14 +504,15 @@ function EventObjectNode({ object, selected, canDrag, setNode, onSelect, onChang
         onChange(patch);
       }}
     >
+      {isChair ? <Rect x={-12} y={-12} width={24} height={24} fill="transparent" /> : null}
       {isRound ? (
         <Circle radius={object.width / 2} fill={fill} stroke={stroke} strokeWidth={selected ? 3 : 2} shadowColor="#405047" shadowBlur={selected ? 8 : 3} shadowOpacity={0.16} />
       ) : (
-        <Rect x={-object.width / 2} y={-object.height / 2} width={object.width} height={object.height} fill={fill} stroke={stroke} strokeWidth={selected ? 3 : 2} cornerRadius={object.type === "chair" ? 7 : isDance ? 2 : 8} shadowColor="#405047" shadowBlur={selected ? 8 : 3} shadowOpacity={0.14} />
+        <Rect x={-object.width / 2} y={-object.height / 2} width={object.width} height={object.height} fill={fill} stroke={stroke} strokeWidth={selected ? 2 : isChair ? 0 : 2} cornerRadius={isChair ? 2 : isDance ? 2 : 8} shadowColor="#405047" shadowBlur={selected ? 8 : isChair ? 0 : 3} shadowOpacity={0.14} />
       )}
       {isDance ? <DanceGrid width={object.width} height={object.height} /> : null}
       {isGuestTable(object.type) ? <SeatMarkers object={object} /> : null}
-      {object.type !== "chair" ? (
+      {!isChair ? (
         <>
           <Text x={-object.width / 2 + 5} y={-8} width={object.width - 10} align="center" text={object.label} fontSize={Math.min(14, Math.max(10, object.width / 9))} fontStyle="bold" fill="#33473b" ellipsis />
           {object.seats !== undefined ? <Text x={-object.width / 2 + 5} y={10} width={object.width - 10} align="center" text={`${object.seats} seats`} fontSize={9} fill="#79867e" /> : null}

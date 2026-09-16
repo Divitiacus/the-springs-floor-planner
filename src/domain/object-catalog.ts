@@ -80,7 +80,7 @@ export const OBJECT_CATALOG: ObjectDefinition[] = [
       { id: "20x20", name: "20' × 20' Dance Floor", shortLabel: "Dance Floor 20' × 20'", width: 240, height: 240, physicalDimensions: { status: "confirmed", shape: "area", widthInches: 240, depthInches: 240 } },
     ],
   },
-  { type: "chair", name: "Generic Chair", shortLabel: "Chair", category: "Event essentials", width: 30, height: 34, inventoryLabel: "chairs", physicalDimensions: { status: "unconfigured", shape: "rectangle", widthInches: null, depthInches: null }, resizable: false, showInLibrary: false, icon: "chair" },
+  { type: "chair", name: "Single Chair", shortLabel: "Chair", category: "Event essentials", width: 10, height: 7, defaultSeats: 1, maximumSeats: 1, inventoryLabel: "chairs", physicalDimensions: { status: "unconfigured", shape: "rectangle", widthInches: null, depthInches: null }, resizable: false, icon: "chair" },
 ];
 
 export const OBJECT_DEFINITIONS = Object.fromEntries(

@@ -20,13 +20,27 @@ describe("floorplan object operations", () => {
       .map((definition) => definition.type);
 
     expect(libraryTypes).not.toContain("buffet");
-    expect(libraryTypes).not.toContain("chair");
+    expect(libraryTypes).toContain("chair");
     expect(OBJECT_DEFINITIONS.buffet).toBeDefined();
     expect(OBJECT_DEFINITIONS.chair).toBeDefined();
     expect(OBJECT_DEFINITIONS["portable-bar"]).toMatchObject({
       name: "Satellite Bar",
       shortLabel: "Satellite Bar",
     });
+  });
+
+  it("creates a table-chair-sized single chair with one guest seat", () => {
+    const chair = createEventObject("chair", { x: 100, y: 120 }, [], "chair-1");
+    const layout = addObject(createEmptyLayout(), chair);
+
+    expect(chair).toMatchObject({
+      id: "chair-1",
+      label: "Chair",
+      width: 10,
+      height: 7,
+      seats: 1,
+    });
+    expect(getLayoutStats(layout)).toEqual({ objectCount: 1, guestTables: 0, seats: 1 });
   });
 
   it("creates a catalog object with sensible table defaults", () => {
@@ -264,8 +278,9 @@ describe("floorplan object operations", () => {
   it("calculates guest table and seating totals", () => {
     const table = createEventObject("round-table-60", { x: 0, y: 0 }, [], "table");
     const sweetheart = createEventObject("sweetheart-table", { x: 0, y: 0 }, [table], "sweetheart");
-    const layout = addObject(addObject(createEmptyLayout(), table), sweetheart);
-    expect(getLayoutStats(layout)).toEqual({ objectCount: 2, guestTables: 1, seats: 8 });
+    const chair = createEventObject("chair", { x: 120, y: 0 }, [table, sweetheart], "chair");
+    const layout = addObject(addObject(addObject(createEmptyLayout(), table), sweetheart), chair);
+    expect(getLayoutStats(layout)).toEqual({ objectCount: 3, guestTables: 1, seats: 9 });
   });
 });
 
@@ -346,6 +361,24 @@ describe("persistence", () => {
       height: 36,
       physicalDimensions: { shape: "circle", diameterInches: 36 },
     });
+  });
+
+  it("round-trips a single chair with its seat count and table-chair footprint", () => {
+    const chair = createEventObject("chair", { x: 220, y: 180 }, [], "chair");
+    const layout = addObject(
+      { ...createEmptyLayout("hall_parker_manor"), name: "Extra Chair Layout" },
+      chair,
+    );
+    const reopened = deserializeFloorplan(serializePortableFloorplan(layout));
+
+    expect(reopened.objects[0]).toMatchObject({
+      type: "chair",
+      label: "Chair",
+      seats: 1,
+      width: 10,
+      height: 7,
+    });
+    expect(getLayoutStats(reopened).seats).toBe(1);
   });
 
   it("reopens fixed rectangle tables at their current confirmed catalog size", () => {
