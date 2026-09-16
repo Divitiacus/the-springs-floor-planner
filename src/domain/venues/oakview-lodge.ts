@@ -1,114 +1,68 @@
 import type { FixedArchitectureElement } from "@/domain/floorplan";
 import type { HallConfiguration } from "@/domain/location-catalog";
 
-const CANVAS_MARGIN = 40;
+const CANVAS_MARGIN = 55;
 const ROOM_X = CANVAS_MARGIN;
-const ROOM_Y = 160;
+const ROOM_Y = 80;
 const ROOM_LENGTH = 1336; // 111′4″, confirmed in the supplied measurement sheet.
-const ROOM_WIDTH = 600; // Provisional 50′ width pending a dimensioned floor-plan drawing.
-const ALCOVE_LENGTH = 374; // 31′2″, confirmed for each alcove.
-const ALCOVE_DEPTH = 120; // Provisional 10′ plan depth; the supplied 12′8″ is alcove height.
-const ALCOVE_X = ROOM_X + (ROOM_LENGTH - ALCOVE_LENGTH) / 2;
-const NORTH_ALCOVE_Y = ROOM_Y - ALCOVE_DEPTH;
-const SOUTH_ALCOVE_Y = ROOM_Y + ROOM_WIDTH;
+const SOURCE_ROOM_LENGTH = 1008;
+const SOURCE_ROOM_WIDTH = 501;
+const ROOM_WIDTH = Math.round((ROOM_LENGTH * SOURCE_ROOM_WIDTH) / SOURCE_ROOM_LENGTH); // 55′4″ source-traced.
 const ROOM_CENTER_Y = ROOM_Y + ROOM_WIDTH / 2;
 
 type Common = { fixed: true; measurementStatus: "source-traced" };
 
 /**
- * Oakview Lodge is based on the supplied September 2026 measurement sheet.
- * The sheet confirms the 111′4″ reception-room length, 31′2″ alcove lengths,
- * and measured fixed features, but it does not include a drawn plan or the
- * reception-room width. The overall width, alcove depth, and fixture placement
- * therefore remain deliberately marked provisional for later field refinement.
+ * Oakview Lodge uses the confirmed dimensions from the supplied measurement
+ * sheet and the ground-floor plan supplied by the user. Only the reception
+ * floor is modeled: the kitchen, patio, and open-air second floor are excluded.
  */
 export function createOakviewLodgeConfiguration(): HallConfiguration {
   const common: Common = { fixed: true, measurementStatus: "source-traced" };
+  const bar = area(
+    common,
+    "oakview-lodge-bar",
+    "bar",
+    "BAR TOP · 15′6″",
+    ROOM_X + 136,
+    ROOM_Y + 135,
+    48,
+    186,
+    "blocked",
+    "confirmed",
+    "The bar top is confirmed at 15′6″ long. The official venue guide supplies its 4-foot depth. The supplied floor plan places it beneath the upper west stair flight.",
+  );
+  bar.labelRotation = -90;
+
   const fixedArchitecturalElements: FixedArchitectureElement[] = [
     area(
       common,
       "oakview-lodge-main-floor",
       "main-floor",
-      "Reception Room · 111′4″ long",
+      "Reception Room · 111′4″ × 55′4″",
       ROOM_X,
       ROOM_Y,
       ROOM_LENGTH,
       ROOM_WIDTH,
       "allowed",
-      "provisional",
-      "The supplied measurement sheet confirms the 111′4″ room length. The 50-foot plan width is provisional because the source gives alcove height, not room width.",
-    ),
-    area(
-      common,
-      "oakview-lodge-north-alcove",
-      "event-floor-extension",
-      "North Alcove · 31′2″ long",
-      ALCOVE_X,
-      NORTH_ALCOVE_Y,
-      ALCOVE_LENGTH,
-      ALCOVE_DEPTH,
-      "allowed",
-      "provisional",
-      "The 31′2″ alcove length is confirmed. Its 10-foot plan depth and centered placement are provisional; 12′8″ in the source is the alcove height.",
-    ),
-    area(
-      common,
-      "oakview-lodge-south-alcove",
-      "event-floor-extension",
-      "South Alcove · 31′2″ long",
-      ALCOVE_X,
-      SOUTH_ALCOVE_Y,
-      ALCOVE_LENGTH,
-      ALCOVE_DEPTH,
-      "allowed",
-      "provisional",
-      "The 31′2″ alcove length is confirmed. Its 10-foot plan depth and centered placement are provisional; 12′8″ in the source is the alcove height.",
-    ),
-    area(
-      common,
-      "oakview-lodge-bar",
-      "bar",
-      "BAR TOP · 15′6″",
-      ALCOVE_X + (ALCOVE_LENGTH - 186) / 2,
-      NORTH_ALCOVE_Y + 36,
-      186,
-      48,
-      "blocked",
       "source-traced",
-      "The supplied sheet confirms the 15′6″ bar-top length. Its 4-foot depth follows the official Denton venue guide; placement within the alcove is provisional.",
+      "The 111′4″ room length is confirmed by the measurement sheet. The 55′4″ width is source-traced proportionally from the supplied ground-floor plan.",
     ),
     area(
       common,
-      "oakview-lodge-catering-table",
+      "oakview-lodge-buffet",
       "buffet",
-      "CATERING TABLE · 11′9½″",
-      ALCOVE_X + (ALCOVE_LENGTH - 141.5) / 2,
-      SOUTH_ALCOVE_Y + 42,
+      "BUFFET · 11′9½″",
+      ROOM_X + 172,
+      ROOM_Y + 33,
       141.5,
       36,
       "blocked",
-      "source-traced",
-      "The supplied sheet confirms the 11′9½″ length. Its 3-foot depth follows the official Denton venue guide; placement within the alcove is provisional.",
+      "confirmed",
+      "The supplied measurement sheet confirms the 11′9½″ catering-table length. Its 3-foot depth follows the official venue guide, and its upper-left placement is traced from the supplied floor plan.",
     ),
-    {
-      ...common,
-      id: "oakview-lodge-grand-staircase",
-      kind: "stairs",
-      label: "Grand Staircase · 16′8″ × 6′9″",
-      physicalNote:
-        "The supplied sheet confirms a 16′8″ bottom-to-top railing run and 6′9″ width across the bottom. The exact plan shape and west-wall placement remain provisional.",
-      placementBehavior: "blocked",
-      measurementStatus: "provisional",
-      x: ROOM_X,
-      y: ROOM_CENTER_Y - 40.5,
-      width: 200,
-      height: 81,
-      orientation: "vertical",
-      treadAxis: "x",
-      treadCount: 12,
-      curvedRight: true,
-      showLabel: false,
-    },
+    bar,
+    ...createWestStairGroup(common),
     area(
       common,
       "oakview-lodge-fireplace-stone",
@@ -119,8 +73,8 @@ export function createOakviewLodgeConfiguration(): HallConfiguration {
       26,
       122,
       "blocked",
-      "source-traced",
-      "The fireplace stone section is confirmed at 10′2″ long, 2′2″ wide, and 1′6″ high. Its centered east-wall placement opposite the grand staircase is provisional.",
+      "confirmed",
+      "The fireplace stone section is confirmed at 10′2″ long, 2′2″ wide, and 1′6″ high. Its centered east-wall position is source-traced from the supplied plan.",
     ),
     area(
       common,
@@ -132,42 +86,72 @@ export function createOakviewLodgeConfiguration(): HallConfiguration {
       14.5,
       82.5,
       "blocked",
-      "source-traced",
+      "confirmed",
       "The mantle is confirmed at 6′10½″ long by 1′2½″ deep and is centered on the measured fireplace stone section.",
     ),
+    pillar(common, "oakview-lodge-upper-center-pillar", ROOM_X + 752, ROOM_Y + 122),
+    pillar(common, "oakview-lodge-lower-center-pillar", ROOM_X + 752, ROOM_Y + ROOM_WIDTH - 18),
     ...createWalls(common),
-    label(common, "oakview-lodge-room-label", "OAKVIEW LODGE · RECEPTION ROOM", 470, 178, 476, 14),
-    label(common, "oakview-lodge-stair-label", "GRAND STAIRCASE", 48, ROOM_CENTER_Y - 58, 190, 10),
+    ...createDoors(common),
+    label(common, "oakview-lodge-room-label", "OAKVIEW LODGE · RECEPTION ROOM", 500, 100, 446, 14),
+    label(common, "oakview-lodge-under-stair-bar-label", "BAR UNDER STAIRS · 15′6″", ROOM_X + 190, ROOM_Y + 185, 190, 9, 90),
+    label(common, "oakview-lodge-kitchen-label", "TO KITCHEN", ROOM_X + 86, 44, 160, 10),
+    label(common, "oakview-lodge-patio-label", "TO PATIO", ROOM_X + ROOM_LENGTH - 160, ROOM_CENTER_Y + 150, 150, 10),
   ];
 
   return {
     physicalWidthInches: ROOM_LENGTH + CANVAS_MARGIN * 2,
-    physicalHeightInches: ROOM_WIDTH + ALCOVE_DEPTH * 2 + CANVAS_MARGIN * 2,
-    physicalDimensionStatus: "provisional",
+    physicalHeightInches: ROOM_WIDTH + ROOM_Y + 80,
+    physicalDimensionStatus: "source-traced",
     physicalDimensionNote:
-      "Oakview Lodge is calibrated to the supplied 111′4″ reception-room length. The 31′2″ alcove lengths and measured staircase, fireplace, mantle, catering-table, and bar dimensions are represented at true scale. Room width, alcove plan depth, and feature placement are provisional because the source is a measurement list rather than a drawn floor plan.",
+      "Oakview Lodge is calibrated to the confirmed 111′4″ reception-room length. Its 55′4″ width, wall openings, pillars, and fixture positions are source-traced from the supplied ground-floor plan. The kitchen, patio, and open-air second floor are intentionally excluded from the seating chart.",
     fixedArchitecturalElements,
     floorplanAsset: null,
   };
 }
 
+function createWestStairGroup(common: Common): FixedArchitectureElement[] {
+  const note =
+    "The supplied plan shows the west grand stair rising to an open-air second floor. Only its blocked ground-floor footprint is rendered; the upper floor itself is intentionally omitted.";
+  return [
+    stairs(common, "oakview-lodge-upper-stair-flight", ROOM_X + 118, ROOM_Y + 126, 82, 204, "horizontal", 11, "y", note),
+    area(
+      common,
+      "oakview-lodge-stair-landing",
+      "landing",
+      "STAIR LANDING",
+      ROOM_X + 118,
+      ROOM_CENTER_Y - 45,
+      82,
+      90,
+      "blocked",
+      "source-traced",
+      note,
+    ),
+    stairs(common, "oakview-lodge-center-stair-flight", ROOM_X + 200, ROOM_CENTER_Y - 45, 133, 90, "vertical", 10, "x", note),
+    stairs(common, "oakview-lodge-lower-stair-flight", ROOM_X + 118, ROOM_CENTER_Y + 45, 82, 219, "horizontal", 12, "y", note),
+    railing(common, "oakview-lodge-stair-west-rail", [ROOM_X + 112, ROOM_Y + 126, ROOM_X + 112, ROOM_Y + ROOM_WIDTH]),
+    railing(common, "oakview-lodge-stair-center-north-rail", [ROOM_X + 200, ROOM_CENTER_Y - 45, ROOM_X + 333, ROOM_CENTER_Y - 45]),
+    railing(common, "oakview-lodge-stair-center-south-rail", [ROOM_X + 200, ROOM_CENTER_Y + 45, ROOM_X + 333, ROOM_CENTER_Y + 45]),
+  ];
+}
+
 function createWalls(common: Common): FixedArchitectureElement[] {
   return [
-    wall(common, "oakview-lodge-outline", [
-      ROOM_X, ROOM_Y,
-      ALCOVE_X, ROOM_Y,
-      ALCOVE_X, NORTH_ALCOVE_Y,
-      ALCOVE_X + ALCOVE_LENGTH, NORTH_ALCOVE_Y,
-      ALCOVE_X + ALCOVE_LENGTH, ROOM_Y,
-      ROOM_X + ROOM_LENGTH, ROOM_Y,
-      ROOM_X + ROOM_LENGTH, ROOM_Y + ROOM_WIDTH,
-      ALCOVE_X + ALCOVE_LENGTH, ROOM_Y + ROOM_WIDTH,
-      ALCOVE_X + ALCOVE_LENGTH, SOUTH_ALCOVE_Y + ALCOVE_DEPTH,
-      ALCOVE_X, SOUTH_ALCOVE_Y + ALCOVE_DEPTH,
-      ALCOVE_X, ROOM_Y + ROOM_WIDTH,
-      ROOM_X, ROOM_Y + ROOM_WIDTH,
-      ROOM_X, ROOM_Y,
-    ]),
+    wall(common, "oakview-lodge-north-wall", [ROOM_X, ROOM_Y, ROOM_X + ROOM_LENGTH, ROOM_Y]),
+    wall(common, "oakview-lodge-east-wall", [ROOM_X + ROOM_LENGTH, ROOM_Y, ROOM_X + ROOM_LENGTH, ROOM_Y + ROOM_WIDTH]),
+    wall(common, "oakview-lodge-south-wall", [ROOM_X, ROOM_Y + ROOM_WIDTH, ROOM_X + ROOM_LENGTH, ROOM_Y + ROOM_WIDTH]),
+    wall(common, "oakview-lodge-west-wall", [ROOM_X, ROOM_Y, ROOM_X, ROOM_Y + ROOM_WIDTH]),
+  ];
+}
+
+function createDoors(common: Common): FixedArchitectureElement[] {
+  return [
+    door(common, "oakview-lodge-kitchen-door", ROOM_X + 132, ROOM_Y, 44, 0, "clockwise"),
+    door(common, "oakview-lodge-main-entrance-north", ROOM_X, ROOM_CENTER_Y - 48, 48, 90, "counterclockwise"),
+    door(common, "oakview-lodge-main-entrance-south", ROOM_X, ROOM_CENTER_Y + 48, 48, -90, "clockwise"),
+    door(common, "oakview-lodge-patio-door-north", ROOM_X + ROOM_LENGTH, ROOM_CENTER_Y - 174, 48, 90, "clockwise"),
+    door(common, "oakview-lodge-patio-door-south", ROOM_X + ROOM_LENGTH, ROOM_CENTER_Y + 174, 48, -90, "counterclockwise"),
   ];
 }
 
@@ -198,8 +182,70 @@ function area(
   };
 }
 
+function stairs(
+  common: Common,
+  id: string,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  orientation: "horizontal" | "vertical",
+  treadCount: number,
+  treadAxis: "x" | "y",
+  physicalNote: string,
+): FixedArchitectureElement {
+  return {
+    ...common,
+    id,
+    kind: "stairs",
+    label: "Grand Staircase",
+    physicalNote,
+    placementBehavior: "blocked",
+    x,
+    y,
+    width,
+    height,
+    orientation,
+    treadCount,
+    treadAxis,
+    showLabel: false,
+  };
+}
+
+function pillar(common: Common, id: string, x: number, y: number): FixedArchitectureElement {
+  return area(common, id, "pillar", "Pillar", x, y, 18, 18, "blocked", "source-traced", "Pillar position is source-traced from the supplied ground-floor plan.");
+}
+
 function wall(common: Common, id: string, points: number[]): FixedArchitectureElement {
   return { ...common, id, kind: "wall", label: "Fixed wall", placementBehavior: "blocked", points };
+}
+
+function railing(common: Common, id: string, points: number[]): FixedArchitectureElement {
+  return { ...common, id, kind: "railing", label: "Fixed stair railing", placementBehavior: "blocked", points };
+}
+
+function door(
+  common: Common,
+  id: string,
+  x: number,
+  y: number,
+  width: number,
+  rotation: number,
+  swingDirection: "clockwise" | "counterclockwise",
+): FixedArchitectureElement {
+  return {
+    ...common,
+    id,
+    kind: "door",
+    label: id.includes("kitchen") ? "Kitchen door" : "Exterior door",
+    placementBehavior: "restricted",
+    x,
+    y,
+    width,
+    rotation,
+    swingDirection,
+    swingAngle: 42,
+  };
 }
 
 function label(
@@ -210,6 +256,7 @@ function label(
   y: number,
   width: number,
   fontSize: number,
+  rotation = 0,
 ): FixedArchitectureElement {
-  return { ...common, id, kind: "label", label: text, placementBehavior: "restricted", x, y, width, fontSize };
+  return { ...common, id, kind: "label", label: text, placementBehavior: "restricted", x, y, width, fontSize, rotation };
 }

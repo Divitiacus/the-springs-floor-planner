@@ -361,24 +361,29 @@ describe("location catalog", () => {
     const configuration = singleLevel(hall.configuration);
     const elements = configuration.fixedArchitecturalElements;
     expect(configuration).toMatchObject({
-      physicalWidthInches: 1416,
-      physicalHeightInches: 920,
-      physicalDimensionStatus: "provisional",
+      physicalWidthInches: 1446,
+      physicalHeightInches: 824,
+      physicalDimensionStatus: "source-traced",
     });
     expect(elements.every((element) => element.id.startsWith("oakview-lodge"))).toBe(true);
     expect(elements.find((element) => element.id === "oakview-lodge-main-floor")).toMatchObject({
-      measurementStatus: "provisional",
-      shape: { type: "rectangle", x: 40, y: 160, width: 1336, height: 600 },
+      measurementStatus: "source-traced",
+      shape: { type: "rectangle", x: 55, y: 80, width: 1336, height: 664 },
     });
-    expect(elements.filter((element) => element.kind === "area" && element.role === "event-floor-extension")).toMatchObject([
-      { shape: { type: "rectangle", width: 374, height: 120 } },
-      { shape: { type: "rectangle", width: 374, height: 120 } },
-    ]);
-    expect(elements.find((element) => element.id === "oakview-lodge-grand-staircase")).toMatchObject({
+    expect(elements.find((element) => element.id === "oakview-lodge-buffet")).toMatchObject({
+      measurementStatus: "confirmed",
+      shape: { type: "rectangle", width: 141.5, height: 36 },
+    });
+    expect(elements.find((element) => element.id === "oakview-lodge-bar")).toMatchObject({
+      measurementStatus: "confirmed",
+      shape: { type: "rectangle", width: 48, height: 186 },
+    });
+    expect(elements.find((element) => element.id === "oakview-lodge-center-stair-flight")).toMatchObject({
       kind: "stairs",
-      width: 200,
-      height: 81,
+      width: 133,
+      height: 90,
     });
+    expect(elements.find((element) => element.id === "oakview-lodge-kitchen-door")).toMatchObject({ kind: "door" });
     expect(elements.find((element) => element.id === "oakview-lodge-fireplace-stone")).toMatchObject({
       shape: { type: "rectangle", width: 26, height: 122 },
     });
