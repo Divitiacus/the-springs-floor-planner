@@ -9,6 +9,7 @@ import { createHeritagePineConfiguration } from "@/domain/venues/heritage-pine";
 import { createHiddenMagnoliaConfiguration } from "@/domain/venues/hidden-magnolia";
 import { createHiddenSpringsRanchConfiguration } from "@/domain/venues/hidden-springs-ranch";
 import { createMagnoliaManorConfiguration } from "@/domain/venues/magnolia-manor";
+import { createPoetrySpringsConfiguration } from "@/domain/venues/poetry-springs";
 import { createStonebrookConfiguration } from "@/domain/venues/stonebrook";
 import { createStonecreekReserveConfiguration } from "@/domain/venues/stonecreek-reserve";
 import { createSycamoreGroveConfiguration } from "@/domain/venues/sycamore-grove";
@@ -139,6 +140,15 @@ export const DENTON_INVENTORY: InventoryCatalog = {
   source: {
     fileName: "user-confirmed",
     note: "Hidden Springs Ranch matches Stonecreek Reserve's planning inventory and 320-chair guest capacity.",
+  },
+};
+
+export const ROCKWALL_INVENTORY: InventoryCatalog = {
+  scope: "hall",
+  limits: { ...LAKE_CONROE_INVENTORY.limits },
+  source: {
+    fileName: "user-confirmed",
+    note: "Poetry Springs matches Heritage Pine's planning inventory and 320-chair guest capacity.",
   },
 };
 
@@ -289,6 +299,22 @@ export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
         configuration: {
           ...createHiddenSpringsRanchConfiguration(),
           inventory: DENTON_INVENTORY,
+        },
+      },
+    ],
+  },
+  {
+    id: "location_rockwall",
+    slug: "rockwall",
+    name: "Rockwall",
+    halls: [
+      {
+        id: "hall_poetry_springs",
+        slug: "poetry-springs",
+        name: "Poetry Springs",
+        configuration: {
+          ...createPoetrySpringsConfiguration(),
+          inventory: ROCKWALL_INVENTORY,
         },
       },
     ],

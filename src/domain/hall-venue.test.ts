@@ -103,6 +103,20 @@ describe("hall venue template", () => {
     expect(venue.elements.length).toBeGreaterThan(20);
   });
 
+  it("loads Rockwall's Poetry Springs with the Heritage Pine footprint and its own identity", () => {
+    const location = getLocationBySlug("rockwall");
+    const hall = getHallBySlug(location, "poetry-springs");
+    if (!location || !hall) throw new Error("Poetry Springs catalog entry missing");
+
+    const venue = createHallVenueTemplate(location, hall);
+
+    expect(venue.id).toBe("location_rockwall:hall_poetry_springs");
+    expect(venue.name).toBe("Rockwall · Poetry Springs");
+    expect(venue.hall).toEqual({ x: 167, y: 60, width: 960, height: 720 });
+    expect(venue.referenceAsset).toBeNull();
+    expect(venue.elements.length).toBeGreaterThan(20);
+  });
+
   it("loads Sycamore Grove at the confirmed 80-by-60-foot scale", () => {
     const location = getLocationBySlug("angleton");
     const hall = getHallBySlug(location, "sycamore-grove");

@@ -10,6 +10,7 @@ import {
   LAKE_CONROE_INVENTORY,
   MAGNOLIA_INVENTORY,
   MAGNOLIA_MANOR_INVENTORY,
+  ROCKWALL_INVENTORY,
   isMultiLevelHallConfiguration,
   resolveInventoryConfiguration,
   SPRINGS_LOCATIONS,
@@ -20,7 +21,7 @@ import {
 
 describe("location catalog", () => {
   it("defines Magnolia with exactly its two confirmed halls", () => {
-    expect(SPRINGS_LOCATIONS).toHaveLength(7);
+    expect(SPRINGS_LOCATIONS).toHaveLength(8);
     expect(SPRINGS_LOCATIONS[0]).toMatchObject({ name: "Magnolia", slug: "magnolia" });
     expect(SPRINGS_LOCATIONS[0].halls.map((hall) => hall.name)).toEqual([
       "Pinehaven Terrace",
@@ -324,6 +325,35 @@ describe("location catalog", () => {
     const elements = singleLevel(hall.configuration).fixedArchitecturalElements;
     expect(elements.every((element) => element.id.startsWith("hidden-springs-ranch"))).toBe(true);
     expect(elements.some((element) => element.id.includes("stonecreek-reserve"))).toBe(false);
+  });
+
+  it("defines Rockwall with Poetry Springs and its stable route slugs", () => {
+    const location = getLocationBySlug("rockwall");
+    const hall = getHallBySlug(location, "poetry-springs");
+
+    expect(location).toMatchObject({ id: "location_rockwall", name: "Rockwall" });
+    expect(location?.halls).toHaveLength(1);
+    expect(hall).toMatchObject({
+      id: "hall_poetry_springs",
+      slug: "poetry-springs",
+      name: "Poetry Springs",
+    });
+  });
+
+  it("gives Poetry Springs the Heritage Pine inventory and Rockwall-specific architecture IDs", () => {
+    const location = getLocationBySlug("rockwall");
+    const hall = getHallBySlug(location, "poetry-springs");
+    if (!location || !hall?.configuration) throw new Error("Rockwall Poetry Springs configuration missing");
+
+    expect(ROCKWALL_INVENTORY).toMatchObject({
+      scope: "hall",
+      limits: { ...LAKE_CONROE_INVENTORY.limits, chairs: 320 },
+    });
+    expect(resolveInventoryConfiguration(location, hall)).toEqual(LAKE_CONROE_INVENTORY.limits);
+
+    const elements = singleLevel(hall.configuration).fixedArchitecturalElements;
+    expect(elements.every((element) => element.id.startsWith("poetry-springs"))).toBe(true);
+    expect(elements.some((element) => element.id.includes("heritage-pine"))).toBe(false);
   });
 
   it("defines Angleton with both confirmed halls and stable route slugs", () => {
