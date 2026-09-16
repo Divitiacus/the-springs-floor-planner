@@ -328,6 +328,48 @@ describe("floorplan object operations", () => {
     expect(untouched?.linkedGroupId).toBeUndefined();
   });
 
+  it("snaps a newly linked chair to the nearest table end with the table's rotation", () => {
+    const table = {
+      ...createEventObject("rectangle-table-8", { x: 200, y: 200 }, [], "table"),
+      rotation: -37,
+    };
+    const chair = createEventObject("chair", { x: 360, y: 260 }, [table], "chair");
+    let layout = addObject(addObject(createEmptyLayout(), table), chair);
+
+    layout = updateSeatingDetails(layout, table.id, [], [chair.id], "end-chair");
+
+    const linkedChair = layout.objects.find((object) => object.id === chair.id);
+    const radians = table.rotation * Math.PI / 180;
+    expect(linkedChair).toMatchObject({ rotation: -37, linkedGroupId: "end-chair" });
+    expect(linkedChair?.x).toBeCloseTo(table.x + 55 * Math.cos(radians));
+    expect(linkedChair?.y).toBeCloseTo(table.y + 55 * Math.sin(radians));
+  });
+
+  it("keeps an end chair aligned and equally spaced when its table rotates", () => {
+    const table = createEventObject("rectangle-table-8", { x: 200, y: 200 }, [], "table");
+    const chair = createEventObject("chair", { x: 400, y: 200 }, [table], "chair");
+    let layout = addObject(addObject(createEmptyLayout(), table), chair);
+
+    layout = updateSeatingDetails(layout, table.id, [], [chair.id], "rotating-table");
+    expect(layout.objects.find((object) => object.id === chair.id)).toMatchObject({ x: 255, y: 200, rotation: 0 });
+
+    layout = updateObject(layout, table.id, { rotation: 90 });
+    expect(layout.objects.find((object) => object.id === table.id)).toMatchObject({ x: 200, y: 200, rotation: 90 });
+    expect(layout.objects.find((object) => object.id === chair.id)).toMatchObject({ x: 200, y: 255, rotation: 90 });
+  });
+
+  it("places two linked chairs at opposite ends of one rectangle table", () => {
+    const table = createEventObject("rectangle-table-6", { x: 200, y: 200 }, [], "table");
+    const leftChair = createEventObject("chair", { x: 80, y: 200 }, [table], "left-chair");
+    const rightChair = createEventObject("chair", { x: 340, y: 200 }, [table, leftChair], "right-chair");
+    let layout = addObject(addObject(addObject(createEmptyLayout(), table), leftChair), rightChair);
+
+    layout = updateSeatingDetails(layout, table.id, [], [leftChair.id, rightChair.id], "two-end-chairs");
+
+    expect(layout.objects.find((object) => object.id === leftChair.id)).toMatchObject({ x: 157, y: 200, rotation: 0 });
+    expect(layout.objects.find((object) => object.id === rightChair.id)).toMatchObject({ x: 243, y: 200, rotation: 0 });
+  });
+
   it("stores exactly one guest-name slot per current seat and removes stale names when the count drops", () => {
     const table = createEventObject("rectangle-table-8", { x: 200, y: 200 }, [], "table");
     let layout = addObject(createEmptyLayout(), table);
