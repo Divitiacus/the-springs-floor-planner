@@ -255,10 +255,11 @@ export const VALLEY_VIEW_INVENTORY: InventoryCatalog = {
     "parson-table-7": 2,
     "sweetheart-table": 2,
     "cocktail-table-32": 6,
+    chairs: 224,
   },
   source: {
     fileName: "user-supplied Valley View plan",
-    note: "The table-and-chair key on the supplied Valley View plan confirms these table quantities. No chair inventory limit is stated.",
+    note: "The table-and-chair key on the supplied Valley View plan confirms these table quantities. The 224-guest capacity was confirmed in a user follow-up.",
   },
 };
 
