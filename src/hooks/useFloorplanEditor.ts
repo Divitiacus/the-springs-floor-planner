@@ -83,12 +83,19 @@ export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner 
   const add = useCallback(
     (selection: EventObjectSelection, position: { x: number; y: number }, levelId?: string) => {
       const object = {
-        ...createEventObject(selection.type, position, layout.objects, undefined, selection.variant),
+        ...createEventObject(
+          selection.type,
+          position,
+          layout.objects,
+          undefined,
+          selection.variant,
+          inventory.defaultSeats?.[selection.type],
+        ),
         ...(levelId ? { levelId } : {}),
       };
       if (commitValidated(addObject(layout, object))) setSelectedId(object.id);
     },
-    [commitValidated, layout],
+    [commitValidated, inventory.defaultSeats, layout],
   );
 
   const update = useCallback(

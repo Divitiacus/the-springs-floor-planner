@@ -14,9 +14,11 @@ const noLimits: InventoryConfiguration = {
   "farmhouse-table-6": null,
   "parson-table-7": null,
   "display-table-33": null,
+  "sweetheart-table-32": null,
   "sweetheart-table-33": null,
   "sweetheart-table": null,
   "sweetheart-table-48": null,
+  "half-moon-table": null,
   "cocktail-table-32": null,
   "cocktail-table-36": null,
   chairs: null,
@@ -90,6 +92,23 @@ describe("inventory validation", () => {
       valid: false,
       code: "table-limit",
       message: "All 0 available 32-inch cocktail tables are already in this floorplan.",
+    });
+  });
+
+  it("tracks Tulsa's 32-inch sweetheart and half-moon tables as two-seat inventory", () => {
+    const sweetheart = createEventObject("sweetheart-table-32", { x: 0, y: 0 }, [], "sweetheart-32");
+    const halfMoon = createEventObject("half-moon-table", { x: 60, y: 0 }, [sweetheart], "half-moon");
+    const layout = addObject(addObject(createEmptyLayout(), sweetheart), halfMoon);
+
+    expect(getInventoryUsage(layout)).toMatchObject({
+      "sweetheart-table-32": 1,
+      "half-moon-table": 1,
+      chairs: 4,
+    });
+    expect(validateLayoutInventory(layout, { "half-moon-table": 0 })).toMatchObject({
+      valid: false,
+      code: "table-limit",
+      message: "All 0 available half-moon tables are already in this floorplan.",
     });
   });
 
@@ -170,9 +189,11 @@ describe("inventory validation", () => {
     ["rectangle-table-8", 10],
     ["farmhouse-table-6", 8],
     ["farmhouse-table-8", 10],
+    ["sweetheart-table-32", 2],
     ["sweetheart-table-33", 2],
     ["sweetheart-table", 2],
     ["sweetheart-table-48", 2],
+    ["half-moon-table", 2],
   ] as const)("enforces the %s seating maximum", (type, maximum) => {
     const table = createEventObject(type, { x: 0, y: 0 }, [], "table");
     const layout = addObject(createEmptyLayout(), { ...table, seats: maximum + 1 });

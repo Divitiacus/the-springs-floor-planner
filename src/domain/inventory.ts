@@ -16,9 +16,11 @@ export const INVENTORY_ITEM_TYPES = [
   "cocktail-table-white-wood",
   "display-table-32",
   "display-table-33",
+  "sweetheart-table-32",
   "sweetheart-table-33",
   "sweetheart-table",
   "sweetheart-table-48",
+  "half-moon-table",
   "cocktail-table-32",
   "cocktail-table-36",
   "chairs",
@@ -26,7 +28,9 @@ export const INVENTORY_ITEM_TYPES = [
 
 export type InventoryItemType = (typeof INVENTORY_ITEM_TYPES)[number];
 export type InventoryLimit = number | null;
-export type InventoryConfiguration = Partial<Record<InventoryItemType, InventoryLimit>>;
+export type InventoryConfiguration = Partial<Record<InventoryItemType, InventoryLimit>> & {
+  defaultSeats?: Partial<Record<EventObjectType, number>>;
+};
 export type InventoryUsage = Record<InventoryItemType, number>;
 
 export type InventoryCatalog = {
@@ -64,9 +68,11 @@ export function getInventoryUsage(layout: FloorplanLayout): InventoryUsage {
     "cocktail-table-white-wood": 0,
     "display-table-32": 0,
     "display-table-33": 0,
+    "sweetheart-table-32": 0,
     "sweetheart-table-33": 0,
     "sweetheart-table": 0,
     "sweetheart-table-48": 0,
+    "half-moon-table": 0,
     "cocktail-table-32": 0,
     "cocktail-table-36": 0,
     chairs: 0,
@@ -156,9 +162,11 @@ const INVENTORY_LABELS: Record<Exclude<InventoryItemType, "chairs">, string> = {
   "cocktail-table-white-wood": OBJECT_DEFINITIONS["cocktail-table-white-wood"].inventoryLabel,
   "display-table-32": OBJECT_DEFINITIONS["display-table-32"].inventoryLabel,
   "display-table-33": OBJECT_DEFINITIONS["display-table-33"].inventoryLabel,
+  "sweetheart-table-32": OBJECT_DEFINITIONS["sweetheart-table-32"].inventoryLabel,
   "sweetheart-table-33": OBJECT_DEFINITIONS["sweetheart-table-33"].inventoryLabel,
   "sweetheart-table": OBJECT_DEFINITIONS["sweetheart-table"].inventoryLabel,
   "sweetheart-table-48": OBJECT_DEFINITIONS["sweetheart-table-48"].inventoryLabel,
+  "half-moon-table": OBJECT_DEFINITIONS["half-moon-table"].inventoryLabel,
   "cocktail-table-32": "32-inch cocktail tables",
   "cocktail-table-36": "36-inch cocktail tables",
 };

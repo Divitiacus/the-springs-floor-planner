@@ -12,7 +12,7 @@ import type {
   VenueFloorRegion,
   VenueTemplate,
 } from "@/domain/floorplan";
-import { OBJECT_DEFINITIONS, isGuestTable } from "@/domain/object-catalog";
+import { OBJECT_DEFINITIONS, isGuestTable, TABLE_TYPES } from "@/domain/object-catalog";
 import type { EditorMode } from "@/components/editor/EditorToolbar";
 
 type Props = {
@@ -481,6 +481,7 @@ function EventObjectNode({ object, selected, canDrag, setNode, onSelect, onChang
   const isRound = object.physicalDimensions.shape === "circle";
   const isDance = object.type === "dance-floor";
   const isChair = object.type === "chair";
+  const isHalfMoon = object.type === "half-moon-table";
   const fill = isDance ? "#e6ded2" : isChair ? "#9aa99f" : isGuestTable(object.type) ? "#fffdf7" : "#dce8e0";
   const stroke = selected ? "#294f3d" : isDance ? "#9d8e7b" : "#5e7768";
 
@@ -509,13 +510,23 @@ function EventObjectNode({ object, selected, canDrag, setNode, onSelect, onChang
       }}
     >
       {isChair ? <Rect x={-12} y={-12} width={24} height={24} fill="transparent" /> : null}
-      {isRound ? (
+      {isHalfMoon ? (
+        <Path
+          data={`M ${-object.width / 2} ${object.height / 2} A ${object.width / 2} ${object.height} 0 0 1 ${object.width / 2} ${object.height / 2} L ${-object.width / 2} ${object.height / 2} Z`}
+          fill={fill}
+          stroke={stroke}
+          strokeWidth={selected ? 3 : 2}
+          shadowColor="#405047"
+          shadowBlur={selected ? 8 : 3}
+          shadowOpacity={0.16}
+        />
+      ) : isRound ? (
         <Circle radius={object.width / 2} fill={fill} stroke={stroke} strokeWidth={selected ? 3 : 2} shadowColor="#405047" shadowBlur={selected ? 8 : 3} shadowOpacity={0.16} />
       ) : (
         <Rect x={-object.width / 2} y={-object.height / 2} width={object.width} height={object.height} fill={fill} stroke={stroke} strokeWidth={selected ? 2 : isChair ? 0 : 2} cornerRadius={isChair ? 2 : isDance ? 2 : 8} shadowColor="#405047" shadowBlur={selected ? 8 : isChair ? 0 : 3} shadowOpacity={0.14} />
       )}
       {isDance ? <DanceGrid width={object.width} height={object.height} /> : null}
-      {isGuestTable(object.type) ? <SeatMarkers object={object} /> : null}
+      {TABLE_TYPES.has(object.type) ? <SeatMarkers object={object} /> : null}
       {!isChair ? (
         <>
           <Text x={-object.width / 2 + 5} y={-8} width={object.width - 10} align="center" text={object.label} fontSize={Math.min(14, Math.max(10, object.width / 9))} fontStyle="bold" fill="#33473b" ellipsis />
@@ -529,7 +540,20 @@ function EventObjectNode({ object, selected, canDrag, setNode, onSelect, onChang
 function SeatMarkers({ object }: { object: EventObject }) {
   const count = Math.min(object.seats ?? 0, 12);
   if (!count) return null;
-  if (object.type.startsWith("round-table")) {
+  if (object.type === "half-moon-table") {
+    return <>{Array.from({ length: count }, (_, index) => (
+      <Rect
+        key={index}
+        x={-object.width / 2 + ((index + 1) * object.width) / (count + 1) - 5}
+        y={object.height / 2 + 2}
+        width={10}
+        height={7}
+        cornerRadius={2}
+        fill="#9aa99f"
+      />
+    ))}</>;
+  }
+  if (object.physicalDimensions.shape === "circle") {
     return <>{Array.from({ length: count }, (_, index) => {
       const angle = (Math.PI * 2 * index) / count;
       const radius = object.width / 2 + 8;

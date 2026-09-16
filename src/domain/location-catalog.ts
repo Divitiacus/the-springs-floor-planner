@@ -180,10 +180,23 @@ export const MCKINNEY_INVENTORY: InventoryCatalog = {
 
 export const TULSA_INVENTORY: InventoryCatalog = {
   scope: "hall",
-  limits: { ...KATY_INVENTORY.limits },
+  limits: {
+    "round-table-60": 40,
+    "rectangle-table-6": 10,
+    "rectangle-table-8": 8,
+    "parson-table-7": 6,
+    "sweetheart-table-32": 2,
+    "half-moon-table": 1,
+    "cocktail-table-32": 8,
+    chairs: 320,
+    defaultSeats: {
+      "rectangle-table-6": 6,
+      "rectangle-table-8": 8,
+    },
+  },
   source: {
     fileName: "user-confirmed",
-    note: "Sunset Pointe matches Stonecreek Reserve's table inventory and 320-chair guest capacity.",
+    note: "Sunset Pointe table quantities are user-confirmed. Its previously confirmed 320-chair guest capacity remains unchanged; 6-foot rectangles seat three per side and 8-foot rectangles seat four per side by default.",
   },
 };
 

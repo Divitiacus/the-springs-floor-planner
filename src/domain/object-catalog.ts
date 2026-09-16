@@ -27,7 +27,7 @@ export type ObjectDefinition = {
   regionalStyleKey?: "photo-booth";
   showInLibrary?: boolean;
   inventoryOnly?: boolean;
-  icon: "round" | "rectangle" | "heart" | "music" | "bar" | "buffet" | "camera" | "dance" | "chair";
+  icon: "round" | "rectangle" | "heart" | "half-moon" | "music" | "bar" | "buffet" | "camera" | "dance" | "chair";
 };
 
 export const OBJECT_CATALOG: ObjectDefinition[] = [
@@ -45,9 +45,11 @@ export const OBJECT_CATALOG: ObjectDefinition[] = [
   { type: "cocktail-table-white-wood", name: "Cocktail Table — White Wood Top", shortLabel: "White Wood Cocktail", category: "Tables", width: 32, height: 32, inventoryLabel: "white wooden-top cocktail tables", physicalDimensions: { status: "unconfigured", shape: "circle", widthInches: null, depthInches: null }, resizable: false, inventoryOnly: true, icon: "round" },
   { type: "display-table-32", name: "32-inch Wood-Top Table", shortLabel: "32\" Wood Top", category: "Tables", width: 32, height: 32, inventoryLabel: "32-inch wood-top tables", physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: 32 }, resizable: false, inventoryOnly: true, icon: "round" },
   { type: "display-table-33", name: "33-inch Display Table", shortLabel: "33\" Display", category: "Tables", width: 33, height: 33, inventoryLabel: "33-inch display tables", physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: 33 }, resizable: false, inventoryOnly: true, icon: "round" },
+  { type: "sweetheart-table-32", name: "32-inch Sweetheart Table", shortLabel: "32\" Sweetheart", category: "Tables", width: 32, height: 32, defaultSeats: 2, maximumSeats: 2, inventoryLabel: "32-inch sweetheart tables", physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: 32 }, resizable: false, inventoryOnly: true, icon: "heart" },
   { type: "sweetheart-table-33", name: "33-inch Sweetheart/Cake Table", shortLabel: "33\" Sweetheart", category: "Tables", width: 33, height: 33, defaultSeats: 2, maximumSeats: 2, inventoryLabel: "33-inch sweetheart/cake tables", physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: 33 }, resizable: false, inventoryOnly: true, icon: "heart" },
   { type: "sweetheart-table", name: "36-inch Sweetheart Table", shortLabel: "36\" Sweetheart", category: "Tables", width: 36, height: 36, defaultSeats: 2, maximumSeats: 2, inventoryLabel: "36-inch sweetheart tables", physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: 36 }, resizable: false, icon: "heart" },
   { type: "sweetheart-table-48", name: "48-inch Sweetheart Table", shortLabel: "48\" Sweetheart", category: "Tables", width: 48, height: 48, defaultSeats: 2, maximumSeats: 2, inventoryLabel: "48-inch sweetheart tables", physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: 48 }, resizable: false, inventoryOnly: true, icon: "heart" },
+  { type: "half-moon-table", name: "Half-Moon Table", shortLabel: "Half-Moon", category: "Tables", width: 48, height: 24, defaultSeats: 2, maximumSeats: 2, inventoryLabel: "half-moon tables", physicalDimensions: { status: "unconfigured", shape: "rectangle", widthInches: null, depthInches: null }, resizable: false, inventoryOnly: true, icon: "half-moon" },
   {
     type: "cocktail-table",
     name: "Cocktail Table",
@@ -104,9 +106,11 @@ export const TABLE_TYPES = new Set<EventObjectType>([
   "rectangle-table-8",
   "farmhouse-table-6",
   "farmhouse-table-8",
+  "sweetheart-table-32",
   "sweetheart-table-33",
   "sweetheart-table",
   "sweetheart-table-48",
+  "half-moon-table",
 ]);
 
 export function isGuestTable(type: EventObjectType) {

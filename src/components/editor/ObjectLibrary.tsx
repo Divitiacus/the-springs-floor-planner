@@ -1,6 +1,6 @@
 "use client";
 
-import { Armchair, Camera, Circle, Heart, LayoutGrid, Martini, Music2, RectangleHorizontal, Utensils } from "lucide-react";
+import { Armchair, Camera, Circle, Heart, LayoutGrid, Martini, Moon, Music2, RectangleHorizontal, Utensils } from "lucide-react";
 import type { EventObjectSelection, PhysicalObjectDimensions } from "@/domain/floorplan";
 import { describePhysicalDimensions, isObjectAvailableForInventory, OBJECT_CATALOG, type ObjectDefinition } from "@/domain/object-catalog";
 import type { InventoryConfiguration, InventoryUsage } from "@/domain/inventory";
@@ -11,6 +11,7 @@ const icons = {
   round: Circle,
   rectangle: RectangleHorizontal,
   heart: Heart,
+  "half-moon": Moon,
   music: Music2,
   bar: Martini,
   buffet: Utensils,
@@ -47,6 +48,7 @@ export function ObjectLibrary({ onAdd, inventory, usage }: Props) {
                 .filter((choice) => isObjectAvailableForInventory(choice.definition, inventory, choice.selection.variant))
                 .map((choice) => {
                   const Icon = icons[choice.definition.icon];
+                  const seatCount = inventory.defaultSeats?.[choice.definition.type] ?? choice.definition.defaultSeats;
                   return (
                     <button
                       key={choice.key}
@@ -66,8 +68,8 @@ export function ObjectLibrary({ onAdd, inventory, usage }: Props) {
                         <span className="mt-0.5 block text-[10px] text-[#8a958e]">
                           {choice.definition.type === "chair"
                             ? "1 seat · matches table-chair size"
-                            : choice.definition.defaultSeats
-                              ? `${choice.definition.defaultSeats} seats · ${describePhysicalDimensions(choice.physicalDimensions)}`
+                            : seatCount
+                              ? `${seatCount} seats · ${describePhysicalDimensions(choice.physicalDimensions)}`
                               : choice.definition.resizable
                                 ? "Resizable planning footprint"
                                 : describePhysicalDimensions(choice.physicalDimensions)}
@@ -128,9 +130,11 @@ function InventorySummary({ inventory, usage }: Pick<Props, "inventory" | "usage
     { type: "cocktail-table-white-wood" as const, label: "White Wood Cocktail", inventoryOnly: true },
     { type: "display-table-32" as const, label: '32" Wood Top', inventoryOnly: true },
     { type: "display-table-33" as const, label: '33" Display', inventoryOnly: true },
+    { type: "sweetheart-table-32" as const, label: '32" Sweetheart', inventoryOnly: true },
     { type: "sweetheart-table-33" as const, label: '33" Sweetheart', inventoryOnly: true },
     { type: "sweetheart-table" as const, label: '36" Sweetheart' },
     { type: "sweetheart-table-48" as const, label: '48" Sweetheart', inventoryOnly: true },
+    { type: "half-moon-table" as const, label: "Half-Moon", inventoryOnly: true },
     { type: "cocktail-table-32" as const, label: '32" Cocktail' },
     { type: "cocktail-table-36" as const, label: '36" Cocktail' },
     { type: "chairs" as const, label: "Chairs" },

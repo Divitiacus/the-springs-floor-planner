@@ -1,5 +1,5 @@
 import type { EventObject, EventObjectType, EventObjectVariant, FloorplanLayout } from "@/domain/floorplan";
-import { getObjectVariant, isGuestTable, OBJECT_DEFINITIONS } from "@/domain/object-catalog";
+import { getObjectVariant, isGuestTable, OBJECT_DEFINITIONS, TABLE_TYPES } from "@/domain/object-catalog";
 
 const now = () => new Date().toISOString();
 
@@ -20,6 +20,7 @@ export function createEventObject(
   existing: EventObject[] = [],
   id = crypto.randomUUID(),
   variant?: EventObjectVariant,
+  defaultSeats?: number,
 ): EventObject {
   const definition = OBJECT_DEFINITIONS[type];
   const variantDefinition = getObjectVariant(type, variant);
@@ -39,7 +40,7 @@ export function createEventObject(
     rotation: 0,
     label: isGuestTable(type) ? `Table ${tableNumber}` : variantDefinition?.shortLabel ?? definition.shortLabel,
     tableNumber,
-    seats: definition.defaultSeats,
+    seats: defaultSeats ?? definition.defaultSeats,
     zIndex: existing.length,
   };
 }
@@ -100,8 +101,8 @@ export function reorderObject(layout: FloorplanLayout, id: string, direction: "f
 export function getLayoutStats(layout: FloorplanLayout) {
   return layout.objects.reduce(
     (stats, object) => {
-      if (isGuestTable(object.type)) {
-        stats.guestTables += 1;
+      if (TABLE_TYPES.has(object.type)) {
+        if (isGuestTable(object.type)) stats.guestTables += 1;
         stats.seats += object.seats ?? 0;
       } else if (object.type === "chair") {
         stats.seats += object.seats ?? 1;

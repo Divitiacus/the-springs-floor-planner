@@ -215,6 +215,36 @@ describe("floorplan object operations", () => {
     });
   });
 
+  it("creates Tulsa's 32-inch sweetheart and half-moon tables with two seats", () => {
+    const sweetheart = createEventObject("sweetheart-table-32", { x: 0, y: 0 }, [], "sweetheart-32");
+    const halfMoon = createEventObject("half-moon-table", { x: 60, y: 0 }, [sweetheart], "half-moon");
+
+    expect(sweetheart).toMatchObject({
+      label: '32" Sweetheart',
+      width: 32,
+      height: 32,
+      seats: 2,
+      physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: 32 },
+    });
+    expect(halfMoon).toMatchObject({
+      label: "Half-Moon",
+      width: 48,
+      height: 24,
+      seats: 2,
+      physicalDimensions: { status: "unconfigured", shape: "rectangle" },
+    });
+  });
+
+  it("supports venue-specific default seats without changing global rectangle capacities", () => {
+    const sixFoot = createEventObject("rectangle-table-6", { x: 0, y: 0 }, [], "six-foot", undefined, 6);
+    const eightFoot = createEventObject("rectangle-table-8", { x: 100, y: 0 }, [sixFoot], "eight-foot", undefined, 8);
+
+    expect(sixFoot.seats).toBe(6);
+    expect(eightFoot.seats).toBe(8);
+    expect(OBJECT_DEFINITIONS["rectangle-table-6"].maximumSeats).toBe(8);
+    expect(OBJECT_DEFINITIONS["rectangle-table-8"].maximumSeats).toBe(10);
+  });
+
   it.each([
     ["32-round" as const, 32],
     ["36-round" as const, 36],
@@ -316,7 +346,7 @@ describe("floorplan object operations", () => {
     const sweetheart = createEventObject("sweetheart-table", { x: 0, y: 0 }, [table], "sweetheart");
     const chair = createEventObject("chair", { x: 120, y: 0 }, [table, sweetheart], "chair");
     const layout = addObject(addObject(addObject(createEmptyLayout(), table), sweetheart), chair);
-    expect(getLayoutStats(layout)).toEqual({ objectCount: 3, guestTables: 1, seats: 9 });
+    expect(getLayoutStats(layout)).toEqual({ objectCount: 3, guestTables: 1, seats: 11 });
   });
 });
 

@@ -332,7 +332,7 @@ describe("location catalog", () => {
     ["tulsa", "location_tulsa", "sunset-pointe", "hall_sunset_pointe", "Sunset Pointe", TULSA_INVENTORY, "sunset-pointe"],
     ["edmond", "location_edmond", "willowbrook-reserve", "hall_willowbrook_reserve", "Willowbrook Reserve", EDMOND_INVENTORY, "willowbrook-reserve"],
   ])(
-    "defines %s with an independent Stonecreek Reserve clone and Katy inventory",
+    "defines %s with an independent Stonecreek Reserve clone and configured inventory",
     (locationSlug, locationId, hallSlug, hallId, hallName, inventory, elementPrefix) => {
       const location = getLocationBySlug(locationSlug);
       const hall = getHallBySlug(location, hallSlug);
@@ -340,8 +340,8 @@ describe("location catalog", () => {
 
       expect(location).toMatchObject({ id: locationId, slug: locationSlug });
       expect(hall).toMatchObject({ id: hallId, slug: hallSlug, name: hallName });
-      expect(inventory).toMatchObject({ scope: "hall", limits: KATY_INVENTORY.limits });
-      expect(resolveInventoryConfiguration(location, hall)).toEqual(KATY_INVENTORY.limits);
+      expect(inventory).toMatchObject({ scope: "hall" });
+      expect(resolveInventoryConfiguration(location, hall)).toEqual(inventory.limits);
 
       const configuration = singleLevel(hall.configuration);
       expect(configuration).toMatchObject({
@@ -360,6 +360,27 @@ describe("location catalog", () => {
       expect(configuration.floorplanAsset).toBeNull();
     },
   );
+
+  it("uses Sunset Pointe's confirmed Tulsa table counts and side-only rectangle seating", () => {
+    const location = getLocationBySlug("tulsa");
+    const hall = getHallBySlug(location, "sunset-pointe");
+    if (!location || !hall) throw new Error("Sunset Pointe configuration missing");
+
+    expect(resolveInventoryConfiguration(location, hall)).toEqual({
+      "round-table-60": 40,
+      "rectangle-table-6": 10,
+      "rectangle-table-8": 8,
+      "parson-table-7": 6,
+      "sweetheart-table-32": 2,
+      "half-moon-table": 1,
+      "cocktail-table-32": 8,
+      chairs: 320,
+      defaultSeats: {
+        "rectangle-table-6": 6,
+        "rectangle-table-8": 8,
+      },
+    });
+  });
 
   it("defines McKinney Havenstone Reserve with the Villa Tuscana footprint and inventory", () => {
     const location = getLocationBySlug("mckinney");
