@@ -473,6 +473,7 @@ describe("location catalog", () => {
       swingDirection: "clockwise",
     });
     expect(upstairs.fixedArchitecturalElements.find((element) => element.id === "parker-manor-upstairs-fireplace")).toMatchObject({ shape: { x: 772, y: 427, width: 43 } });
+    expect(upstairs.fixedArchitecturalElements.find((element) => element.id === "parker-manor-upstairs-pillar-3")).toMatchObject({ shape: { x: 129, y: 300 } });
     expect(upstairs.fixedArchitecturalElements.find((element) => element.id === "parker-manor-upstairs-pillar-4")).toMatchObject({ shape: { x: 763, y: 300 } });
     expect(upstairs.fixedArchitecturalElements.filter((element) => element.kind === "stairs")).toHaveLength(3);
     expect(upstairs.fixedArchitecturalElements.some((element) => element.id.includes("buffet") || element.id.includes("bar"))).toBe(false);

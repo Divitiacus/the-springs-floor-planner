@@ -17,7 +17,7 @@ const STAIR_NOTCH_TOP = 415;
 const STAIR_NOTCH_BOTTOM = 529;
 const FIREPLACE_Y = (STAIR_NOTCH_TOP + STAIR_NOTCH_BOTTOM) / 2 - 45;
 const MANTLE_Y = FIREPLACE_Y - 1;
-const UPPER_RIGHT_PILLAR_Y = 300;
+const UPPER_SIDE_PILLAR_Y = 300;
 const SERVICE_RIGHT = OPENING_LEFT - 10;
 
 type Common = { fixed: true; measurementStatus: "source-traced" };
@@ -154,7 +154,7 @@ function createAlignedStaircase(common: Common, level: "downstairs" | "upstairs"
 function createPillars(common: Common, idPrefix: string): FixedArchitectureElement[] {
   const positions = [
     [285, OPENING_TOP - 9], [575, OPENING_TOP - 9],
-    [OPENING_LEFT - 9, 430], [OPENING_RIGHT - 9, UPPER_RIGHT_PILLAR_Y],
+    [OPENING_LEFT - 9, UPPER_SIDE_PILLAR_Y], [OPENING_RIGHT - 9, UPPER_SIDE_PILLAR_Y],
     [OPENING_LEFT - 9, 650], [OPENING_RIGHT - 9, 650],
     [285, OPENING_BOTTOM - 9], [575, OPENING_BOTTOM - 9],
   ];
