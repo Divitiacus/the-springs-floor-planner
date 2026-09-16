@@ -5,6 +5,7 @@ import type {
   VenueFloorRegion,
 } from "@/domain/floorplan";
 import type { InventoryCatalog, InventoryConfiguration } from "@/domain/inventory";
+import { createHavenstoneReserveConfiguration } from "@/domain/venues/havenstone-reserve";
 import { createHeritagePineConfiguration } from "@/domain/venues/heritage-pine";
 import { createHiddenMagnoliaConfiguration } from "@/domain/venues/hidden-magnolia";
 import { createHiddenSpringsRanchConfiguration } from "@/domain/venues/hidden-springs-ranch";
@@ -159,6 +160,15 @@ export const DENTON_INVENTORY: InventoryCatalog = {
   source: {
     fileName: "user-confirmed",
     note: "Hidden Springs Ranch table quantities are user-confirmed; its previously confirmed guest capacity remains 320.",
+  },
+};
+
+export const MCKINNEY_INVENTORY: InventoryCatalog = {
+  scope: "hall",
+  limits: { ...KATY_INVENTORY.limits },
+  source: {
+    fileName: "user-confirmed",
+    note: "Havenstone Reserve matches Villa Tuscana's table inventory and 320-chair guest capacity.",
   },
 };
 
@@ -451,6 +461,22 @@ export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
         configuration: {
           ...createValleyViewConfiguration(),
           inventory: VALLEY_VIEW_INVENTORY,
+        },
+      },
+    ],
+  },
+  {
+    id: "location_mckinney",
+    slug: "mckinney",
+    name: "McKinney",
+    halls: [
+      {
+        id: "hall_havenstone_reserve",
+        slug: "havenstone-reserve",
+        name: "Havenstone Reserve",
+        configuration: {
+          ...createHavenstoneReserveConfiguration(),
+          inventory: MCKINNEY_INVENTORY,
         },
       },
     ],

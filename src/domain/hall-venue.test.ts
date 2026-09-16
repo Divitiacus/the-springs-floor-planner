@@ -103,6 +103,21 @@ describe("hall venue template", () => {
     expect(venue.elements.length).toBeGreaterThan(20);
   });
 
+  it("loads McKinney's Havenstone Reserve with the Villa Tuscana footprint and its own identity", () => {
+    const location = getLocationBySlug("mckinney");
+    const hall = getHallBySlug(location, "havenstone-reserve");
+    if (!location || !hall) throw new Error("Havenstone Reserve catalog entry missing");
+
+    const venue = createHallVenueTemplate(location, hall);
+
+    expect(venue.id).toBe("location_mckinney:hall_havenstone_reserve");
+    expect(venue.name).toBe("McKinney · Havenstone Reserve");
+    expect(venue.hall).toEqual({ x: 169, y: 60, width: 960, height: 720 });
+    expect(venue.referenceAsset).toBeNull();
+    expect(venue.elements.length).toBeGreaterThan(20);
+    expect(venue.elements.every((element) => element.id.startsWith("havenstone-reserve"))).toBe(true);
+  });
+
   it("loads Denton's Oakview Lodge at the confirmed 111-foot-4-inch room length", () => {
     const location = getLocationBySlug("denton");
     const hall = getHallBySlug(location, "oakview-lodge");

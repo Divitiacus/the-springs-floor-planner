@@ -11,6 +11,7 @@ import {
   LAKE_CONROE_INVENTORY,
   MAGNOLIA_INVENTORY,
   MAGNOLIA_MANOR_INVENTORY,
+  MCKINNEY_INVENTORY,
   ROCKWALL_INVENTORY,
   isMultiLevelHallConfiguration,
   resolveInventoryConfiguration,
@@ -25,7 +26,7 @@ import {
 
 describe("location catalog", () => {
   it("defines Magnolia with exactly its two confirmed halls", () => {
-    expect(SPRINGS_LOCATIONS).toHaveLength(10);
+    expect(SPRINGS_LOCATIONS).toHaveLength(11);
     expect(SPRINGS_LOCATIONS[0]).toMatchObject({ name: "Magnolia", slug: "magnolia" });
     expect(SPRINGS_LOCATIONS[0].halls.map((hall) => hall.name)).toEqual([
       "Pinehaven Terrace",
@@ -319,6 +320,40 @@ describe("location catalog", () => {
       slug: "oakview-lodge",
       name: "Oakview Lodge",
     });
+  });
+
+  it("defines McKinney Havenstone Reserve with the Villa Tuscana footprint and inventory", () => {
+    const location = getLocationBySlug("mckinney");
+    const hall = getHallBySlug(location, "havenstone-reserve");
+    if (!location || !hall?.configuration) throw new Error("McKinney Havenstone Reserve configuration missing");
+
+    expect(location).toMatchObject({ id: "location_mckinney", slug: "mckinney", name: "McKinney" });
+    expect(hall).toMatchObject({
+      id: "hall_havenstone_reserve",
+      slug: "havenstone-reserve",
+      name: "Havenstone Reserve",
+    });
+    expect(MCKINNEY_INVENTORY).toMatchObject({
+      scope: "hall",
+      limits: KATY_INVENTORY.limits,
+    });
+    expect(resolveInventoryConfiguration(location, hall)).toEqual(KATY_INVENTORY.limits);
+
+    const configuration = singleLevel(hall.configuration);
+    expect(configuration).toMatchObject({
+      physicalWidthInches: 1320,
+      physicalHeightInches: 840,
+      physicalDimensionStatus: "source-traced",
+    });
+    expect(configuration.fixedArchitecturalElements.find((element) => element.id === "havenstone-reserve-main-floor")).toMatchObject({
+      kind: "area",
+      role: "main-floor",
+      measurementStatus: "confirmed",
+      shape: { type: "rectangle", x: 169, y: 60, width: 960, height: 720 },
+    });
+    expect(configuration.fixedArchitecturalElements.every((element) => element.id.startsWith("havenstone-reserve"))).toBe(true);
+    expect(configuration.fixedArchitecturalElements.some((element) => element.id.includes("villa-tuscana"))).toBe(false);
+    expect(configuration.floorplanAsset).toBeNull();
   });
 
   it("defines Valley View with its traced floor shape and supplied table inventory", () => {
