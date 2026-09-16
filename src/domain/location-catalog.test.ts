@@ -366,6 +366,21 @@ describe("location catalog", () => {
       shape: { type: "rectangle", x: 764, y: 763, width: 557, height: 298 },
     });
     expect(configuration.fixedArchitecturalElements.filter((element) => element.kind === "area" && element.role === "pillar")).toHaveLength(4);
+    expect(configuration.fixedArchitecturalElements.filter((element) => element.id.startsWith("valley-view-suite-fixture-"))).toHaveLength(6);
+    expect(configuration.fixedArchitecturalElements.find((element) => element.id === "valley-view-suite-fixture-6")).toMatchObject({
+      kind: "path",
+      data: "M 635 289 H 747 V 322 H 635 Z",
+    });
+    expect(configuration.fixedArchitecturalElements.find((element) => element.id === "valley-view-suite-platform")).toMatchObject({
+      kind: "path",
+      label: "Fixed platform",
+      fill: "#fffdfa",
+    });
+    expect(configuration.fixedArchitecturalElements.find((element) => element.id === "valley-view-upper-stair-landing")).toMatchObject({
+      kind: "path",
+      data: "M 381 351 H 431 V 467 H 381 Z",
+    });
+    expect(configuration.fixedArchitecturalElements.some((element) => element.label.toLowerCase().includes("chapel"))).toBe(false);
     expect(configuration.fixedArchitecturalElements.every((element) => element.id.startsWith("valley-view"))).toBe(true);
     expect(configuration.floorplanAsset).toBeNull();
   });
