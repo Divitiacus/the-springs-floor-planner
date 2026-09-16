@@ -63,9 +63,9 @@ function createUsableAreas(): VenueFloorRegion[] {
 
 function createSuiteAccessFixtures(common: Common): FixedArchitectureElement[] {
   const fixtures = [
-    [635, 50, 77, 42],
+    [575, 50, 77, 42],
     [528, 137, 34, 76],
-    [574, 152, 78, 42],
+    [586, 152, 78, 42],
     [686, 137, 34, 76],
     [570, 230, 93, 42],
     [635, 289, 112, 33],

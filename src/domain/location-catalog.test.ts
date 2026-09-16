@@ -370,11 +370,11 @@ describe("location catalog", () => {
     expect(configuration.fixedArchitecturalElements.filter((element) => element.id.startsWith("valley-view-suite-fixture-"))).toHaveLength(6);
     expect(configuration.fixedArchitecturalElements.find((element) => element.id === "valley-view-suite-fixture-1")).toMatchObject({
       kind: "path",
-      data: "M 635 50 H 712 V 92 H 635 Z",
+      data: "M 575 50 H 652 V 92 H 575 Z",
     });
     expect(configuration.fixedArchitecturalElements.find((element) => element.id === "valley-view-suite-fixture-3")).toMatchObject({
       kind: "path",
-      data: "M 574 152 H 652 V 194 H 574 Z",
+      data: "M 586 152 H 664 V 194 H 586 Z",
     });
     expect(configuration.fixedArchitecturalElements.find((element) => element.id === "valley-view-suite-fixture-6")).toMatchObject({
       kind: "path",
