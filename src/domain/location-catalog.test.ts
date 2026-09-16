@@ -402,7 +402,7 @@ describe("location catalog", () => {
     expect(downstairs.voidAreas).toEqual([]);
     expect(downstairs.fixedArchitecturalElements.find((element) => element.id === "parker-manor-buffet")).toMatchObject({ shape: { x: 134, y: 134, width: 36, height: 192 } });
     expect(downstairs.fixedArchitecturalElements.find((element) => element.id === "parker-manor-bar")).toMatchObject({ shape: { x: 128, y: 641, width: 48, height: 168 } });
-    expect(downstairs.fixedArchitecturalElements.find((element) => element.id === "parker-manor-balcony-overhang")).toMatchObject({ kind: "path", dash: [12, 8] });
+    expect(downstairs.fixedArchitecturalElements.some((element) => element.id === "parker-manor-balcony-overhang")).toBe(false);
     expect(downstairs.fixedArchitecturalElements.find((element) => element.id === "parker-manor-mantle")).toMatchObject({ shape: { x: 758, width: 14, height: 92 } });
     expect(downstairs.fixedArchitecturalElements.find((element) => element.id === "parker-manor-fireplace")).toMatchObject({ shape: { x: 772, y: 466, width: 43, height: 90 } });
     expect(downstairs.fixedArchitecturalElements.filter((element) => element.kind === "stairs")).toHaveLength(3);

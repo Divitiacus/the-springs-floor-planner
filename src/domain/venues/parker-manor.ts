@@ -30,7 +30,7 @@ export function createParkerManorConfiguration(): HallConfiguration {
       physicalHeightInches: CANVAS_HEIGHT,
       physicalDimensionStatus: "source-traced",
       physicalDimensionNote:
-        "Parker Manor has one confirmed 67′6″ square exterior footprint. Level 1 is a continuous walkable reception floor. The dashed interior outline is only the projection of the balcony above; it is not a wall or opening.",
+        "Parker Manor has one confirmed 67′6″ square exterior footprint. Level 1 is a continuous walkable reception floor.",
       planningBounds: { x: HALL_X, y: HALL_Y, width: HALL_SIZE, height: HALL_SIZE },
       defaultObjectPosition: { x: 455, y: 520 },
       usableAreas: createDownstairsUsableAreas(),
@@ -67,7 +67,6 @@ function createDownstairsElements(common: Common): FixedArchitectureElement[] {
     areaWithNote(common, "parker-manor-mantle", "fireplace", "MANTLE · 7′8″", OPENING_RIGHT - 14, 465, 14, 92, "blocked", "confirmed", "Mantle is 14 inches deep, 7 feet 8 inches wide, and 7 feet from the floor. It is centered on the east edge of the upper-floor projection opposite the west stair group."),
     areaWithNote(common, "parker-manor-fireplace", "fireplace", "FIREPLACE", OPENING_RIGHT, 466, 43, 90, "blocked", "confirmed", "The fireplace projection is shown as 3′7″ by 7′6″. It is centered beneath the east edge of the upper floor, opposite the west stair group and away from the exterior wall."),
     ...createPillars(common, "parker-manor-downstairs-pillar"),
-    overheadPath(common, "parker-manor-balcony-overhang", openingOutlinePath()),
     ...createHallWalls(common, "downstairs"),
     ...createDownstairsDoors(common),
     label(common, "parker-manor-downstairs-label", "LEVEL 1 · DOWNSTAIRS", 285, 105, 340, 15),
@@ -201,10 +200,6 @@ function createUpstairsDoors(common: Common): FixedArchitectureElement[] {
   ];
 }
 
-function openingOutlinePath() {
-  return `M ${OPENING_LEFT} ${OPENING_TOP} L ${OPENING_RIGHT} ${OPENING_TOP} L ${OPENING_RIGHT} ${OPENING_BOTTOM} L ${OPENING_LEFT} ${OPENING_BOTTOM} Z`;
-}
-
 function area(common: Common, id: string, role: Extract<FixedArchitectureElement, { kind: "area" }>["role"], areaLabel: string, x: number, y: number, width: number, height: number, placementBehavior: Extract<FixedArchitectureElement, { kind: "area" }>["placementBehavior"], measurementStatus: Extract<FixedArchitectureElement, { kind: "area" }>["measurementStatus"] = "source-traced"): Extract<FixedArchitectureElement, { kind: "area" }> {
   return { ...common, id, kind: "area", role, label: areaLabel, placementBehavior, measurementStatus, elevation: "floor", shape: { type: "rectangle", x, y, width, height } };
 }
@@ -223,10 +218,6 @@ function wall(common: Common, id: string, points: number[]): FixedArchitectureEl
 
 function railing(common: Common, id: string, points: number[]): FixedArchitectureElement {
   return { ...common, id, kind: "railing", label: "Fixed balcony railing", placementBehavior: "blocked", points };
-}
-
-function overheadPath(common: Common, id: string, data: string): FixedArchitectureElement {
-  return { ...common, id, kind: "path", label: "Balcony Above", placementBehavior: "restricted", data, stroke: "#718078", strokeWidth: 2, dash: [12, 8], opacity: 0.85 };
 }
 
 function stairs(common: Common, id: string, stairLabel: string, x: number, y: number, width: number, height: number, orientation: "horizontal" | "vertical", treadCount: number, treadAxis: "x" | "y", physicalNote: string): FixedArchitectureElement {
