@@ -11,7 +11,8 @@ const OPENING_LEFT = 138;
 const OPENING_RIGHT = 772;
 const OPENING_TOP = 219;
 const OPENING_BOTTOM = 802;
-const STAIR_NOTCH_RIGHT = 188;
+const STAIR_GROUP_X = 128;
+const STAIR_NOTCH_RIGHT = STAIR_GROUP_X + 138;
 const STAIR_NOTCH_TOP = 415;
 const STAIR_NOTCH_BOTTOM = 529;
 
@@ -60,11 +61,11 @@ export function createParkerManorConfiguration(): HallConfiguration {
 
 function createDownstairsElements(common: Common): FixedArchitectureElement[] {
   return [
-    areaWithNote(common, "parker-manor-buffet", "buffet", "BUFFET · 16′ × 3′", OPENING_LEFT - 36, 120, 36, 192, "blocked", "confirmed", "The supplied downstairs plan confirms a 16-foot length and 3-foot depth. User correction places the freestanding buffet beneath the west edge of the upper floor, not against the exterior wall."),
-    areaWithNote(common, "parker-manor-bar", "bar", "BAR · 14′ × 4′", OPENING_LEFT - 48, 700, 48, 168, "blocked", "confirmed", "The supplied downstairs plan confirms a 14-foot length and 4-foot depth. User correction places the freestanding bar beneath the west edge of the upper floor, not against the exterior wall."),
+    areaWithNote(common, "parker-manor-buffet", "buffet", "BUFFET · 16′ × 3′", 134, 134, 36, 192, "blocked", "confirmed", "The supplied downstairs plan confirms a 16-foot length and 3-foot depth. Its placement follows Magnolia Manor's service-and-stair group rotated 90 degrees counterclockwise, with the buffet above the west-side stairs."),
+    areaWithNote(common, "parker-manor-bar", "bar", "BAR · 14′ × 4′", 128, 641, 48, 168, "blocked", "confirmed", "The supplied downstairs plan confirms a 14-foot length and 4-foot depth. Its placement follows Magnolia Manor's service-and-stair group rotated 90 degrees counterclockwise, with the bar below the west-side stairs."),
     ...createAlignedStaircase(common, "downstairs"),
-    areaWithNote(common, "parker-manor-mantle", "fireplace", "MANTLE · 7′8″", OPENING_RIGHT - 14, 389, 14, 92, "blocked", "confirmed", "Mantle is 14 inches deep, 7 feet 8 inches wide, and 7 feet from the floor. It aligns to the east edge of the upper-floor projection."),
-    areaWithNote(common, "parker-manor-fireplace", "fireplace", "FIREPLACE", OPENING_RIGHT, 390, 43, 90, "blocked", "confirmed", "The fireplace projection is shown as 3′7″ by 7′6″. User correction places it beneath the east edge of the upper floor, away from the exterior wall."),
+    areaWithNote(common, "parker-manor-mantle", "fireplace", "MANTLE · 7′8″", OPENING_RIGHT - 14, 465, 14, 92, "blocked", "confirmed", "Mantle is 14 inches deep, 7 feet 8 inches wide, and 7 feet from the floor. It is centered on the east edge of the upper-floor projection opposite the west stair group."),
+    areaWithNote(common, "parker-manor-fireplace", "fireplace", "FIREPLACE", OPENING_RIGHT, 466, 43, 90, "blocked", "confirmed", "The fireplace projection is shown as 3′7″ by 7′6″. It is centered beneath the east edge of the upper floor, opposite the west stair group and away from the exterior wall."),
     ...createPillars(common, "parker-manor-downstairs-pillar"),
     overheadPath(common, "parker-manor-balcony-overhang", openingOutlinePath()),
     ...createHallWalls(common, "downstairs"),
@@ -81,7 +82,7 @@ function createUpstairsElements(common: Common): FixedArchitectureElement[] {
     areaWithoutLabel(common, "parker-manor-full-balcony", "porch", "Full Exterior Balcony", HALL_X, 8, HALL_SIZE, 72, "restricted"),
     areaWithoutLabel(common, "parker-manor-juliet-balcony", "porch", "Juliet Balcony", HALL_X, HALL_Y + HALL_SIZE, HALL_SIZE, 72, "restricted"),
     ...createAlignedStaircase(common, "upstairs"),
-    areaWithNote(common, "parker-manor-upstairs-fireplace", "fireplace", "FIREPLACE", OPENING_RIGHT, 390, 43, 90, "blocked", "confirmed", "The upstairs drawing places the fireplace projection at the east edge of the central opening, not against the exterior wall."),
+    areaWithNote(common, "parker-manor-upstairs-fireplace", "fireplace", "FIREPLACE", OPENING_RIGHT, 466, 43, 90, "blocked", "confirmed", "The upstairs drawing centers the fireplace projection on the east edge of the central opening, opposite the west stair group."),
     ...createPillars(common, "parker-manor-upstairs-pillar"),
     ...createHallWalls(common, "upstairs"),
     ...createOpeningRails(common),
@@ -139,20 +140,25 @@ function createUpstairsVoidAreas(): VenueFloorRegion[] {
 function createAlignedStaircase(common: Common, level: "downstairs" | "upstairs"): FixedArchitectureElement[] {
   const note = "One west-side staircase connects both levels. Its confirmed overall envelope is 11′6″ × 23′1″; its three-flight form follows the Manor stair arrangement and the source-labeled 8′2″ and 10′2″ internal spans.";
   return [
-    areaWithNote(common, `parker-manor-${level}-stairs-landing`, "landing", "STAIR LANDING", 54, 432, 50, 81, "blocked", "source-traced", note),
-    stairs(common, `parker-manor-${level}-stairs-north-flight`, "North Stair Flight", 54, 334, 50, 98, "vertical", 8, "y", note),
-    stairs(common, `parker-manor-${level}-stairs-south-flight`, "South Stair Flight", 54, 513, 50, 98, "vertical", 8, "y", note),
-    stairs(common, `parker-manor-${level}-stairs-east-flight`, "Center Stair Flight", 104, STAIR_NOTCH_TOP, 84, STAIR_NOTCH_BOTTOM - STAIR_NOTCH_TOP, "horizontal", 9, "x", note),
-    railing(common, `parker-manor-${level}-stairs-west-rail`, [50, 342, 50, 603]),
-    railing(common, `parker-manor-${level}-stairs-north-rail`, [104, 334, 104, STAIR_NOTCH_TOP]),
-    railing(common, `parker-manor-${level}-stairs-south-rail`, [104, STAIR_NOTCH_BOTTOM, 104, 611]),
-    railing(common, `parker-manor-${level}-stairs-east-upper-rail`, [104, STAIR_NOTCH_TOP, STAIR_NOTCH_RIGHT, STAIR_NOTCH_TOP]),
-    railing(common, `parker-manor-${level}-stairs-east-lower-rail`, [104, STAIR_NOTCH_BOTTOM, STAIR_NOTCH_RIGHT, STAIR_NOTCH_BOTTOM]),
+    areaWithNote(common, `parker-manor-${level}-stairs-landing`, "landing", "STAIR LANDING", STAIR_GROUP_X + 4, 432, 50, 81, "blocked", "source-traced", note),
+    stairs(common, `parker-manor-${level}-stairs-north-flight`, "North Stair Flight", STAIR_GROUP_X + 4, 334, 50, 98, "vertical", 8, "y", note),
+    stairs(common, `parker-manor-${level}-stairs-south-flight`, "South Stair Flight", STAIR_GROUP_X + 4, 513, 50, 98, "vertical", 8, "y", note),
+    stairs(common, `parker-manor-${level}-stairs-east-flight`, "Center Stair Flight", STAIR_GROUP_X + 54, STAIR_NOTCH_TOP, 84, STAIR_NOTCH_BOTTOM - STAIR_NOTCH_TOP, "horizontal", 9, "x", note),
+    railing(common, `parker-manor-${level}-stairs-west-rail`, [STAIR_GROUP_X, 342, STAIR_GROUP_X, 603]),
+    railing(common, `parker-manor-${level}-stairs-north-rail`, [STAIR_GROUP_X + 54, 334, STAIR_GROUP_X + 54, STAIR_NOTCH_TOP]),
+    railing(common, `parker-manor-${level}-stairs-south-rail`, [STAIR_GROUP_X + 54, STAIR_NOTCH_BOTTOM, STAIR_GROUP_X + 54, 611]),
+    railing(common, `parker-manor-${level}-stairs-east-upper-rail`, [STAIR_GROUP_X + 54, STAIR_NOTCH_TOP, STAIR_NOTCH_RIGHT, STAIR_NOTCH_TOP]),
+    railing(common, `parker-manor-${level}-stairs-east-lower-rail`, [STAIR_GROUP_X + 54, STAIR_NOTCH_BOTTOM, STAIR_NOTCH_RIGHT, STAIR_NOTCH_BOTTOM]),
   ];
 }
 
 function createPillars(common: Common, idPrefix: string): FixedArchitectureElement[] {
-  const positions = [[170, 258], [690, 258], [170, 430], [690, 430], [170, 650], [690, 650], [285, 780], [575, 780]];
+  const positions = [
+    [285, OPENING_TOP - 9], [575, OPENING_TOP - 9],
+    [OPENING_LEFT - 9, 430], [OPENING_RIGHT - 9, 430],
+    [OPENING_LEFT - 9, 650], [OPENING_RIGHT - 9, 650],
+    [285, OPENING_BOTTOM - 9], [575, OPENING_BOTTOM - 9],
+  ];
   return positions.map(([x, y], index) =>
     areaWithNote(common, `${idPrefix}-${index + 1}`, "pillar", "Pillar", x, y, 18, 18, "blocked", "source-traced", "Pillar footprint is source-traced. The supplied downstairs plan confirms 24′2″ between the paired interior pillars and 10 feet to the east wall."),
   );
