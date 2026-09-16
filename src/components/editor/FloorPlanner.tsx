@@ -202,7 +202,7 @@ export function FloorPlanner({ venue, levelVenues, locationName, inventory }: Pr
   }
 
   return (
-    <main className="floor-planner-shell flex h-screen min-h-[720px] flex-col overflow-hidden bg-[#f6f4ef]">
+    <main className={`floor-planner-shell floor-planner-view-${workspaceView} flex h-screen min-h-[720px] flex-col overflow-hidden bg-[#f6f4ef]`}>
       <header className="floor-planner-header flex h-[72px] shrink-0 items-center justify-between border-b border-[#dce2dd] bg-[#fffefa] px-5">
         <div className="flex items-center gap-4">
           <Link
@@ -312,7 +312,14 @@ export function FloorPlanner({ venue, levelVenues, locationName, inventory }: Pr
 
       {workspaceView === "guest-list" ? (
         <div className="floor-planner-workspace flex min-h-0 flex-1">
-          <GuestListSheet objects={editor.layout.objects} servicePlan={servicePlan} onUpdateGuest={editor.updateGuest} />
+          <GuestListSheet
+            objects={editor.layout.objects}
+            servicePlan={servicePlan}
+            eventName={editor.layout.name}
+            venueName={`${locationName} · ${venue.name}`}
+            onPrint={printPlan}
+            onUpdateGuest={editor.updateGuest}
+          />
         </div>
       ) : (
       <div className="floor-planner-workspace grid min-h-0 flex-1 grid-cols-[258px_minmax(520px,1fr)_292px]">

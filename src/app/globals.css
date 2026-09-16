@@ -127,4 +127,80 @@ input:focus-visible {
   .canvas-grid {
     background: white !important;
   }
+
+  .floor-planner-view-guest-list {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .floor-planner-view-guest-list .floor-planner-header,
+  .floor-planner-view-guest-list nav,
+  .floor-planner-view-guest-list .guest-list-export-actions,
+  .floor-planner-view-guest-list .guest-list-row-empty {
+    display: none !important;
+  }
+
+  .floor-planner-view-guest-list .floor-planner-workspace,
+  .floor-planner-view-guest-list .guest-list-sheet,
+  .floor-planner-view-guest-list .guest-list-scroll {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+
+  .floor-planner-view-guest-list .guest-list-header {
+    padding: 0 0 0.18in !important;
+  }
+
+  .floor-planner-view-guest-list .guest-list-header > div:last-child {
+    align-items: flex-start !important;
+  }
+
+  .floor-planner-view-guest-list .guest-list-print-title {
+    display: block !important;
+    margin-top: 0.06in;
+    color: #53675b;
+    font-size: 10pt;
+    font-weight: 600;
+  }
+
+  .floor-planner-view-guest-list .guest-list-scroll {
+    padding: 0 !important;
+  }
+
+  .floor-planner-view-guest-list .guest-list-scroll > div {
+    max-width: none !important;
+    overflow: visible !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .floor-planner-view-guest-list table {
+    font-size: 9pt;
+  }
+
+  .floor-planner-view-guest-list thead {
+    display: table-header-group !important;
+    position: static !important;
+  }
+
+  .floor-planner-view-guest-list tr {
+    break-inside: avoid;
+  }
+
+  .floor-planner-view-guest-list input::placeholder {
+    color: transparent !important;
+  }
+
+  .floor-planner-view-guest-list .guest-list-no-alcohol-control > input,
+  .floor-planner-view-guest-list .guest-list-no-alcohol-control > span[aria-hidden="true"] {
+    display: none !important;
+  }
+
+  .floor-planner-view-guest-list .guest-list-no-alcohol-print {
+    display: inline !important;
+    color: #327b94;
+    font-size: 8pt;
+    font-weight: 800;
+  }
 }

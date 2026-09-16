@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
-import { ClipboardList, Users } from "lucide-react";
+import { ClipboardList, Download, Printer, Users } from "lucide-react";
 import type { EventObject } from "@/domain/floorplan";
+import { hasGuestDetails, serializeGuestListCsv } from "@/domain/guest-list-export";
 import type { ServicePlan } from "@/domain/service-markers";
 import { DEFAULT_SEAT_COLOR, getSeatServiceColor, NO_ALCOHOL_COLOR } from "@/domain/service-markers";
 import { ServiceLegend } from "@/components/editor/ServiceLegend";
@@ -12,6 +13,9 @@ type GuestPatch = { name?: string; meal?: string; role?: string; noAlcohol?: boo
 type Props = {
   objects: readonly EventObject[];
   servicePlan: ServicePlan;
+  eventName: string;
+  venueName: string;
+  onPrint: () => void;
   onUpdateGuest: (objectId: string, seatIndex: number, patch: GuestPatch) => void;
 };
 
@@ -29,25 +33,56 @@ type GuestRow = {
   sortOrder: number;
 };
 
-export function GuestListSheet({ objects, servicePlan, onUpdateGuest }: Props) {
+export function GuestListSheet({ objects, servicePlan, eventName, venueName, onPrint, onUpdateGuest }: Props) {
   const rows = useMemo(() => buildGuestRows(objects, servicePlan), [objects, servicePlan]);
   const namedGuests = rows.filter((row) => row.name.trim()).length;
   const noAlcoholGuests = rows.filter((row) => row.noAlcohol).length;
 
+  const exportCsv = () => {
+    const csv = serializeGuestListCsv(rows.map((row) => ({
+      tableLabel: row.tableLabel,
+      displaySeatNumber: row.displaySeatNumber,
+      name: row.name,
+      serviceNote: row.meal,
+      role: row.role,
+      noAlcohol: row.noAlcohol,
+    })));
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${fileSlug(eventName || "event")}-${fileSlug(venueName)}-guest-list.csv`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
+  };
+
   return (
     <section className="guest-list-sheet flex min-h-0 flex-1 flex-col bg-[#f7f6f1]">
-      <header className="flex shrink-0 items-center justify-between border-b border-[#dce2dd] bg-[#fffefa] px-7 py-5">
+      <header className="guest-list-header flex shrink-0 items-center justify-between gap-5 border-b border-[#dce2dd] bg-[#fffefa] px-7 py-5">
         <div>
           <div className="flex items-center gap-2 text-[#294f3d]">
             <ClipboardList size={20} />
             <h2 className="font-serif text-2xl font-semibold">Guest List</h2>
           </div>
           <p className="mt-1 text-xs text-[#748078]">Keep the common service blank or repeated. Exceptions receive consistent colors automatically.</p>
+          <p className="guest-list-print-title hidden">{eventName || "Event guest list"} · {venueName}</p>
         </div>
-        <div className="flex gap-2">
-          <SummaryBadge label="Seats" value={rows.length} />
-          <SummaryBadge label="Named" value={namedGuests} />
-          <SummaryBadge label="No alcohol" value={noAlcoholGuests} />
+        <div className="flex items-center gap-3">
+          <div className="guest-list-export-actions flex gap-2">
+            <button type="button" className="inline-flex h-9 items-center gap-2 rounded-lg border border-[#cad5ce] bg-white px-3 text-xs font-bold text-[#3c5949] shadow-sm hover:bg-[#f1f5f2]" onClick={exportCsv}>
+              <Download size={14} /> Export CSV
+            </button>
+            <button type="button" className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#294f3d] px-3 text-xs font-bold text-white shadow-sm hover:bg-[#1f4031]" onClick={onPrint}>
+              <Printer size={14} /> Print / PDF
+            </button>
+          </div>
+          <div className="guest-list-summary flex gap-2">
+            <SummaryBadge label="Seats" value={rows.length} />
+            <SummaryBadge label="Named" value={namedGuests} />
+            <SummaryBadge label="No alcohol" value={noAlcoholGuests} />
+          </div>
         </div>
       </header>
 
@@ -57,7 +92,7 @@ export function GuestListSheet({ objects, servicePlan, onUpdateGuest }: Props) {
         </div>
       ) : null}
 
-      <div className="subtle-scrollbar min-h-0 flex-1 overflow-auto p-6">
+      <div className="guest-list-scroll subtle-scrollbar min-h-0 flex-1 overflow-auto p-6">
         {rows.length ? (
           <div className="mx-auto max-w-7xl overflow-hidden rounded-xl border border-[#d8dfda] bg-white shadow-sm">
             <table className="w-full table-fixed border-collapse text-left">
@@ -72,7 +107,7 @@ export function GuestListSheet({ objects, servicePlan, onUpdateGuest }: Props) {
               </thead>
               <tbody>
                 {rows.map((row, rowIndex) => (
-                  <tr key={`${row.objectId}:${row.seatIndex}`} className={rowIndex % 2 ? "bg-[#fbfcfa]" : "bg-white"}>
+                  <tr key={`${row.objectId}:${row.seatIndex}`} className={`${rowIndex % 2 ? "bg-[#fbfcfa]" : "bg-white"} ${hasGuestDetails({ name: row.name, serviceNote: row.meal, role: row.role, noAlcohol: row.noAlcohol }) ? "" : "guest-list-row-empty"}`}>
                     <td className="border-t border-[#e2e7e3] px-4 py-2.5 align-middle">
                       <span className="block text-sm font-bold text-[#31473b]">{row.tableNumber ? `Table ${row.tableNumber}` : row.tableLabel}</span>
                       <span className="mt-0.5 block text-[10px] text-[#8a958e]">Seat {row.displaySeatNumber}</span>
@@ -97,7 +132,7 @@ export function GuestListSheet({ objects, servicePlan, onUpdateGuest }: Props) {
                       onChange={(value) => onUpdateGuest(row.objectId, row.seatIndex, { role: value })}
                     />
                     <td className="border-l border-t border-[#e2e7e3] px-3 text-center">
-                      <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-[10px] font-bold text-[#527180] hover:bg-[#edf7fa]">
+                      <label className="guest-list-no-alcohol-control inline-flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-[10px] font-bold text-[#527180] hover:bg-[#edf7fa]">
                         <input
                           type="checkbox"
                           aria-label={`${row.tableLabel}, seat ${row.displaySeatNumber}, under 21 or no alcohol`}
@@ -106,6 +141,7 @@ export function GuestListSheet({ objects, servicePlan, onUpdateGuest }: Props) {
                           onChange={(event) => onUpdateGuest(row.objectId, row.seatIndex, { noAlcohol: event.target.checked })}
                         />
                         <span className="size-3 rounded-full border-2 bg-white" style={{ borderColor: NO_ALCOHOL_COLOR }} aria-hidden="true" />
+                        <span className="guest-list-no-alcohol-print hidden">{row.noAlcohol ? "YES" : ""}</span>
                       </label>
                     </td>
                   </tr>
@@ -125,6 +161,10 @@ export function GuestListSheet({ objects, servicePlan, onUpdateGuest }: Props) {
       </div>
     </section>
   );
+}
+
+function fileSlug(value: string) {
+  return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "event";
 }
 
 function ServiceCell({ ariaLabel, color, isDefault, value, onChange }: {
