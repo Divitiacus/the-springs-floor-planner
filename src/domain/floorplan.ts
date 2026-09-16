@@ -135,6 +135,7 @@ export type FixedArchitectureElement =
       treadAxis?: "x" | "y";
       curvedBottom?: boolean;
       curvedTop?: boolean;
+      curvedRight?: boolean;
       showLabel?: boolean;
     })
   | (FixedArchitectureBase & {

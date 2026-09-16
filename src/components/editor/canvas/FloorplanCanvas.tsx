@@ -321,8 +321,11 @@ function FixedArchitectureNode({ element }: { element: FixedArchitectureElement 
         : element.curvedTop && treadAxis === "y" && ratio < 0.28
           ? ((0.28 - ratio) / 0.28) * 18
           : 0;
+      const horizontalFlare = element.curvedRight && treadAxis === "x" && ratio > 0.72
+        ? ((ratio - 0.72) / 0.28) * 18
+        : 0;
       const points = treadAxis === "x"
-        ? [element.x + element.width * ratio, element.y, element.x + element.width * ratio, element.y + element.height]
+        ? [element.x + element.width * ratio, element.y - horizontalFlare, element.x + element.width * ratio, element.y + element.height + horizontalFlare]
         : [element.x - flare, element.y + element.height * ratio, element.x + element.width + flare, element.y + element.height * ratio];
       return <Line key={index} points={points} stroke="#7e8983" strokeWidth={1.5} />;
     });
@@ -336,6 +339,13 @@ function FixedArchitectureNode({ element }: { element: FixedArchitectureElement 
     ) : element.curvedBottom ? (
       <Path
         data={`M ${element.x} ${element.y} L ${element.x + element.width} ${element.y} L ${element.x + element.width} ${element.y + element.height - 25} C ${element.x + element.width} ${element.y + element.height - 11}, ${element.x + element.width + 10} ${element.y + element.height - 5}, ${element.x + element.width + 18} ${element.y + element.height} L ${element.x - 18} ${element.y + element.height} C ${element.x - 10} ${element.y + element.height - 5}, ${element.x} ${element.y + element.height - 11}, ${element.x} ${element.y + element.height - 25} Z`}
+        fill="#e2e4df"
+        stroke="#657169"
+        strokeWidth={2}
+      />
+    ) : element.curvedRight ? (
+      <Path
+        data={`M ${element.x} ${element.y} L ${element.x + element.width - 25} ${element.y} C ${element.x + element.width - 11} ${element.y}, ${element.x + element.width - 5} ${element.y - 10}, ${element.x + element.width} ${element.y - 18} L ${element.x + element.width} ${element.y + element.height + 18} C ${element.x + element.width - 5} ${element.y + element.height + 10}, ${element.x + element.width - 11} ${element.y + element.height}, ${element.x + element.width - 25} ${element.y + element.height} L ${element.x} ${element.y + element.height} Z`}
         fill="#e2e4df"
         stroke="#657169"
         strokeWidth={2}

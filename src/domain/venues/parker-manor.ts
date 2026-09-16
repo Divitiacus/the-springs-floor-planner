@@ -15,6 +15,9 @@ const STAIR_GROUP_X = 128;
 const STAIR_NOTCH_RIGHT = STAIR_GROUP_X + 138;
 const STAIR_NOTCH_TOP = 415;
 const STAIR_NOTCH_BOTTOM = 529;
+const FIREPLACE_Y = (STAIR_NOTCH_TOP + STAIR_NOTCH_BOTTOM) / 2 - 45;
+const MANTLE_Y = FIREPLACE_Y - 1;
+const UPPER_RIGHT_PILLAR_Y = 391;
 
 type Common = { fixed: true; measurementStatus: "source-traced" };
 
@@ -64,8 +67,8 @@ function createDownstairsElements(common: Common): FixedArchitectureElement[] {
     areaWithNote(common, "parker-manor-buffet", "buffet", "BUFFET · 16′ × 3′", 134, 134, 36, 192, "blocked", "confirmed", "The supplied downstairs plan confirms a 16-foot length and 3-foot depth. Its placement follows Magnolia Manor's service-and-stair group rotated 90 degrees counterclockwise, with the buffet above the west-side stairs."),
     areaWithNote(common, "parker-manor-bar", "bar", "BAR · 14′ × 4′", 128, 641, 48, 168, "blocked", "confirmed", "The supplied downstairs plan confirms a 14-foot length and 4-foot depth. Its placement follows Magnolia Manor's service-and-stair group rotated 90 degrees counterclockwise, with the bar below the west-side stairs."),
     ...createAlignedStaircase(common, "downstairs"),
-    areaWithNote(common, "parker-manor-mantle", "fireplace", "MANTLE · 7′8″", OPENING_RIGHT - 14, 465, 14, 92, "blocked", "confirmed", "Mantle is 14 inches deep, 7 feet 8 inches wide, and 7 feet from the floor. It is centered on the east edge of the upper-floor projection opposite the west stair group."),
-    areaWithNote(common, "parker-manor-fireplace", "fireplace", "FIREPLACE", OPENING_RIGHT, 466, 43, 90, "blocked", "confirmed", "The fireplace projection is shown as 3′7″ by 7′6″. It is centered beneath the east edge of the upper floor, opposite the west stair group and away from the exterior wall."),
+    areaWithNote(common, "parker-manor-mantle", "fireplace", "MANTLE · 7′8″", OPENING_RIGHT - 14, MANTLE_Y, 14, 92, "blocked", "confirmed", "Mantle is 14 inches deep, 7 feet 8 inches wide, and 7 feet from the floor. It is centered on the east edge of the upper-floor projection directly opposite the west stair group."),
+    areaWithNote(common, "parker-manor-fireplace", "fireplace", "FIREPLACE", OPENING_RIGHT, FIREPLACE_Y, 43, 90, "blocked", "confirmed", "The fireplace projection is shown as 3′7″ by 7′6″. It is centered beneath the east edge of the upper floor, directly opposite the west stair group and away from the exterior wall."),
     ...createPillars(common, "parker-manor-downstairs-pillar"),
     ...createHallWalls(common, "downstairs"),
     ...createDownstairsDoors(common),
@@ -81,7 +84,7 @@ function createUpstairsElements(common: Common): FixedArchitectureElement[] {
     areaWithoutLabel(common, "parker-manor-full-balcony", "porch", "Full Exterior Balcony", HALL_X, 8, HALL_SIZE, 72, "restricted"),
     areaWithoutLabel(common, "parker-manor-juliet-balcony", "porch", "Juliet Balcony", HALL_X, HALL_Y + HALL_SIZE, HALL_SIZE, 72, "restricted"),
     ...createAlignedStaircase(common, "upstairs"),
-    areaWithNote(common, "parker-manor-upstairs-fireplace", "fireplace", "FIREPLACE", OPENING_RIGHT, 466, 43, 90, "blocked", "confirmed", "The upstairs drawing centers the fireplace projection on the east edge of the central opening, opposite the west stair group."),
+    areaWithNote(common, "parker-manor-upstairs-fireplace", "fireplace", "FIREPLACE", OPENING_RIGHT, FIREPLACE_Y, 43, 90, "blocked", "confirmed", "The upstairs drawing centers the fireplace projection on the east edge of the central opening, directly opposite the west stair group."),
     ...createPillars(common, "parker-manor-upstairs-pillar"),
     ...createHallWalls(common, "upstairs"),
     ...createOpeningRails(common),
@@ -138,7 +141,7 @@ function createAlignedStaircase(common: Common, level: "downstairs" | "upstairs"
     areaWithNote(common, `parker-manor-${level}-stairs-landing`, "landing", "STAIR LANDING", STAIR_GROUP_X + 4, 432, 50, 81, "blocked", "source-traced", note),
     stairs(common, `parker-manor-${level}-stairs-north-flight`, "North Stair Flight", STAIR_GROUP_X + 4, 334, 50, 98, "vertical", 8, "y", note),
     stairs(common, `parker-manor-${level}-stairs-south-flight`, "South Stair Flight", STAIR_GROUP_X + 4, 513, 50, 98, "vertical", 8, "y", note),
-    stairs(common, `parker-manor-${level}-stairs-east-flight`, "Center Stair Flight", STAIR_GROUP_X + 54, STAIR_NOTCH_TOP, 84, STAIR_NOTCH_BOTTOM - STAIR_NOTCH_TOP, "horizontal", 9, "x", note),
+    stairs(common, `parker-manor-${level}-stairs-east-flight`, "Center Stair Flight", STAIR_GROUP_X + 54, STAIR_NOTCH_TOP, 84, STAIR_NOTCH_BOTTOM - STAIR_NOTCH_TOP, "horizontal", 9, "x", note, true),
     railing(common, `parker-manor-${level}-stairs-west-rail`, [STAIR_GROUP_X, 342, STAIR_GROUP_X, 603]),
     railing(common, `parker-manor-${level}-stairs-north-rail`, [STAIR_GROUP_X + 54, 334, STAIR_GROUP_X + 54, STAIR_NOTCH_TOP]),
     railing(common, `parker-manor-${level}-stairs-south-rail`, [STAIR_GROUP_X + 54, STAIR_NOTCH_BOTTOM, STAIR_GROUP_X + 54, 611]),
@@ -150,7 +153,7 @@ function createAlignedStaircase(common: Common, level: "downstairs" | "upstairs"
 function createPillars(common: Common, idPrefix: string): FixedArchitectureElement[] {
   const positions = [
     [285, OPENING_TOP - 9], [575, OPENING_TOP - 9],
-    [OPENING_LEFT - 9, 430], [OPENING_RIGHT - 9, 430],
+    [OPENING_LEFT - 9, 430], [OPENING_RIGHT - 9, UPPER_RIGHT_PILLAR_Y],
     [OPENING_LEFT - 9, 650], [OPENING_RIGHT - 9, 650],
     [285, OPENING_BOTTOM - 9], [575, OPENING_BOTTOM - 9],
   ];
@@ -220,8 +223,8 @@ function railing(common: Common, id: string, points: number[]): FixedArchitectur
   return { ...common, id, kind: "railing", label: "Fixed balcony railing", placementBehavior: "blocked", points };
 }
 
-function stairs(common: Common, id: string, stairLabel: string, x: number, y: number, width: number, height: number, orientation: "horizontal" | "vertical", treadCount: number, treadAxis: "x" | "y", physicalNote: string): FixedArchitectureElement {
-  return { ...common, id, kind: "stairs", label: stairLabel, physicalNote, placementBehavior: "blocked", measurementStatus: "source-traced", x, y, width, height, orientation, treadCount, treadAxis, showLabel: false };
+function stairs(common: Common, id: string, stairLabel: string, x: number, y: number, width: number, height: number, orientation: "horizontal" | "vertical", treadCount: number, treadAxis: "x" | "y", physicalNote: string, curvedRight = false): FixedArchitectureElement {
+  return { ...common, id, kind: "stairs", label: stairLabel, physicalNote, placementBehavior: "blocked", measurementStatus: "source-traced", x, y, width, height, orientation, treadCount, treadAxis, curvedRight, showLabel: false };
 }
 
 function door(common: Common, id: string, x: number, y: number, width: number, rotation: number, swingDirection: "clockwise" | "counterclockwise"): FixedArchitectureElement {
