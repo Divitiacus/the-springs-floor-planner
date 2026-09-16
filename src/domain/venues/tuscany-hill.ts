@@ -47,8 +47,6 @@ function createLevelElements(
     "parker-manor-upstairs-fireplace",
     "parker-manor-pavilion-door-west",
     "parker-manor-pavilion-door-east",
-    "parker-manor-main-entrance-west",
-    "parker-manor-main-entrance-east",
     "parker-manor-reception-label",
     "parker-manor-overhang-label",
     "parker-manor-main-entrance-label",
@@ -71,7 +69,7 @@ function createLevelElements(
     ...(isUpstairs ? [roundedPorch(), porchDoor(), porchLabel()] : []),
     ...elements,
     ...(isUpstairs
-      ? [northFireplace("tuscany-hill-upstairs-fireplace", HALL_TOP - 22)]
+      ? [northFireplace("tuscany-hill-upstairs-fireplace", HALL_TOP)]
       : [northMantle(), northFireplace("tuscany-hill-fireplace", HALL_TOP + 14), ...rightEntranceDoors()]),
   ];
 }

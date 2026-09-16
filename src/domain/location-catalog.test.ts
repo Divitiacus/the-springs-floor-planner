@@ -388,7 +388,15 @@ describe("location catalog", () => {
     expect(downstairs.fixedArchitecturalElements.some((element) => element.id.includes("main-entrance-label"))).toBe(false);
     expect(downstairs.fixedArchitecturalElements.some((element) => element.id.includes("reception-label"))).toBe(false);
     expect(downstairs.fixedArchitecturalElements.some((element) => element.id.includes("overhang-label"))).toBe(false);
-    expect(downstairs.fixedArchitecturalElements.filter((element) => element.id.startsWith("tuscany-hill-main-entrance-"))).toMatchObject([
+    expect(downstairs.fixedArchitecturalElements.filter((element) =>
+      element.id === "tuscany-hill-main-entrance-west" || element.id === "tuscany-hill-main-entrance-east"
+    )).toMatchObject([
+      { x: 407, y: 890, width: 48, rotation: 0, swingDirection: "clockwise" },
+      { x: 503, y: 890, width: 48, rotation: 180, swingDirection: "counterclockwise" },
+    ]);
+    expect(downstairs.fixedArchitecturalElements.filter((element) =>
+      element.id === "tuscany-hill-main-entrance-north" || element.id === "tuscany-hill-main-entrance-south"
+    )).toMatchObject([
       { x: 860, y: 485, width: 48, rotation: -90, swingDirection: "clockwise" },
       { x: 860, y: 485, width: 48, rotation: 90, swingDirection: "counterclockwise" },
     ]);
@@ -405,7 +413,7 @@ describe("location catalog", () => {
     });
     expect(upstairs.fixedArchitecturalElements.find((element) => element.id === "tuscany-hill-upstairs-fireplace")).toMatchObject({
       label: "FIREPLACE",
-      shape: { type: "rectangle", x: 392, y: 58, width: 126, height: 43 },
+      shape: { type: "rectangle", x: 392, y: 80, width: 126, height: 43 },
     });
     expect(upstairs.fixedArchitecturalElements.some((element) => element.id === "tuscany-hill-upstairs-label")).toBe(false);
     expect(upstairs.fixedArchitecturalElements.some((element) => element.id.includes("full-balcony"))).toBe(false);
