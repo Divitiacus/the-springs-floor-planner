@@ -167,7 +167,7 @@ describe("hall venue template", () => {
     expect(upstairs.name).toBe("Weatherford · Parker Manor");
     expect(upstairs.levelName).toBe("Level 2 — Upstairs Balcony");
     expect(upstairs.hall).toEqual({ x: 50, y: 80, width: 810, height: 810 });
-    expect(upstairs.usableAreas).toHaveLength(4);
+    expect(upstairs.usableAreas).toHaveLength(1);
     expect(upstairs.voidAreas?.map((region) => region.id)).toEqual(["parker-manor-level-2-open-to-below"]);
     expect(upstairs.referenceAsset).toBeNull();
   });

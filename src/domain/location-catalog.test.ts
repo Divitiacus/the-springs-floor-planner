@@ -429,11 +429,12 @@ describe("location catalog", () => {
       return centerX === 138 || centerX === 772 || centerY === 219 || centerY === 802;
     })).toBe(true);
 
-    expect(upstairs.usableAreas?.map((region) => region.id)).toEqual([
-      "parker-manor-level-2-north-walkway",
-      "parker-manor-level-2-south-walkway",
-      "parker-manor-level-2-west-walkway",
-      "parker-manor-level-2-east-walkway",
+    expect(upstairs.usableAreas).toEqual([
+      expect.objectContaining({
+        id: "parker-manor-level-2-upper-floor",
+        placementBehavior: "allowed",
+        shape: { type: "rectangle", x: 50, y: 80, width: 810, height: 810 },
+      }),
     ]);
     expect(upstairs.voidAreas).toEqual([
       expect.objectContaining({
@@ -444,6 +445,18 @@ describe("location catalog", () => {
     ]);
     expect(isPositionOnFloor({ x: 455, y: 150 }, upstairs.usableAreas ?? [], upstairs.voidAreas ?? [])).toBe(true);
     expect(isPositionOnFloor({ x: 455, y: 500 }, upstairs.usableAreas ?? [], upstairs.voidAreas ?? [])).toBe(false);
+    expect(upstairs.fixedArchitecturalElements.find((element) => element.id === "parker-manor-full-balcony-door-west")).toMatchObject({
+      kind: "door",
+      x: 407,
+      rotation: 0,
+      swingDirection: "counterclockwise",
+    });
+    expect(upstairs.fixedArchitecturalElements.find((element) => element.id === "parker-manor-full-balcony-door-east")).toMatchObject({
+      kind: "door",
+      x: 503,
+      rotation: 180,
+      swingDirection: "clockwise",
+    });
     expect(upstairs.fixedArchitecturalElements.find((element) => element.id === "parker-manor-upstairs-fireplace")).toMatchObject({ shape: { x: 772, y: 466, width: 43 } });
     expect(upstairs.fixedArchitecturalElements.filter((element) => element.kind === "stairs")).toHaveLength(3);
     expect(upstairs.fixedArchitecturalElements.some((element) => element.id.includes("buffet") || element.id.includes("bar"))).toBe(false);

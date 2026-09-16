@@ -105,20 +105,16 @@ function createDownstairsUsableAreas(): VenueFloorRegion[] {
 }
 
 function createUpstairsUsableAreas(): VenueFloorRegion[] {
-  return [
-    floorRegion("parker-manor-level-2-north-walkway", "North Upper Walkway", "usable-floor", {
-      type: "rectangle", x: HALL_X, y: HALL_Y, width: HALL_SIZE, height: OPENING_TOP - HALL_Y,
-    }),
-    floorRegion("parker-manor-level-2-south-walkway", "South Upper Walkway", "usable-floor", {
-      type: "rectangle", x: HALL_X, y: OPENING_BOTTOM, width: HALL_SIZE, height: HALL_Y + HALL_SIZE - OPENING_BOTTOM,
-    }),
-    floorRegion("parker-manor-level-2-west-walkway", "West Upper Walkway", "usable-floor", {
-      type: "rectangle", x: HALL_X, y: OPENING_TOP, width: OPENING_LEFT - HALL_X, height: OPENING_BOTTOM - OPENING_TOP,
-    }),
-    floorRegion("parker-manor-level-2-east-walkway", "East Upper Walkway", "usable-floor", {
-      type: "rectangle", x: OPENING_RIGHT, y: OPENING_TOP, width: HALL_X + HALL_SIZE - OPENING_RIGHT, height: OPENING_BOTTOM - OPENING_TOP,
-    }),
-  ];
+  // The positive floor is one continuous seating/setup footprint. The explicit
+  // open-to-below polygon subtracts the center, avoiding false seam lines where
+  // separate walkway rectangles would otherwise meet.
+  return [floorRegion("parker-manor-level-2-upper-floor", "Walkable Upper Floor", "usable-floor", {
+    type: "rectangle",
+    x: HALL_X,
+    y: HALL_Y,
+    width: HALL_SIZE,
+    height: HALL_SIZE,
+  })];
 }
 
 function createUpstairsVoidAreas(): VenueFloorRegion[] {
@@ -198,8 +194,8 @@ function createDownstairsDoors(common: Common): FixedArchitectureElement[] {
 function createUpstairsDoors(common: Common): FixedArchitectureElement[] {
   const center = HALL_X + HALL_SIZE / 2;
   return [
-    door(common, "parker-manor-full-balcony-door-west", center - 48, HALL_Y, 48, 180, "clockwise"),
-    door(common, "parker-manor-full-balcony-door-east", center + 48, HALL_Y, 48, 0, "counterclockwise"),
+    door(common, "parker-manor-full-balcony-door-west", center - 48, HALL_Y, 48, 0, "counterclockwise"),
+    door(common, "parker-manor-full-balcony-door-east", center + 48, HALL_Y, 48, 180, "clockwise"),
     door(common, "parker-manor-juliet-balcony-door-west", center - 48, HALL_Y + HALL_SIZE, 48, 0, "clockwise"),
     door(common, "parker-manor-juliet-balcony-door-east", center + 48, HALL_Y + HALL_SIZE, 48, 180, "counterclockwise"),
   ];
