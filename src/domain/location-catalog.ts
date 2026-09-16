@@ -143,10 +143,21 @@ export const KATY_INVENTORY: InventoryCatalog = {
 
 export const DENTON_INVENTORY: InventoryCatalog = {
   scope: "hall",
-  limits: { ...KATY_INVENTORY.limits },
+  limits: {
+    "round-table-60": 40,
+    "rectangle-table-6": 2,
+    "rectangle-table-8": 6,
+    "farmhouse-table-6": 0,
+    "parson-table-7": 6,
+    "sweetheart-table": 2,
+    "sweetheart-table-48": 1,
+    "cocktail-table-32": 6,
+    "cocktail-table-36": 0,
+    chairs: 320,
+  },
   source: {
     fileName: "user-confirmed",
-    note: "Hidden Springs Ranch matches Stonecreek Reserve's planning inventory and 320-chair guest capacity.",
+    note: "Hidden Springs Ranch table quantities are user-confirmed; its previously confirmed guest capacity remains 320.",
   },
 };
 

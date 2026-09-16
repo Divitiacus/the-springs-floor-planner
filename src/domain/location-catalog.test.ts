@@ -320,16 +320,27 @@ describe("location catalog", () => {
     });
   });
 
-  it("gives Hidden Springs Ranch the Stonecreek inventory and Denton-specific architecture IDs", () => {
+  it("gives Hidden Springs Ranch its confirmed Denton inventory and architecture IDs", () => {
     const location = getLocationBySlug("denton");
     const hall = getHallBySlug(location, "hidden-springs-ranch");
     if (!location || !hall?.configuration) throw new Error("Denton Hidden Springs Ranch configuration missing");
 
     expect(DENTON_INVENTORY).toMatchObject({
       scope: "hall",
-      limits: { ...KATY_INVENTORY.limits, chairs: 320 },
+      limits: {
+        "round-table-60": 40,
+        "rectangle-table-6": 2,
+        "rectangle-table-8": 6,
+        "farmhouse-table-6": 0,
+        "parson-table-7": 6,
+        "sweetheart-table": 2,
+        "sweetheart-table-48": 1,
+        "cocktail-table-32": 6,
+        "cocktail-table-36": 0,
+        chairs: 320,
+      },
     });
-    expect(resolveInventoryConfiguration(location, hall)).toEqual(KATY_INVENTORY.limits);
+    expect(resolveInventoryConfiguration(location, hall)).toEqual(DENTON_INVENTORY.limits);
 
     const elements = singleLevel(hall.configuration).fixedArchitecturalElements;
     expect(elements.every((element) => element.id.startsWith("hidden-springs-ranch"))).toBe(true);
