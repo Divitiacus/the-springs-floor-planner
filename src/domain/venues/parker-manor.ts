@@ -17,7 +17,8 @@ const STAIR_NOTCH_TOP = 415;
 const STAIR_NOTCH_BOTTOM = 529;
 const FIREPLACE_Y = (STAIR_NOTCH_TOP + STAIR_NOTCH_BOTTOM) / 2 - 45;
 const MANTLE_Y = FIREPLACE_Y - 1;
-const UPPER_RIGHT_PILLAR_Y = 391;
+const UPPER_RIGHT_PILLAR_Y = 300;
+const SERVICE_RIGHT = OPENING_LEFT - 10;
 
 type Common = { fixed: true; measurementStatus: "source-traced" };
 
@@ -64,8 +65,8 @@ export function createParkerManorConfiguration(): HallConfiguration {
 
 function createDownstairsElements(common: Common): FixedArchitectureElement[] {
   return [
-    areaWithNote(common, "parker-manor-buffet", "buffet", "BUFFET · 16′ × 3′", 134, 134, 36, 192, "blocked", "confirmed", "The supplied downstairs plan confirms a 16-foot length and 3-foot depth. Its placement follows Magnolia Manor's service-and-stair group rotated 90 degrees counterclockwise, with the buffet above the west-side stairs."),
-    areaWithNote(common, "parker-manor-bar", "bar", "BAR · 14′ × 4′", 128, 641, 48, 168, "blocked", "confirmed", "The supplied downstairs plan confirms a 14-foot length and 4-foot depth. Its placement follows Magnolia Manor's service-and-stair group rotated 90 degrees counterclockwise, with the bar below the west-side stairs."),
+    areaWithNote(common, "parker-manor-buffet", "buffet", "BUFFET · 16′ × 3′", SERVICE_RIGHT - 36, 134, 36, 192, "blocked", "confirmed", "The supplied downstairs plan confirms a 16-foot length and 3-foot depth. Its placement follows Magnolia Manor's service-and-stair group rotated 90 degrees counterclockwise, set back to the west of the pillar line above the stairs."),
+    areaWithNote(common, "parker-manor-bar", "bar", "BAR · 14′ × 4′", SERVICE_RIGHT - 48, 641, 48, 168, "blocked", "confirmed", "The supplied downstairs plan confirms a 14-foot length and 4-foot depth. Its placement follows Magnolia Manor's service-and-stair group rotated 90 degrees counterclockwise, set back to the west of the pillar line below the stairs."),
     ...createAlignedStaircase(common, "downstairs"),
     areaWithNote(common, "parker-manor-mantle", "fireplace", "MANTLE · 7′8″", OPENING_RIGHT - 14, MANTLE_Y, 14, 92, "blocked", "confirmed", "Mantle is 14 inches deep, 7 feet 8 inches wide, and 7 feet from the floor. It is centered on the east edge of the upper-floor projection directly opposite the west stair group."),
     areaWithNote(common, "parker-manor-fireplace", "fireplace", "FIREPLACE", OPENING_RIGHT, FIREPLACE_Y, 43, 90, "blocked", "confirmed", "The fireplace projection is shown as 3′7″ by 7′6″. It is centered beneath the east edge of the upper floor, directly opposite the west stair group and away from the exterior wall."),
@@ -188,6 +189,8 @@ function createOpeningRails(common: Common): FixedArchitectureElement[] {
 function createDownstairsDoors(common: Common): FixedArchitectureElement[] {
   const center = HALL_X + HALL_SIZE / 2;
   return [
+    door(common, "parker-manor-pavilion-door-west", center - 48, HALL_Y, 48, 0, "counterclockwise"),
+    door(common, "parker-manor-pavilion-door-east", center + 48, HALL_Y, 48, 180, "clockwise"),
     door(common, "parker-manor-main-entrance-west", center - 48, HALL_Y + HALL_SIZE, 48, 0, "clockwise"),
     door(common, "parker-manor-main-entrance-east", center + 48, HALL_Y + HALL_SIZE, 48, 180, "counterclockwise"),
   ];
