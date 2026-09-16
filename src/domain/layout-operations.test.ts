@@ -179,6 +179,26 @@ describe("floorplan object operations", () => {
     expect(resized.objects[0]).toMatchObject({ width: 36, height: 36 });
   });
 
+  it("represents Weatherford's 33-inch sweetheart and non-seating display rounds separately", () => {
+    const sweetheart = createEventObject("sweetheart-table-33", { x: 0, y: 0 }, [], "sweetheart-33");
+    const display = createEventObject("display-table-33", { x: 50, y: 0 }, [sweetheart], "display-33");
+
+    expect(sweetheart).toMatchObject({
+      label: '33" Sweetheart',
+      width: 33,
+      height: 33,
+      seats: 2,
+      physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: 33 },
+    });
+    expect(display).toMatchObject({
+      label: '33" Display',
+      width: 33,
+      height: 33,
+      physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: 33 },
+    });
+    expect(display.seats).toBeUndefined();
+  });
+
   it("uses a distinct two-seat 48-inch Sweetheart Table footprint", () => {
     const sweetheart = createEventObject("sweetheart-table-48", { x: 0, y: 0 }, [], "sweetheart-48");
 

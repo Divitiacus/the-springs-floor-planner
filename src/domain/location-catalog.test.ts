@@ -469,16 +469,26 @@ describe("location catalog", () => {
     ]);
   });
 
-  it("gives Westwood Ranch the Stonecreek footprint, inventory, and curved stage steps", () => {
+  it("gives Westwood Ranch its supplied table counts and curved stage steps", () => {
     const location = getLocationBySlug("weatherford");
     const hall = getHallBySlug(location, "westwood-ranch");
     if (!location || !hall?.configuration) throw new Error("Weatherford Westwood Ranch configuration missing");
 
     expect(WEATHERFORD_WESTWOOD_RANCH_INVENTORY).toMatchObject({
       scope: "hall",
-      limits: { ...KATY_INVENTORY.limits, chairs: 320 },
+      limits: {
+        "round-table-60": 40,
+        "rectangle-table-6": 4,
+        "rectangle-table-8": 6,
+        "parson-table-7": 7,
+        "sweetheart-table-33": 3,
+        "sweetheart-table-48": 1,
+        "cocktail-table-32": 5,
+        chairs: 320,
+      },
+      source: { fileName: "Westwood Ranch table count.pdf" },
     });
-    expect(resolveInventoryConfiguration(location, hall)).toEqual(KATY_INVENTORY.limits);
+    expect(resolveInventoryConfiguration(location, hall)).toEqual(WEATHERFORD_WESTWOOD_RANCH_INVENTORY.limits);
 
     const configuration = singleLevel(hall.configuration);
     const mainFloor = configuration.fixedArchitecturalElements.find(
@@ -495,13 +505,26 @@ describe("location catalog", () => {
     expect(configuration.fixedArchitecturalElements.some((element) => element.kind === "stairs" && element.id.includes("stage"))).toBe(false);
   });
 
-  it("models Parker Manor's confirmed plan measurements and 320-seat inventory", () => {
+  it("models Parker Manor's confirmed plan measurements and supplied table counts", () => {
     const location = getLocationBySlug("weatherford");
     const hall = getHallBySlug(location, "parker-manor");
     if (!location || !hall?.configuration) throw new Error("Weatherford Parker Manor configuration missing");
 
-    expect(WEATHERFORD_PARKER_MANOR_INVENTORY).toMatchObject({ scope: "hall", limits: { chairs: 320 } });
-    expect(resolveInventoryConfiguration(location, hall).chairs).toBe(320);
+    expect(WEATHERFORD_PARKER_MANOR_INVENTORY).toMatchObject({
+      scope: "hall",
+      limits: {
+        "round-table-60": 30,
+        "rectangle-table-6": 4,
+        "rectangle-table-8": 12,
+        "display-table-33": 4,
+        "sweetheart-table-33": 3,
+        "sweetheart-table-48": 1,
+        "cocktail-table-32": 7,
+        chairs: 320,
+      },
+      source: { fileName: "Parker Manor table count.pdf" },
+    });
+    expect(resolveInventoryConfiguration(location, hall)).toEqual(WEATHERFORD_PARKER_MANOR_INVENTORY.limits);
 
     if (!isMultiLevelHallConfiguration(hall.configuration)) throw new Error("Parker Manor must use multi-level configuration");
     expect(hall.configuration.defaultLevelId).toBe("level-1-downstairs");

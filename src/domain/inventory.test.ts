@@ -13,6 +13,8 @@ const noLimits: InventoryConfiguration = {
   "rectangle-table-8": null,
   "farmhouse-table-6": null,
   "parson-table-7": null,
+  "display-table-33": null,
+  "sweetheart-table-33": null,
   "sweetheart-table": null,
   "sweetheart-table-48": null,
   "cocktail-table-32": null,
@@ -167,6 +169,7 @@ describe("inventory validation", () => {
     ["rectangle-table-6", 8],
     ["rectangle-table-8", 10],
     ["farmhouse-table-6", 8],
+    ["sweetheart-table-33", 2],
     ["sweetheart-table", 2],
     ["sweetheart-table-48", 2],
   ] as const)("enforces the %s seating maximum", (type, maximum) => {

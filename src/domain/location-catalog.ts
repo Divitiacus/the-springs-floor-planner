@@ -218,19 +218,37 @@ export const MAGNOLIA_MANOR_INVENTORY: InventoryCatalog = {
 
 export const WEATHERFORD_PARKER_MANOR_INVENTORY: InventoryCatalog = {
   scope: "hall",
-  limits: { ...MAGNOLIA_MANOR_INVENTORY.limits },
+  limits: {
+    "round-table-60": 30,
+    "rectangle-table-6": 4,
+    "rectangle-table-8": 12,
+    "display-table-33": 4,
+    "sweetheart-table-33": 3,
+    "sweetheart-table-48": 1,
+    "cocktail-table-32": 7,
+    chairs: 320,
+  },
   source: {
-    fileName: "user-confirmed",
-    note: "Parker Manor is a 320-guest Manor-style hall; its planning inventory follows Magnolia Manor pending Weatherford-specific counts.",
+    fileName: "Parker Manor table count.pdf",
+    note: "The supplied Parker Manor sheet confirms all table quantities; the hall's previously confirmed guest capacity remains 320.",
   },
 };
 
 export const WEATHERFORD_WESTWOOD_RANCH_INVENTORY: InventoryCatalog = {
   scope: "hall",
-  limits: { ...KATY_INVENTORY.limits },
+  limits: {
+    "round-table-60": 40,
+    "rectangle-table-6": 4,
+    "rectangle-table-8": 6,
+    "parson-table-7": 7,
+    "sweetheart-table-33": 3,
+    "sweetheart-table-48": 1,
+    "cocktail-table-32": 5,
+    chairs: 320,
+  },
   source: {
-    fileName: "user-confirmed",
-    note: "Westwood Ranch matches Stonecreek Reserve's planning inventory and 320-chair guest capacity.",
+    fileName: "Westwood Ranch table count.pdf",
+    note: "The supplied Westwood Ranch sheet confirms all table quantities; the hall's previously confirmed guest capacity remains 320.",
   },
 };
 
