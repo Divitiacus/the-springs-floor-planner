@@ -6,19 +6,28 @@ const CANVAS_HEIGHT = 980;
 const HALL_X = 50;
 const HALL_Y = 80;
 const HALL_SIZE = 810; // 67′6″
+const BALCONY_DEPTH = 143; // 11′11″
+const PILLAR_SIZE = 18;
+const PILLAR_HALF = PILLAR_SIZE / 2;
+const PILLAR_TO_OPENING_CORNER = 88; // 7′4″
 
-const OPENING_LEFT = 138;
-const OPENING_RIGHT = 772;
-const OPENING_TOP = 219;
-const OPENING_BOTTOM = 802;
-const STAIR_GROUP_X = 128;
+const OPENING_LEFT = HALL_X + BALCONY_DEPTH;
+const OPENING_RIGHT = HALL_X + HALL_SIZE - BALCONY_DEPTH;
+const OPENING_TOP = HALL_Y + BALCONY_DEPTH;
+const OPENING_BOTTOM = HALL_Y + HALL_SIZE - BALCONY_DEPTH;
+const STAIR_GROUP_X = OPENING_LEFT - 65;
 const STAIR_NOTCH_RIGHT = STAIR_GROUP_X + 138;
-const STAIR_NOTCH_TOP = 415;
-const STAIR_NOTCH_BOTTOM = 529;
-const FIREPLACE_Y = (STAIR_NOTCH_TOP + STAIR_NOTCH_BOTTOM) / 2 - 45;
+const STAIR_CENTER_Y = (OPENING_TOP + OPENING_BOTTOM) / 2;
+const STAIR_NOTCH_TOP = STAIR_CENTER_Y - 57;
+const STAIR_NOTCH_BOTTOM = STAIR_CENTER_Y + 57;
+const FIREPLACE_Y = STAIR_CENTER_Y - 45;
 const MANTLE_Y = FIREPLACE_Y - 1;
-const UPPER_SIDE_PILLAR_Y = 300;
-const SERVICE_RIGHT = OPENING_LEFT - 10;
+const UPPER_SIDE_PILLAR_Y = OPENING_TOP + PILLAR_TO_OPENING_CORNER - PILLAR_HALF;
+const LOWER_SIDE_PILLAR_Y = OPENING_BOTTOM - PILLAR_TO_OPENING_CORNER - PILLAR_HALF;
+const LEFT_EDGE_PILLAR_X = OPENING_LEFT + PILLAR_TO_OPENING_CORNER - PILLAR_HALF;
+const RIGHT_EDGE_PILLAR_X = OPENING_RIGHT - PILLAR_TO_OPENING_CORNER - PILLAR_HALF;
+const SERVICE_PILLAR_GAP = 12;
+const SERVICE_RIGHT = OPENING_LEFT - PILLAR_HALF - SERVICE_PILLAR_GAP;
 
 type Common = { fixed: true; measurementStatus: "source-traced" };
 
@@ -50,7 +59,7 @@ export function createParkerManorConfiguration(): HallConfiguration {
       physicalHeightInches: CANVAS_HEIGHT,
       physicalDimensionStatus: "source-traced",
       physicalDimensionNote:
-        "Level 2 uses the same 67′6″ exterior footprint. Its walkable floor is the perimeter balcony around a genuine open-to-below void. The source labels the north balcony depth as 11′7″ and the east walkway as 7′4″; other edges are source-traced.",
+        "Level 2 uses the same 67′6″ exterior footprint. Its walkable floor is an 11′11″ perimeter balcony around a 43′8″ open-to-below void. The source's 7′4″ callout runs from the pillar to the opening corner, not from the opening to the exterior wall.",
       planningBounds: { x: HALL_X, y: HALL_Y, width: HALL_SIZE, height: HALL_SIZE },
       defaultObjectPosition: { x: 455, y: 150 },
       usableAreas: createUpstairsUsableAreas(),
@@ -138,14 +147,17 @@ function createUpstairsVoidAreas(): VenueFloorRegion[] {
 
 function createAlignedStaircase(common: Common, level: "downstairs" | "upstairs"): FixedArchitectureElement[] {
   const note = "One west-side staircase connects both levels. Its confirmed overall envelope is 11′6″ × 23′1″; its three-flight form follows the Manor stair arrangement and the source-labeled 8′2″ and 10′2″ internal spans.";
+  const northFlightY = STAIR_NOTCH_TOP - 81;
+  const landingY = northFlightY + 98;
+  const southFlightY = landingY + 81;
   return [
-    areaWithNote(common, `parker-manor-${level}-stairs-landing`, "landing", "STAIR LANDING", STAIR_GROUP_X + 4, 432, 50, 81, "blocked", "source-traced", note),
-    stairs(common, `parker-manor-${level}-stairs-north-flight`, "North Stair Flight", STAIR_GROUP_X + 4, 334, 50, 98, "vertical", 8, "y", note),
-    stairs(common, `parker-manor-${level}-stairs-south-flight`, "South Stair Flight", STAIR_GROUP_X + 4, 513, 50, 98, "vertical", 8, "y", note),
+    areaWithNote(common, `parker-manor-${level}-stairs-landing`, "landing", "STAIR LANDING", STAIR_GROUP_X + 4, landingY, 50, 81, "blocked", "source-traced", note),
+    stairs(common, `parker-manor-${level}-stairs-north-flight`, "North Stair Flight", STAIR_GROUP_X + 4, northFlightY, 50, 98, "vertical", 8, "y", note),
+    stairs(common, `parker-manor-${level}-stairs-south-flight`, "South Stair Flight", STAIR_GROUP_X + 4, southFlightY, 50, 98, "vertical", 8, "y", note),
     stairs(common, `parker-manor-${level}-stairs-east-flight`, "Center Stair Flight", STAIR_GROUP_X + 54, STAIR_NOTCH_TOP, 84, STAIR_NOTCH_BOTTOM - STAIR_NOTCH_TOP, "horizontal", 9, "x", note, true),
-    railing(common, `parker-manor-${level}-stairs-west-rail`, [STAIR_GROUP_X, 342, STAIR_GROUP_X, 603]),
-    railing(common, `parker-manor-${level}-stairs-north-rail`, [STAIR_GROUP_X + 54, 334, STAIR_GROUP_X + 54, STAIR_NOTCH_TOP]),
-    railing(common, `parker-manor-${level}-stairs-south-rail`, [STAIR_GROUP_X + 54, STAIR_NOTCH_BOTTOM, STAIR_GROUP_X + 54, 611]),
+    railing(common, `parker-manor-${level}-stairs-west-rail`, [STAIR_GROUP_X, northFlightY + 8, STAIR_GROUP_X, southFlightY + 90]),
+    railing(common, `parker-manor-${level}-stairs-north-rail`, [STAIR_GROUP_X + 54, northFlightY, STAIR_GROUP_X + 54, STAIR_NOTCH_TOP]),
+    railing(common, `parker-manor-${level}-stairs-south-rail`, [STAIR_GROUP_X + 54, STAIR_NOTCH_BOTTOM, STAIR_GROUP_X + 54, southFlightY + 98]),
     railing(common, `parker-manor-${level}-stairs-east-upper-rail`, [STAIR_GROUP_X + 54, STAIR_NOTCH_TOP, STAIR_NOTCH_RIGHT, STAIR_NOTCH_TOP]),
     railing(common, `parker-manor-${level}-stairs-east-lower-rail`, [STAIR_GROUP_X + 54, STAIR_NOTCH_BOTTOM, STAIR_NOTCH_RIGHT, STAIR_NOTCH_BOTTOM]),
   ];
@@ -153,13 +165,13 @@ function createAlignedStaircase(common: Common, level: "downstairs" | "upstairs"
 
 function createPillars(common: Common, idPrefix: string): FixedArchitectureElement[] {
   const positions = [
-    [285, OPENING_TOP - 9], [575, OPENING_TOP - 9],
-    [OPENING_LEFT - 9, UPPER_SIDE_PILLAR_Y], [OPENING_RIGHT - 9, UPPER_SIDE_PILLAR_Y],
-    [OPENING_LEFT - 9, 650], [OPENING_RIGHT - 9, 650],
-    [285, OPENING_BOTTOM - 9], [575, OPENING_BOTTOM - 9],
+    [LEFT_EDGE_PILLAR_X, OPENING_TOP - PILLAR_HALF], [RIGHT_EDGE_PILLAR_X, OPENING_TOP - PILLAR_HALF],
+    [OPENING_LEFT - PILLAR_HALF, UPPER_SIDE_PILLAR_Y], [OPENING_RIGHT - PILLAR_HALF, UPPER_SIDE_PILLAR_Y],
+    [OPENING_LEFT - PILLAR_HALF, LOWER_SIDE_PILLAR_Y], [OPENING_RIGHT - PILLAR_HALF, LOWER_SIDE_PILLAR_Y],
+    [LEFT_EDGE_PILLAR_X, OPENING_BOTTOM - PILLAR_HALF], [RIGHT_EDGE_PILLAR_X, OPENING_BOTTOM - PILLAR_HALF],
   ];
   return positions.map(([x, y], index) =>
-    areaWithNote(common, `${idPrefix}-${index + 1}`, "pillar", "Pillar", x, y, 18, 18, "blocked", "source-traced", "Pillar footprint is source-traced. The supplied downstairs plan confirms 24′2″ between the paired interior pillars and 10 feet to the east wall."),
+    areaWithNote(common, `${idPrefix}-${index + 1}`, "pillar", "Pillar", x, y, PILLAR_SIZE, PILLAR_SIZE, "blocked", "source-traced", "Pillar footprint is source-traced. The 7′4″ callout measures from the pillar to the nearby opening corner."),
   );
 }
 
