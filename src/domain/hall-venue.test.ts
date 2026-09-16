@@ -145,18 +145,31 @@ describe("hall venue template", () => {
     expect(table.width / venue.hall.width).toBe(2 / 27);
   });
 
-  it("loads Weatherford's Parker Manor at the confirmed 67-foot-6-inch square scale", () => {
+  it("loads Weatherford's Parker Manor as two aligned floor levels", () => {
     const location = getLocationBySlug("weatherford");
     const hall = getHallBySlug(location, "parker-manor");
     if (!location || !hall) throw new Error("Parker Manor catalog entry missing");
 
-    const venue = createHallVenueTemplate(location, hall);
+    const downstairs = createHallVenueTemplate(location, hall, "level-1-downstairs");
+    const upstairs = createHallVenueTemplate(location, hall, "level-2-upstairs");
+    const levels = createHallVenueTemplates(location, hall);
 
-    expect(venue.id).toBe("location_weatherford:hall_parker_manor");
-    expect(venue.name).toBe("Weatherford · Parker Manor");
-    expect(venue.hall).toEqual({ x: 50, y: 80, width: 810, height: 810 });
-    expect(venue.referenceAsset).toBeNull();
-    expect(venue.elements.length).toBeGreaterThan(35);
+    expect(levels.map((level) => level.levelId)).toEqual(["level-1-downstairs", "level-2-upstairs"]);
+    expect(downstairs.id).toBe("location_weatherford:hall_parker_manor");
+    expect(downstairs.name).toBe("Weatherford · Parker Manor");
+    expect(downstairs.levelName).toBe("Level 1 — Downstairs");
+    expect(downstairs.hall).toEqual({ x: 50, y: 80, width: 810, height: 810 });
+    expect(downstairs.usableAreas).toHaveLength(1);
+    expect(downstairs.voidAreas).toEqual([]);
+    expect(downstairs.referenceAsset).toBeNull();
+
+    expect(upstairs.id).toBe("location_weatherford:hall_parker_manor");
+    expect(upstairs.name).toBe("Weatherford · Parker Manor");
+    expect(upstairs.levelName).toBe("Level 2 — Upstairs Balcony");
+    expect(upstairs.hall).toEqual({ x: 50, y: 80, width: 810, height: 810 });
+    expect(upstairs.usableAreas).toHaveLength(4);
+    expect(upstairs.voidAreas?.map((region) => region.id)).toEqual(["parker-manor-level-2-open-to-below"]);
+    expect(upstairs.referenceAsset).toBeNull();
   });
 
   it("resolves Cypress as two independent venue templates without concatenating architecture", () => {

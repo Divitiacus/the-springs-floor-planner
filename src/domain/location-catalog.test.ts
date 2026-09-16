@@ -383,16 +383,45 @@ describe("location catalog", () => {
     expect(WEATHERFORD_PARKER_MANOR_INVENTORY).toMatchObject({ scope: "hall", limits: { chairs: 320 } });
     expect(resolveInventoryConfiguration(location, hall).chairs).toBe(320);
 
-    const elements = singleLevel(hall.configuration).fixedArchitecturalElements;
-    expect(elements.find((element) => element.id === "parker-manor-main-floor")).toMatchObject({
-      measurementStatus: "confirmed",
-      shape: { type: "rectangle", width: 810, height: 810 },
-    });
-    expect(elements.find((element) => element.id === "parker-manor-buffet")).toMatchObject({ shape: { width: 36, height: 192 } });
-    expect(elements.find((element) => element.id === "parker-manor-bar")).toMatchObject({ shape: { width: 48, height: 168 } });
-    expect(elements.find((element) => element.id === "parker-manor-downstairs-stairs")).toMatchObject({ width: 138, height: 277 });
-    expect(elements.find((element) => element.id === "parker-manor-mantle")).toMatchObject({ shape: { width: 14, height: 92 } });
-    expect(elements.every((element) => element.id.startsWith("parker-manor"))).toBe(true);
+    if (!isMultiLevelHallConfiguration(hall.configuration)) throw new Error("Parker Manor must use multi-level configuration");
+    expect(hall.configuration.defaultLevelId).toBe("level-1-downstairs");
+    expect(hall.configuration.levels.map((level) => [level.id, level.slug])).toEqual([
+      ["level-1-downstairs", "downstairs"],
+      ["level-2-upstairs", "upstairs"],
+    ]);
+
+    const [downstairs, upstairs] = hall.configuration.levels;
+    expect(downstairs.planningBounds).toEqual({ x: 50, y: 80, width: 810, height: 810 });
+    expect(downstairs.usableAreas).toEqual([
+      expect.objectContaining({
+        id: "parker-manor-level-1-reception-floor",
+        placementBehavior: "allowed",
+        shape: { type: "rectangle", x: 50, y: 80, width: 810, height: 810 },
+      }),
+    ]);
+    expect(downstairs.voidAreas).toEqual([]);
+    expect(downstairs.fixedArchitecturalElements.find((element) => element.id === "parker-manor-buffet")).toMatchObject({ shape: { width: 36, height: 192 } });
+    expect(downstairs.fixedArchitecturalElements.find((element) => element.id === "parker-manor-bar")).toMatchObject({ shape: { width: 48, height: 168 } });
+    expect(downstairs.fixedArchitecturalElements.find((element) => element.id === "parker-manor-balcony-overhang")).toMatchObject({ kind: "path", dash: [12, 8] });
+    expect(downstairs.fixedArchitecturalElements.find((element) => element.id === "parker-manor-mantle")).toMatchObject({ shape: { width: 14, height: 92 } });
+
+    expect(upstairs.usableAreas?.map((region) => region.id)).toEqual([
+      "parker-manor-level-2-north-walkway",
+      "parker-manor-level-2-south-walkway",
+      "parker-manor-level-2-west-walkway",
+      "parker-manor-level-2-east-walkway",
+    ]);
+    expect(upstairs.voidAreas).toEqual([
+      expect.objectContaining({
+        id: "parker-manor-level-2-open-to-below",
+        placementBehavior: "blocked",
+        shape: expect.objectContaining({ type: "polygon" }),
+      }),
+    ]);
+    expect(isPositionOnFloor({ x: 455, y: 150 }, upstairs.usableAreas ?? [], upstairs.voidAreas ?? [])).toBe(true);
+    expect(isPositionOnFloor({ x: 455, y: 500 }, upstairs.usableAreas ?? [], upstairs.voidAreas ?? [])).toBe(false);
+    expect(upstairs.fixedArchitecturalElements.some((element) => element.id.includes("buffet") || element.id.includes("bar"))).toBe(false);
+    expect([...downstairs.fixedArchitecturalElements, ...upstairs.fixedArchitecturalElements].every((element) => element.id.startsWith("parker-manor"))).toBe(true);
   });
 
   it("keeps each confirmed Angleton hall inventory separate", () => {
