@@ -16,6 +16,7 @@ import { createStonebrookConfiguration } from "@/domain/venues/stonebrook";
 import { createStonecreekReserveConfiguration } from "@/domain/venues/stonecreek-reserve";
 import { createSycamoreGroveConfiguration } from "@/domain/venues/sycamore-grove";
 import { createVillaTuscanaConfiguration } from "@/domain/venues/villa-tuscana";
+import { createValleyViewConfiguration } from "@/domain/venues/valley-view";
 import { createWestwoodRanchConfiguration } from "@/domain/venues/westwood-ranch";
 import { createFarmhouseWallisvilleConfiguration } from "@/domain/venues/farmhouse-wallisville";
 import { createTheChateauCypressConfiguration } from "@/domain/venues/the-chateau-cypress";
@@ -245,6 +246,22 @@ export const WEATHERFORD_PARKER_MANOR_INVENTORY: InventoryCatalog = {
   },
 };
 
+export const VALLEY_VIEW_INVENTORY: InventoryCatalog = {
+  scope: "hall",
+  limits: {
+    "round-table-60": 28,
+    "rectangle-table-6": 2,
+    "rectangle-table-8": 6,
+    "parson-table-7": 2,
+    "sweetheart-table": 2,
+    "cocktail-table-32": 6,
+  },
+  source: {
+    fileName: "user-supplied Valley View plan",
+    note: "The table-and-chair key on the supplied Valley View plan confirms these table quantities. No chair inventory limit is stated.",
+  },
+};
+
 export const WEATHERFORD_WESTWOOD_RANCH_INVENTORY: InventoryCatalog = {
   scope: "hall",
   limits: {
@@ -418,6 +435,22 @@ export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
         slug: "magnolia-manor",
         name: "Magnolia Manor",
         configuration: { ...createMagnoliaManorConfiguration(), inventory: MAGNOLIA_MANOR_INVENTORY },
+      },
+    ],
+  },
+  {
+    id: "location_valley_view",
+    slug: "valley-view",
+    name: "Valley View",
+    halls: [
+      {
+        id: "hall_valley_view",
+        slug: "valley-view",
+        name: "Valley View",
+        configuration: {
+          ...createValleyViewConfiguration(),
+          inventory: VALLEY_VIEW_INVENTORY,
+        },
       },
     ],
   },

@@ -17,6 +17,7 @@ import {
   SPRINGS_LOCATIONS,
   type HallConfiguration,
   type SingleLevelHallConfiguration,
+  VALLEY_VIEW_INVENTORY,
   WALLISVILLE_FARMHOUSE_INVENTORY,
   WEATHERFORD_PARKER_MANOR_INVENTORY,
   WEATHERFORD_WESTWOOD_RANCH_INVENTORY,
@@ -24,7 +25,7 @@ import {
 
 describe("location catalog", () => {
   it("defines Magnolia with exactly its two confirmed halls", () => {
-    expect(SPRINGS_LOCATIONS).toHaveLength(9);
+    expect(SPRINGS_LOCATIONS).toHaveLength(10);
     expect(SPRINGS_LOCATIONS[0]).toMatchObject({ name: "Magnolia", slug: "magnolia" });
     expect(SPRINGS_LOCATIONS[0].halls.map((hall) => hall.name)).toEqual([
       "Pinehaven Terrace",
@@ -318,6 +319,55 @@ describe("location catalog", () => {
       slug: "oakview-lodge",
       name: "Oakview Lodge",
     });
+  });
+
+  it("defines Valley View with its traced floor shape and supplied table inventory", () => {
+    const location = getLocationBySlug("valley-view");
+    const hall = getHallBySlug(location, "valley-view");
+    if (!location || !hall?.configuration) throw new Error("Valley View configuration missing");
+
+    expect(location).toMatchObject({ id: "location_valley_view", slug: "valley-view", name: "Valley View" });
+    expect(hall).toMatchObject({ id: "hall_valley_view", slug: "valley-view", name: "Valley View" });
+    expect(VALLEY_VIEW_INVENTORY).toMatchObject({
+      scope: "hall",
+      limits: {
+        "round-table-60": 28,
+        "rectangle-table-6": 2,
+        "rectangle-table-8": 6,
+        "parson-table-7": 2,
+        "sweetheart-table": 2,
+        "cocktail-table-32": 6,
+      },
+    });
+    expect(resolveInventoryConfiguration(location, hall)).toEqual(VALLEY_VIEW_INVENTORY.limits);
+    expect(resolveInventoryConfiguration(location, hall).chairs).toBeUndefined();
+
+    const configuration = singleLevel(hall.configuration);
+    expect(configuration).toMatchObject({
+      physicalWidthInches: 1492,
+      physicalHeightInches: 1111,
+      physicalDimensionStatus: "source-traced",
+      planningBounds: { x: 50, y: 50, width: 1392, height: 1011 },
+    });
+    expect(configuration.usableAreas).toHaveLength(3);
+    expect(configuration.fixedArchitecturalElements.find((element) => element.id === "valley-view-main-floor")).toMatchObject({
+      kind: "area",
+      role: "main-floor",
+      placementBehavior: "allowed",
+      showOutline: false,
+      shape: { type: "rectangle", x: 50, y: 351, width: 1392, height: 412 },
+    });
+    expect(configuration.fixedArchitecturalElements.find((element) => element.id === "valley-view-north-floor")).toMatchObject({
+      role: "event-floor-extension",
+      shape: { type: "rectangle", x: 523, y: 50, width: 798, height: 301 },
+    });
+    expect(configuration.fixedArchitecturalElements.find((element) => element.id === "valley-view-south-floor")).toMatchObject({
+      role: "event-floor-extension",
+      shape: { type: "rectangle", x: 764, y: 763, width: 557, height: 298 },
+    });
+    expect(configuration.fixedArchitecturalElements.filter((element) => element.kind === "area" && element.role === "pillar")).toHaveLength(4);
+    expect(configuration.fixedArchitecturalElements.every((element) => element.id.startsWith("valley-view"))).toBe(true);
+    expect(configuration.floorplanAsset).toBeNull();
   });
 
   it("gives Hidden Springs Ranch its confirmed Denton inventory and architecture IDs", () => {

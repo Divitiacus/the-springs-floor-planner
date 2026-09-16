@@ -121,6 +121,21 @@ describe("hall venue template", () => {
     expect(table.width / venue.hall.width).toBeCloseTo(60 / 1336, 12);
   });
 
+  it("loads Valley View without repeating its identical location and hall name", () => {
+    const location = getLocationBySlug("valley-view");
+    const hall = getHallBySlug(location, "valley-view");
+    if (!location || !hall) throw new Error("Valley View catalog entry missing");
+
+    const venue = createHallVenueTemplate(location, hall);
+
+    expect(venue.id).toBe("location_valley_view:hall_valley_view");
+    expect(venue.name).toBe("Valley View");
+    expect(venue.hall).toEqual({ x: 50, y: 50, width: 1392, height: 1011 });
+    expect(venue.physicalDimensionStatus).toBe("source-traced");
+    expect(venue.usableAreas).toHaveLength(3);
+    expect(venue.referenceAsset).toBeNull();
+  });
+
   it("loads Rockwall's Poetry Springs with the Heritage Pine footprint and its own identity", () => {
     const location = getLocationBySlug("rockwall");
     const hall = getHallBySlug(location, "poetry-springs");

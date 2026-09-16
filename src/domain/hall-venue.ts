@@ -20,7 +20,7 @@ export function createHallVenueTemplate(
 
   return {
     id: `${location.id}:${hall.id}`,
-    name: `${location.name} · ${hall.name}`,
+    name: location.name === hall.name ? location.name : `${location.name} · ${hall.name}`,
     levelId: level.id,
     levelSlug: level.slug,
     levelName: level.name,
