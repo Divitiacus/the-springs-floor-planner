@@ -73,6 +73,7 @@ export function updateObject(layout: FloorplanLayout, id: string, patch: Partial
         seatAssignments: normalizeSeatAssignments(updatedSource.seatAssignments, updatedSource.seats),
         seatMeals: normalizeSeatField(updatedSource.seatMeals, updatedSource.seats),
         seatRoles: normalizeSeatField(updatedSource.seatRoles, updatedSource.seats),
+        seatNoAlcohol: normalizeSeatFlag(updatedSource.seatNoAlcohol, updatedSource.seats),
       };
     }
     if (!source.linkedGroupId || object.linkedGroupId !== source.linkedGroupId) return object;
@@ -123,6 +124,7 @@ export type GuestDetailsPatch = {
   name?: string;
   meal?: string;
   role?: string;
+  noAlcohol?: boolean;
 };
 
 export function updateGuestDetails(
@@ -138,12 +140,14 @@ export function updateGuestDetails(
   const seatAssignments = normalizeSeatAssignments(source.seatAssignments, seatCount) ?? [];
   const seatMeals = normalizeSeatField(source.seatMeals, seatCount) ?? [];
   const seatRoles = normalizeSeatField(source.seatRoles, seatCount) ?? [];
+  const seatNoAlcohol = normalizeSeatFlag(source.seatNoAlcohol, seatCount) ?? [];
   if (patch.name !== undefined) seatAssignments[seatIndex] = patch.name.slice(0, 80);
   if (patch.meal !== undefined) seatMeals[seatIndex] = patch.meal.slice(0, 80);
   if (patch.role !== undefined) seatRoles[seatIndex] = patch.role.slice(0, 80);
+  if (patch.noAlcohol !== undefined) seatNoAlcohol[seatIndex] = patch.noAlcohol;
 
   return touch(layout, layout.objects.map((object) => object.id === id
-    ? { ...object, seatAssignments, seatMeals, seatRoles }
+    ? { ...object, seatAssignments, seatMeals, seatRoles, seatNoAlcohol }
     : object));
 }
 
@@ -157,6 +161,7 @@ export function normalizePhysicalFootprints(layout: FloorplanLayout): FloorplanL
         seatAssignments: normalizeSeatAssignments(constrained.seatAssignments, constrained.seats),
         seatMeals: normalizeSeatField(constrained.seatMeals, constrained.seats),
         seatRoles: normalizeSeatField(constrained.seatRoles, constrained.seats),
+        seatNoAlcohol: normalizeSeatFlag(constrained.seatNoAlcohol, constrained.seats),
       };
     })),
   };
@@ -183,6 +188,7 @@ export function duplicateObject(layout: FloorplanLayout, id: string, newId = cry
     seatAssignments: undefined,
     seatMeals: undefined,
     seatRoles: undefined,
+    seatNoAlcohol: undefined,
     linkedGroupId: undefined,
   };
   return touch(layout, [...layout.objects, copy]);
@@ -236,6 +242,11 @@ function normalizeSeatAssignments(assignments: readonly string[] | undefined, se
 function normalizeSeatField(values: readonly string[] | undefined, seats: number | undefined): string[] | undefined {
   if (seats === undefined) return undefined;
   return Array.from({ length: Math.max(0, Math.floor(seats)) }, (_, index) => values?.[index]?.slice(0, 80) ?? "");
+}
+
+function normalizeSeatFlag(values: readonly boolean[] | undefined, seats: number | undefined): boolean[] | undefined {
+  if (seats === undefined) return undefined;
+  return Array.from({ length: Math.max(0, Math.floor(seats)) }, (_, index) => values?.[index] === true);
 }
 
 function removeSingletonLinkGroups(objects: EventObject[]): EventObject[] {

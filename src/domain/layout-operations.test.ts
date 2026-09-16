@@ -419,6 +419,7 @@ describe("floorplan object operations", () => {
       seatAssignments: ["Alex", "Bailey"],
       seatMeals: ["Chicken", "Vegetarian"],
       seatRoles: ["VIP", "Wedding party"],
+      seatNoAlcohol: [false, true],
       linkedGroupId: "head-table",
     };
     const layout = duplicateObject(addObject(createEmptyLayout(), table), table.id, "copy");
@@ -428,6 +429,7 @@ describe("floorplan object operations", () => {
       seatAssignments: undefined,
       seatMeals: undefined,
       seatRoles: undefined,
+      seatNoAlcohol: undefined,
       linkedGroupId: undefined,
     });
   });
@@ -543,23 +545,25 @@ describe("persistence", () => {
     const chair = createEventObject("chair", { x: 275, y: 180 }, [table], "chair");
     let layout = addObject(addObject(createEmptyLayout("hall_rockwall_manor"), table), chair);
 
-    layout = updateGuestDetails(layout, table.id, 0, { name: "Jason", meal: "Chicken", role: "Best man" });
-    layout = updateGuestDetails(layout, chair.id, 0, { name: "Jordan", meal: "Vegetarian", role: "Vendor" });
+    layout = updateGuestDetails(layout, table.id, 0, { name: "Jason", meal: "Chicken", role: "Best man", noAlcohol: true });
+    layout = updateGuestDetails(layout, chair.id, 0, { name: "Jordan", meal: "Vegetarian", role: "Vendor", noAlcohol: false });
 
     expect(layout.objects.find((object) => object.id === table.id)).toMatchObject({
       seatAssignments: ["Jason", "", "", "", "", "", "", "", "", ""],
       seatMeals: ["Chicken", "", "", "", "", "", "", "", "", ""],
       seatRoles: ["Best man", "", "", "", "", "", "", "", "", ""],
+      seatNoAlcohol: [true, false, false, false, false, false, false, false, false, false],
     });
     expect(layout.objects.find((object) => object.id === chair.id)).toMatchObject({ seatAssignments: ["Jordan"] });
   });
 
-  it("round-trips guest spreadsheet details and linked seating groups through version 6 editable files", () => {
+  it("round-trips guest service details and linked seating groups through version 7 editable files", () => {
     const table = {
       ...createEventObject("rectangle-table-8", { x: 220, y: 180 }, [], "table"),
       seatAssignments: ["Jason", "Bailey", "Casey", "Dakota", "Emery", "Finley", "Gray", "Harper", "", ""],
       seatMeals: ["Chicken", "Vegetarian", "", "", "", "", "", "", "", ""],
       seatRoles: ["Best man", "Mother of bride", "", "", "", "", "", "", "", ""],
+      seatNoAlcohol: [false, true, false, false, false, false, false, false, false, false],
       linkedGroupId: "family-table",
     };
     const chair = {
@@ -574,12 +578,13 @@ describe("persistence", () => {
     const serialized = serializePortableFloorplan(layout);
     const reopened = deserializeFloorplan(serialized);
 
-    expect(JSON.parse(serialized).v).toBe(6);
+    expect(JSON.parse(serialized).v).toBe(7);
     expect(reopened.objects).toMatchObject([
       {
         seatAssignments: table.seatAssignments,
         seatMeals: table.seatMeals,
         seatRoles: table.seatRoles,
+        seatNoAlcohol: table.seatNoAlcohol,
         linkedGroupId: "family-table",
       },
       { seatAssignments: ["Jordan"], linkedGroupId: "family-table" },
@@ -592,6 +597,20 @@ describe("persistence", () => {
     );
 
     expect(reopened.objects[0]).toMatchObject({ type: "chair", seatAssignments: ["Jason"] });
+  });
+
+  it("still opens version 6 guest spreadsheet files", () => {
+    const reopened = deserializeFloorplan(
+      '{"v":6,"h":"hall_rockwall_manor","n":"Service Plan","o":[["chair",null,220,180,10,7,0,"Chair",null,1,0,null,["Jason"],null,["Fish"],["Family"]]]}',
+    );
+
+    expect(reopened.objects[0]).toMatchObject({
+      type: "chair",
+      seatAssignments: ["Jason"],
+      seatMeals: ["Fish"],
+      seatRoles: ["Family"],
+    });
+    expect(reopened.objects[0].seatNoAlcohol).toBeUndefined();
   });
 
   it("reopens fixed rectangle tables at their current confirmed catalog size", () => {

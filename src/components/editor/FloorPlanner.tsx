@@ -10,6 +10,7 @@ import { getInventoryUsage } from "@/domain/inventory";
 import { isPositionOnFloor } from "@/domain/floor-regions";
 import { getLayoutStats } from "@/domain/layout-operations";
 import { deserializeFloorplan, serializePortableFloorplan } from "@/domain/persistence";
+import { buildServicePlan } from "@/domain/service-markers";
 import { useFloorplanEditor } from "@/hooks/useFloorplanEditor";
 import { EditorCanvas } from "@/components/editor/EditorCanvas";
 import { ObjectLibrary } from "@/components/editor/ObjectLibrary";
@@ -18,6 +19,7 @@ import { EditorToolbar, type EditorMode } from "@/components/editor/EditorToolba
 import { SpringsLogo } from "@/components/brand/SpringsLogo";
 import { SeatingDetailsDialog } from "@/components/editor/SeatingDetailsDialog";
 import { GuestListSheet } from "@/components/editor/GuestListSheet";
+import { ServiceLegend } from "@/components/editor/ServiceLegend";
 
 type Props = {
   venue: VenueTemplate;
@@ -41,6 +43,7 @@ export function FloorPlanner({ venue, levelVenues, locationName, inventory }: Pr
     ),
   } : editor.layout, [activeLevelId, defaultLevelId, editor.layout, isMultiLevel]);
   const activeStats = useMemo(() => getLayoutStats(activeLayout), [activeLayout]);
+  const servicePlan = useMemo(() => buildServicePlan(editor.layout.objects), [editor.layout.objects]);
   const [mode, setMode] = useState<EditorMode>("select");
   const [workspaceView, setWorkspaceView] = useState<"floorplan" | "guest-list">("floorplan");
   const [zoom, setZoom] = useState(1);
@@ -309,7 +312,7 @@ export function FloorPlanner({ venue, levelVenues, locationName, inventory }: Pr
 
       {workspaceView === "guest-list" ? (
         <div className="floor-planner-workspace flex min-h-0 flex-1">
-          <GuestListSheet objects={editor.layout.objects} onUpdateGuest={editor.updateGuest} />
+          <GuestListSheet objects={editor.layout.objects} servicePlan={servicePlan} onUpdateGuest={editor.updateGuest} />
         </div>
       ) : (
       <div className="floor-planner-workspace grid min-h-0 flex-1 grid-cols-[258px_minmax(520px,1fr)_292px]">
@@ -335,8 +338,14 @@ export function FloorPlanner({ venue, levelVenues, locationName, inventory }: Pr
             onResetView={() => { setZoom(1); setResetViewKey((key) => key + 1); }}
             onToggleReference={() => setShowReference((visible) => !visible)}
           />
+          {servicePlan.defaultLabel || servicePlan.markers.length || servicePlan.hasNoAlcohol ? (
+            <div className="shrink-0 border-b border-[#dce2dd] bg-[#fffefa] px-4 py-2">
+              <ServiceLegend plan={servicePlan} compact />
+            </div>
+          ) : null}
           <EditorCanvas
             layout={activeLayout}
+            servicePlan={servicePlan}
             venue={activeVenue}
             selectedId={selectedId}
             mode={mode}

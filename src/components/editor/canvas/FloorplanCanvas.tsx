@@ -13,10 +13,13 @@ import type {
   VenueTemplate,
 } from "@/domain/floorplan";
 import { OBJECT_DEFINITIONS, isGuestTable, TABLE_TYPES } from "@/domain/object-catalog";
+import type { ServicePlan } from "@/domain/service-markers";
+import { DEFAULT_SEAT_COLOR, getSeatServiceColor, NO_ALCOHOL_COLOR } from "@/domain/service-markers";
 import type { EditorMode } from "@/components/editor/EditorToolbar";
 
 type Props = {
   layout: FloorplanLayout;
+  servicePlan: ServicePlan;
   venue: VenueTemplate;
   selectedId: string | null;
   mode: EditorMode;
@@ -30,7 +33,7 @@ type Props = {
   onZoomChange: (zoom: number) => void;
 };
 
-export function FloorplanCanvas({ layout, venue, selectedId, mode, zoom, showReference, onSelect, onAdd, onChange, onOpenDetails, onZoomChange }: Props) {
+export function FloorplanCanvas({ layout, servicePlan, venue, selectedId, mode, zoom, showReference, onSelect, onAdd, onChange, onOpenDetails, onZoomChange }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
@@ -129,6 +132,7 @@ export function FloorplanCanvas({ layout, venue, selectedId, mode, zoom, showRef
             <EventObjectNode
               key={object.id}
               object={object}
+              servicePlan={servicePlan}
               selected={object.id === selectedId}
               canDrag={mode === "select"}
               setNode={(node) => {
@@ -472,6 +476,7 @@ function getAreaBounds(element: Extract<FixedArchitectureElement, { kind: "area"
 
 type ObjectNodeProps = {
   object: EventObject;
+  servicePlan: ServicePlan;
   selected: boolean;
   canDrag: boolean;
   setNode: (node: Konva.Group | null) => void;
@@ -480,13 +485,15 @@ type ObjectNodeProps = {
   onOpenDetails: () => void;
 };
 
-function EventObjectNode({ object, selected, canDrag, setNode, onSelect, onChange, onOpenDetails }: ObjectNodeProps) {
+function EventObjectNode({ object, servicePlan, selected, canDrag, setNode, onSelect, onChange, onOpenDetails }: ObjectNodeProps) {
   const isRound = object.physicalDimensions.shape === "circle";
   const isDance = object.type === "dance-floor";
   const isChair = object.type === "chair";
   const isHalfMoon = object.type === "half-moon-table";
-  const fill = isDance ? "#e6ded2" : isChair ? "#9aa99f" : isGuestTable(object.type) ? "#fffdf7" : "#dce8e0";
-  const stroke = selected ? "#294f3d" : isDance ? "#9d8e7b" : "#5e7768";
+  const chairNoAlcohol = isChair && object.seatNoAlcohol?.[0] === true;
+  const chairServiceColor = isChair ? getSeatServiceColor(object, 0, servicePlan) : undefined;
+  const fill = isDance ? "#e6ded2" : isChair ? chairServiceColor ?? DEFAULT_SEAT_COLOR : isGuestTable(object.type) ? "#fffdf7" : "#dce8e0";
+  const stroke = chairNoAlcohol ? NO_ALCOHOL_COLOR : selected ? "#294f3d" : isDance ? "#9d8e7b" : "#5e7768";
 
   return (
     <Group
@@ -533,10 +540,10 @@ function EventObjectNode({ object, selected, canDrag, setNode, onSelect, onChang
       ) : isRound ? (
         <Circle radius={object.width / 2} fill={fill} stroke={stroke} strokeWidth={selected ? 3 : 2} shadowColor="#405047" shadowBlur={selected ? 8 : 3} shadowOpacity={0.16} />
       ) : (
-        <Rect x={-object.width / 2} y={-object.height / 2} width={object.width} height={object.height} fill={fill} stroke={stroke} strokeWidth={selected ? 2 : isChair ? 0 : 2} cornerRadius={isChair ? 2 : isDance ? 2 : 8} shadowColor="#405047" shadowBlur={selected ? 8 : isChair ? 0 : 3} shadowOpacity={0.14} />
+        <Rect x={-object.width / 2} y={-object.height / 2} width={object.width} height={object.height} fill={fill} stroke={stroke} strokeWidth={chairNoAlcohol ? 3 : selected ? 2 : isChair ? 0 : 2} cornerRadius={isChair ? 2 : isDance ? 2 : 8} shadowColor="#405047" shadowBlur={selected ? 8 : isChair ? 0 : 3} shadowOpacity={0.14} />
       )}
       {isDance ? <DanceGrid width={object.width} height={object.height} /> : null}
-      {TABLE_TYPES.has(object.type) ? <SeatMarkers object={object} /> : null}
+      {TABLE_TYPES.has(object.type) ? <SeatMarkers object={object} servicePlan={servicePlan} /> : null}
       {!isChair ? (
         <>
           <Text x={-object.width / 2 + 5} y={-8} width={object.width - 10} align="center" text={object.label} fontSize={Math.min(14, Math.max(10, object.width / 9))} fontStyle="bold" fill="#33473b" ellipsis />
@@ -547,21 +554,24 @@ function EventObjectNode({ object, selected, canDrag, setNode, onSelect, onChang
   );
 }
 
-function SeatMarkers({ object }: { object: EventObject }) {
+function SeatMarkers({ object, servicePlan }: { object: EventObject; servicePlan: ServicePlan }) {
   const count = Math.min(object.seats ?? 0, 12);
   if (!count) return null;
   if (object.type === "half-moon-table") {
-    return <>{Array.from({ length: count }, (_, index) => (
-      <Rect
-        key={index}
-        x={-object.width / 2 + ((index + 1) * object.width) / (count + 1) - 5}
-        y={object.height / 2 + 2}
-        width={10}
-        height={7}
-        cornerRadius={2}
-        fill="#9aa99f"
-      />
-    ))}</>;
+    return <>{Array.from({ length: count }, (_, index) => {
+      const style = getSeatMarkerStyle(object, index, servicePlan);
+      return (
+        <Rect
+          key={index}
+          x={-object.width / 2 + ((index + 1) * object.width) / (count + 1) - 5}
+          y={object.height / 2 + 2}
+          width={10}
+          height={7}
+          cornerRadius={2}
+          {...style}
+        />
+      );
+    })}</>;
   }
   if (object.physicalDimensions.shape === "circle") {
     return <>{Array.from({ length: count }, (_, index) => {
@@ -569,8 +579,9 @@ function SeatMarkers({ object }: { object: EventObject }) {
       const radius = object.width / 2 + 8;
       const x = Math.cos(angle) * radius;
       const y = Math.sin(angle) * radius;
+      const style = getSeatMarkerStyle(object, index, servicePlan);
       return (
-        <Circle key={index} x={x} y={y} radius={4.5} fill="#9aa99f" />
+        <Circle key={index} x={x} y={y} radius={4.5} {...style} />
       );
     })}</>;
   }
@@ -580,10 +591,20 @@ function SeatMarkers({ object }: { object: EventObject }) {
     const sideIndex = top ? index : index - perSide;
     const sideCount = top ? perSide : count - perSide;
     const x = -object.width / 2 + ((sideIndex + 1) * object.width) / (sideCount + 1);
+    const style = getSeatMarkerStyle(object, index, servicePlan);
     return (
-      <Rect key={index} x={x - 5} y={top ? -object.height / 2 - 9 : object.height / 2 + 2} width={10} height={7} cornerRadius={2} fill="#9aa99f" />
+      <Rect key={index} x={x - 5} y={top ? -object.height / 2 - 9 : object.height / 2 + 2} width={10} height={7} cornerRadius={2} {...style} />
     );
   })}</>;
+}
+
+function getSeatMarkerStyle(object: EventObject, seatIndex: number, servicePlan: ServicePlan) {
+  const noAlcohol = object.seatNoAlcohol?.[seatIndex] === true;
+  return {
+    fill: getSeatServiceColor(object, seatIndex, servicePlan) ?? DEFAULT_SEAT_COLOR,
+    stroke: noAlcohol ? NO_ALCOHOL_COLOR : undefined,
+    strokeWidth: noAlcohol ? 2.5 : 0,
+  };
 }
 
 function DanceGrid({ width, height }: { width: number; height: number }) {

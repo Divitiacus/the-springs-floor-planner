@@ -143,7 +143,7 @@ export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner 
   );
 
   const updateGuest = useCallback(
-    (id: string, seatIndex: number, patch: { name?: string; meal?: string; role?: string }) => {
+    (id: string, seatIndex: number, patch: { name?: string; meal?: string; role?: string; noAlcohol?: boolean }) => {
       commit(updateGuestDetails(layout, id, seatIndex, patch));
     },
     [commit, layout],

@@ -31,10 +31,11 @@ type PortableObject = [
   linkedGroupId: string | null,
   seatMeals: string[] | null,
   seatRoles: string[] | null,
+  seatNoAlcohol: boolean[] | null,
 ];
 
 type PortableFloorplan = {
-  v: 3 | 4 | 5 | 6;
+  v: 3 | 4 | 5 | 6 | 7;
   h: string;
   n: string;
   o: PortableObject[];
@@ -45,7 +46,7 @@ export function serializePortableFloorplan(layout: FloorplanLayout): string {
   const name = layout.name.trim();
   if (!name) throw new Error("Enter an event or client name before saving.");
   const portable: PortableFloorplan = {
-    v: 6,
+    v: 7,
     h: layout.venueTemplateId,
     n: name,
     o: layout.objects.map((object) => [
@@ -65,6 +66,7 @@ export function serializePortableFloorplan(layout: FloorplanLayout): string {
       object.linkedGroupId ?? null,
       object.seatMeals ?? null,
       object.seatRoles ?? null,
+      object.seatNoAlcohol ?? null,
     ]),
   };
   return JSON.stringify(portable);
@@ -84,7 +86,7 @@ function inflatePortableFloorplan(stored: PortableFloorplan): FloorplanLayout {
     venueTemplateId: stored.h,
     coordinateUnit: "inches",
     objects: stored.o.map((entry, index) => {
-      const [type, variant, x, y, width, height, rotation, label, tableNumber, seats, zIndex, levelId, seatAssignments, linkedGroupId, seatMeals, seatRoles] = entry;
+      const [type, variant, x, y, width, height, rotation, label, tableNumber, seats, zIndex, levelId, seatAssignments, linkedGroupId, seatMeals, seatRoles, seatNoAlcohol] = entry;
       const definition = OBJECT_DEFINITIONS[type];
       const variantDefinition = getObjectVariant(type, variant ?? undefined);
       const catalogWidth = variantDefinition?.width ?? definition.width;
@@ -109,6 +111,7 @@ function inflatePortableFloorplan(stored: PortableFloorplan): FloorplanLayout {
       if (linkedGroupId) object.linkedGroupId = linkedGroupId;
       if (seatMeals) object.seatMeals = seatMeals;
       if (seatRoles) object.seatRoles = seatRoles;
+      if (seatNoAlcohol) object.seatNoAlcohol = seatNoAlcohol;
       return object;
     }),
     updatedAt: new Date().toISOString(),
@@ -119,7 +122,7 @@ function isPortableFloorplan(value: unknown): value is PortableFloorplan {
   if (!value || typeof value !== "object") return false;
   const stored = value as Partial<PortableFloorplan>;
   return (
-    (stored.v === 3 || stored.v === 4 || stored.v === 5 || stored.v === 6) &&
+    (stored.v === 3 || stored.v === 4 || stored.v === 5 || stored.v === 6 || stored.v === 7) &&
     typeof stored.h === "string" &&
     stored.h.length > 0 &&
     typeof stored.n === "string" &&
@@ -131,8 +134,8 @@ function isPortableFloorplan(value: unknown): value is PortableFloorplan {
 
 function isPortableObject(value: unknown, version: PortableFloorplan["v"] | undefined): value is PortableObject {
   if (!Array.isArray(value)) return false;
-  if (version === 6 ? value.length !== 16 : version === 5 ? value.length !== 14 : value.length !== 11 && value.length !== 12) return false;
-  const [type, variant, x, y, width, height, rotation, label, tableNumber, seats, zIndex, levelId, seatAssignments, linkedGroupId, seatMeals, seatRoles] = value;
+  if (version === 7 ? value.length !== 17 : version === 6 ? value.length !== 16 : version === 5 ? value.length !== 14 : value.length !== 11 && value.length !== 12) return false;
+  const [type, variant, x, y, width, height, rotation, label, tableNumber, seats, zIndex, levelId, seatAssignments, linkedGroupId, seatMeals, seatRoles, seatNoAlcohol] = value;
   if (typeof type !== "string" || !(type in OBJECT_DEFINITIONS)) return false;
   if (variant !== null) {
     if (typeof variant !== "string") return false;
@@ -152,7 +155,8 @@ function isPortableObject(value: unknown, version: PortableFloorplan["v"] | unde
     )) &&
     (linkedGroupId === undefined || linkedGroupId === null || typeof linkedGroupId === "string") &&
     isOptionalSeatField(seatMeals) &&
-    isOptionalSeatField(seatRoles)
+    isOptionalSeatField(seatRoles) &&
+    isOptionalSeatFlag(seatNoAlcohol)
   );
 }
 
@@ -185,6 +189,7 @@ function isStoredFloorplan(value: unknown): value is StoredFloorplan {
           )) &&
           isOptionalSeatField(object.seatMeals) &&
           isOptionalSeatField(object.seatRoles) &&
+          isOptionalSeatFlag(object.seatNoAlcohol) &&
           (object.linkedGroupId === undefined || typeof object.linkedGroupId === "string"),
       ),
     )
@@ -194,5 +199,11 @@ function isStoredFloorplan(value: unknown): value is StoredFloorplan {
 function isOptionalSeatField(value: unknown) {
   return value === undefined || value === null || (
     Array.isArray(value) && value.every((entry) => typeof entry === "string" && entry.length <= 80)
+  );
+}
+
+function isOptionalSeatFlag(value: unknown) {
+  return value === undefined || value === null || (
+    Array.isArray(value) && value.every((entry) => typeof entry === "boolean")
   );
 }
