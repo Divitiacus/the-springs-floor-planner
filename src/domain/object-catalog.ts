@@ -37,7 +37,13 @@ export const OBJECT_CATALOG: ObjectDefinition[] = [
   { type: "rectangle-table-6", name: "6-foot Rectangle Table", shortLabel: "6' Rectangle", category: "Tables", width: 72, height: 30, defaultSeats: 8, maximumSeats: 8, inventoryLabel: "6-foot rectangle tables", physicalDimensions: { status: "confirmed", shape: "rectangle", widthInches: 72, depthInches: 30 }, resizable: false, icon: "rectangle" },
   { type: "rectangle-table-8", name: "8-foot Rectangle Table", shortLabel: "8' Rectangle", category: "Tables", width: 96, height: 30, defaultSeats: 10, maximumSeats: 10, inventoryLabel: "8-foot rectangle tables", physicalDimensions: { status: "confirmed", shape: "rectangle", widthInches: 96, depthInches: 30 }, resizable: false, icon: "rectangle" },
   { type: "farmhouse-table-6", name: "Wooden Farmhouse Table", shortLabel: "Farmhouse", category: "Tables", width: 72, height: 30, defaultSeats: 8, maximumSeats: 8, inventoryLabel: "wooden Farmhouse tables", physicalDimensions: { status: "confirmed", shape: "rectangle", widthInches: 72, depthInches: 30 }, resizable: false, inventoryOnly: true, icon: "rectangle" },
+  { type: "farmhouse-table-8", name: "8-foot Farmhouse Table", shortLabel: "8' Farmhouse", category: "Tables", width: 96, height: 30, defaultSeats: 10, maximumSeats: 10, inventoryLabel: "8-foot farmhouse tables", physicalDimensions: { status: "confirmed", shape: "rectangle", widthInches: 96, depthInches: 30 }, resizable: false, inventoryOnly: true, icon: "rectangle" },
   { type: "parson-table-7", name: "Parson Table", shortLabel: "Parson", category: "Tables", width: 84, height: 22, inventoryLabel: "Parson tables", physicalDimensions: { status: "confirmed", shape: "rectangle", widthInches: 84, depthInches: 22 }, resizable: false, icon: "rectangle" },
+  { type: "parson-table-5", name: "5-foot Parson Table", shortLabel: "5' Parson", category: "Tables", width: 60, height: 30, inventoryLabel: "5-foot Parson tables", physicalDimensions: { status: "confirmed", shape: "rectangle", widthInches: 60, depthInches: 30 }, resizable: false, inventoryOnly: true, icon: "rectangle" },
+  { type: "side-table-wood", name: "Wooden Side Table", shortLabel: "Wood Side", category: "Tables", width: 60, height: 30, inventoryLabel: "wooden side tables", physicalDimensions: { status: "unconfigured", shape: "rectangle", widthInches: null, depthInches: null }, resizable: false, inventoryOnly: true, icon: "rectangle" },
+  { type: "cocktail-table-plastic", name: "Cocktail Table — Plastic Top", shortLabel: "Plastic Cocktail", category: "Tables", width: 32, height: 32, inventoryLabel: "plastic-top cocktail tables", physicalDimensions: { status: "unconfigured", shape: "circle", widthInches: null, depthInches: null }, resizable: false, inventoryOnly: true, icon: "round" },
+  { type: "cocktail-table-white-wood", name: "Cocktail Table — White Wood Top", shortLabel: "White Wood Cocktail", category: "Tables", width: 32, height: 32, inventoryLabel: "white wooden-top cocktail tables", physicalDimensions: { status: "unconfigured", shape: "circle", widthInches: null, depthInches: null }, resizable: false, inventoryOnly: true, icon: "round" },
+  { type: "display-table-32", name: "32-inch Wood-Top Table", shortLabel: "32\" Wood Top", category: "Tables", width: 32, height: 32, inventoryLabel: "32-inch wood-top tables", physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: 32 }, resizable: false, inventoryOnly: true, icon: "round" },
   { type: "display-table-33", name: "33-inch Display Table", shortLabel: "33\" Display", category: "Tables", width: 33, height: 33, inventoryLabel: "33-inch display tables", physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: 33 }, resizable: false, inventoryOnly: true, icon: "round" },
   { type: "sweetheart-table-33", name: "33-inch Sweetheart/Cake Table", shortLabel: "33\" Sweetheart", category: "Tables", width: 33, height: 33, defaultSeats: 2, maximumSeats: 2, inventoryLabel: "33-inch sweetheart/cake tables", physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: 33 }, resizable: false, inventoryOnly: true, icon: "heart" },
   { type: "sweetheart-table", name: "36-inch Sweetheart Table", shortLabel: "36\" Sweetheart", category: "Tables", width: 36, height: 36, defaultSeats: 2, maximumSeats: 2, inventoryLabel: "36-inch sweetheart tables", physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: 36 }, resizable: false, icon: "heart" },
@@ -97,13 +103,14 @@ export const TABLE_TYPES = new Set<EventObjectType>([
   "rectangle-table-6",
   "rectangle-table-8",
   "farmhouse-table-6",
+  "farmhouse-table-8",
   "sweetheart-table-33",
   "sweetheart-table",
   "sweetheart-table-48",
 ]);
 
 export function isGuestTable(type: EventObjectType) {
-  return type === "round-table-48" || type === "round-table-60" || type === "round-table-72" || type === "rectangle-table-6" || type === "rectangle-table-8" || type === "farmhouse-table-6";
+  return type === "round-table-48" || type === "round-table-60" || type === "round-table-72" || type === "rectangle-table-6" || type === "rectangle-table-8" || type === "farmhouse-table-6" || type === "farmhouse-table-8";
 }
 
 export function getObjectVariant(type: EventObjectType, variant?: EventObjectVariant) {

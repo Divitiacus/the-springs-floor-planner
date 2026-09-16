@@ -25,6 +25,7 @@ import { createWillowbrookReserveConfiguration } from "@/domain/venues/willowbro
 import { createFarmhouseWallisvilleConfiguration } from "@/domain/venues/farmhouse-wallisville";
 import { createTheChateauCypressConfiguration } from "@/domain/venues/the-chateau-cypress";
 import { createTuscanyHillConfiguration } from "@/domain/venues/tuscany-hill";
+import { createWhiteSparrowConfiguration } from "@/domain/venues/white-sparrow";
 
 export type HallLevelConfiguration = {
   id: string;
@@ -368,6 +369,34 @@ export const CYPRESS_CHATEAU_INVENTORY: InventoryCatalog = {
   },
 };
 
+export const WHITE_SPARROW_INVENTORY: InventoryCatalog = {
+  scope: "hall",
+  limits: {
+    "round-table-48": 1,
+    "round-table-60": 28,
+    "rectangle-table-6": 2,
+    "rectangle-table-8": 4,
+    "farmhouse-table-6": 1,
+    "farmhouse-table-8": 8,
+    "parson-table-5": 2,
+    "side-table-wood": 2,
+    "cocktail-table-plastic": 4,
+    "cocktail-table-white-wood": 5,
+    "display-table-32": 1,
+    chairs: 400,
+  },
+  source: {
+    fileName: "user-supplied White Sparrow floor plans",
+    note: "The supplied inventory confirms 200 white garden chairs and 200 brown cross-back chairs. Cocktail-table diameters and wooden-side-table dimensions were not specified, so their planning footprints remain unconfigured.",
+  },
+  additionalItems: [
+    { sourceItemKey: "white-garden-chairs", name: "White garden chairs", quantity: 200 },
+    { sourceItemKey: "brown-cross-back-chairs", name: "Brown cross-back chairs", quantity: 200 },
+    { sourceItemKey: "farmhouse-table-6-rental", name: "6-foot rectangular farmhouse table", quantity: 1, note: "Rental: $40" },
+    { sourceItemKey: "farmhouse-table-8-rental", name: "8-foot rectangular farmhouse tables", quantity: 8, note: "Rental: $50 each" },
+  ],
+};
+
 export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
   {
     id: "location_magnolia",
@@ -631,6 +660,22 @@ export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
         configuration: {
           ...createTheChateauCypressConfiguration(),
           inventory: CYPRESS_CHATEAU_INVENTORY,
+        },
+      },
+    ],
+  },
+  {
+    id: "location_white_sparrow",
+    slug: "white-sparrow",
+    name: "White Sparrow",
+    halls: [
+      {
+        id: "hall_white_sparrow",
+        slug: "white-sparrow",
+        name: "White Sparrow",
+        configuration: {
+          ...createWhiteSparrowConfiguration(),
+          inventory: WHITE_SPARROW_INVENTORY,
         },
       },
     ],

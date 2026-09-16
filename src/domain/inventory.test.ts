@@ -169,6 +169,7 @@ describe("inventory validation", () => {
     ["rectangle-table-6", 8],
     ["rectangle-table-8", 10],
     ["farmhouse-table-6", 8],
+    ["farmhouse-table-8", 10],
     ["sweetheart-table-33", 2],
     ["sweetheart-table", 2],
     ["sweetheart-table-48", 2],

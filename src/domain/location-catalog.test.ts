@@ -26,11 +26,12 @@ import {
   WALLISVILLE_FARMHOUSE_INVENTORY,
   WEATHERFORD_PARKER_MANOR_INVENTORY,
   WEATHERFORD_WESTWOOD_RANCH_INVENTORY,
+  WHITE_SPARROW_INVENTORY,
 } from "@/domain/location-catalog";
 
 describe("location catalog", () => {
   it("defines Magnolia with exactly its two confirmed halls", () => {
-    expect(SPRINGS_LOCATIONS).toHaveLength(14);
+    expect(SPRINGS_LOCATIONS).toHaveLength(15);
     expect(SPRINGS_LOCATIONS[0]).toMatchObject({ name: "Magnolia", slug: "magnolia" });
     expect(SPRINGS_LOCATIONS[0].halls.map((hall) => hall.name)).toEqual([
       "Pinehaven Terrace",
@@ -1364,6 +1365,44 @@ describe("location catalog", () => {
       { x: 705, width: 44, rotation: 180, swingDirection: "counterclockwise", swingAngle: 42 },
       { x: 1210, width: 58, rotation: 0, swingDirection: "clockwise", swingAngle: 32 },
     ]);
+  });
+
+  it("defines White Sparrow as a two-level hall with its exact supplied inventory", () => {
+    const location = getLocationBySlug("white-sparrow");
+    const hall = getHallBySlug(location, "white-sparrow");
+    if (!location || !hall?.configuration) throw new Error("White Sparrow configuration missing");
+
+    expect(location).toMatchObject({ id: "location_white_sparrow", name: "White Sparrow" });
+    expect(hall).toMatchObject({ id: "hall_white_sparrow", name: "White Sparrow" });
+    expect(resolveInventoryConfiguration(location, hall)).toEqual(WHITE_SPARROW_INVENTORY.limits);
+    expect(WHITE_SPARROW_INVENTORY.limits).toMatchObject({
+      "round-table-60": 28,
+      "round-table-48": 1,
+      "rectangle-table-8": 4,
+      "rectangle-table-6": 2,
+      "farmhouse-table-8": 8,
+      "farmhouse-table-6": 1,
+      "parson-table-5": 2,
+      "side-table-wood": 2,
+      "cocktail-table-plastic": 4,
+      "cocktail-table-white-wood": 5,
+      "display-table-32": 1,
+      chairs: 400,
+    });
+
+    if (!isMultiLevelHallConfiguration(hall.configuration)) throw new Error("White Sparrow must be multi-level");
+    expect(hall.configuration.defaultLevelId).toBe("level-1-reception-hall");
+    const [downstairs, upstairs] = hall.configuration.levels;
+    expect(downstairs).toMatchObject({
+      id: "level-1-reception-hall",
+      planningBounds: { x: 560, y: 90, width: 720, height: 480 },
+    });
+    expect(upstairs).toMatchObject({
+      id: "level-2-upstairs-balcony",
+      planningBounds: { x: 680, y: 210, width: 376, height: 360 },
+    });
+    expect(isPositionOnFloor({ x: 800, y: 350 }, upstairs.usableAreas ?? [], upstairs.voidAreas ?? [])).toBe(true);
+    expect(isPositionOnFloor({ x: 300, y: 350 }, upstairs.usableAreas ?? [], upstairs.voidAreas ?? [])).toBe(false);
   });
 });
 
