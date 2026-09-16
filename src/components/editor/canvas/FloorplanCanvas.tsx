@@ -191,6 +191,10 @@ function ReferenceUnderlay({ asset }: { asset: ReferenceFloorplanAsset }) {
 function VenueLayer({ venue }: { venue: VenueTemplate }) {
   const floorAreaRoles = new Set(["main-floor", "event-floor-extension", "porch", "second-floor", "open-to-below"]);
   const gridAreaRoles = new Set(["main-floor", "event-floor-extension"]);
+  const floorElements = venue.elements.filter((element) => element.kind === "area" && floorAreaRoles.has(element.role));
+  // Vector-only venues can use explicit floor pieces for the drawing while
+  // usableAreas independently enforce their irregular placement boundary.
+  const useVectorFloor = venue.referenceAsset === null && floorElements.length > 0;
   const grid = venue.elements.flatMap((element) => {
     if (element.kind !== "area" || !gridAreaRoles.has(element.role) || element.shape.type !== "rectangle") return [];
 
@@ -207,12 +211,12 @@ function VenueLayer({ venue }: { venue: VenueTemplate }) {
 
   return (
     <>
-      {venue.usableAreas ? venue.usableAreas.map((region) => (
+      {!useVectorFloor && venue.usableAreas ? venue.usableAreas.map((region) => (
         <FloorRegionNode key={region.id} region={region} />
-      )) : venue.elements.filter((element) => element.kind === "area" && floorAreaRoles.has(element.role)).map((element) => (
+      )) : floorElements.map((element) => (
         <FixedArchitectureNode key={element.id} element={element} />
       ))}
-      {venue.usableAreas ? null : grid}
+      {useVectorFloor || !venue.usableAreas ? grid : null}
       {venue.voidAreas?.map((region) => (
         <FloorRegionNode key={region.id} region={region} />
       ))}

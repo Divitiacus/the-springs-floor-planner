@@ -73,6 +73,10 @@ function resolveHallLevel(
     physicalDimensionNote: configuration.physicalDimensionNote,
     fixedArchitecturalElements: configuration.fixedArchitecturalElements,
     floorplanAsset: configuration.floorplanAsset,
+    usableAreas: configuration.usableAreas,
+    voidAreas: configuration.voidAreas,
+    planningBounds: configuration.planningBounds,
+    defaultObjectPosition: configuration.defaultObjectPosition,
   };
 }
 

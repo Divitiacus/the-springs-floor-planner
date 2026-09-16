@@ -361,29 +361,58 @@ describe("location catalog", () => {
     const configuration = singleLevel(hall.configuration);
     const elements = configuration.fixedArchitecturalElements;
     expect(configuration).toMatchObject({
-      physicalWidthInches: 1446,
-      physicalHeightInches: 824,
+      physicalWidthInches: 1436,
+      physicalHeightInches: 926,
       physicalDimensionStatus: "source-traced",
+      planningBounds: { x: 50, y: 50, width: 1336, height: 826 },
     });
     expect(elements.every((element) => element.id.startsWith("oakview-lodge"))).toBe(true);
     expect(elements.find((element) => element.id === "oakview-lodge-main-floor")).toMatchObject({
       measurementStatus: "source-traced",
-      shape: { type: "rectangle", x: 55, y: 80, width: 1336, height: 664 },
+      showOutline: false,
+      shape: { type: "rectangle", x: 50, y: 212, width: 1336, height: 533 },
+    });
+    expect(elements.find((element) => element.id === "oakview-lodge-buffet-wing-floor")).toMatchObject({
+      showOutline: false,
+      shape: { type: "rectangle", x: 170, y: 50, width: 264, height: 162 },
+    });
+    expect(elements.find((element) => element.id === "oakview-lodge-upper-alcove-floor")).toMatchObject({
+      showOutline: false,
+      shape: { type: "rectangle", x: 633, y: 82, width: 364, height: 130 },
+    });
+    expect(elements.find((element) => element.id === "oakview-lodge-south-alcove-floor")).toMatchObject({
+      showOutline: false,
+      shape: { type: "rectangle", x: 624, y: 745, width: 374, height: 131 },
     });
     expect(elements.find((element) => element.id === "oakview-lodge-buffet")).toMatchObject({
       measurementStatus: "confirmed",
       shape: { type: "rectangle", width: 141.5, height: 36 },
     });
     expect(elements.find((element) => element.id === "oakview-lodge-bar")).toMatchObject({
-      measurementStatus: "confirmed",
-      shape: { type: "rectangle", width: 48, height: 186 },
+      measurementStatus: "source-traced",
+      role: "bar",
+      label: "BAR",
+      shape: { type: "rectangle", width: 85, height: 117 },
     });
     expect(elements.find((element) => element.id === "oakview-lodge-center-stair-flight")).toMatchObject({
       kind: "stairs",
-      width: 133,
-      height: 90,
+      width: 132,
+      height: 89,
     });
+    expect(elements.find((element) => element.id === "oakview-lodge-upper-stair-flight")).toBeUndefined();
+    expect(elements.find((element) => element.id === "oakview-lodge-stair-landing")).toBeUndefined();
+    expect(elements.find((element) => element.id === "oakview-lodge-upstairs-label")).toMatchObject({
+      kind: "label",
+      label: "UPSTAIRS",
+    });
+    expect(elements.find((element) => element.id === "oakview-lodge-lower-stair-flight")).toBeUndefined();
+    expect(elements.find((element) => element.id === "oakview-lodge-stair-west-rail")).toBeUndefined();
+    expect(elements.find((element) => element.id === "oakview-lodge-room-label")).toBeUndefined();
+    expect(elements.find((element) => element.id === "oakview-lodge-alcove-label")).toBeUndefined();
     expect(elements.find((element) => element.id === "oakview-lodge-kitchen-door")).toMatchObject({ kind: "door" });
+    expect(elements.filter((element) => element.id.includes("patio-door"))).toHaveLength(4);
+    expect(elements.find((element) => element.id === "oakview-lodge-perimeter-wall")).toMatchObject({ kind: "wall" });
+    expect(configuration.usableAreas).toHaveLength(4);
     expect(elements.find((element) => element.id === "oakview-lodge-fireplace-stone")).toMatchObject({
       shape: { type: "rectangle", width: 26, height: 122 },
     });

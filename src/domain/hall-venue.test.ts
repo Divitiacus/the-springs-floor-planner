@@ -113,9 +113,11 @@ describe("hall venue template", () => {
 
     expect(venue.id).toBe("location_denton:hall_oakview_lodge");
     expect(venue.name).toBe("Denton · Oakview Lodge");
-    expect(venue.hall).toEqual({ x: 55, y: 80, width: 1336, height: 664 });
+    expect(venue.hall).toEqual({ x: 50, y: 50, width: 1336, height: 826 });
     expect(venue.physicalDimensionStatus).toBe("source-traced");
     expect(venue.referenceAsset).toBeNull();
+    expect(venue.usableAreas).toHaveLength(4);
+    expect(venue.defaultObjectPosition).toEqual({ x: 819, y: 494 });
     expect(table.width / venue.hall.width).toBeCloseTo(60 / 1336, 12);
   });
 

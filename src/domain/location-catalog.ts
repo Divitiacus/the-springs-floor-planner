@@ -48,6 +48,10 @@ export type SingleLevelHallConfiguration = HallConfigurationShared & {
   physicalDimensionNote?: string;
   fixedArchitecturalElements: readonly FixedArchitectureElement[];
   floorplanAsset: ReferenceFloorplanAsset | null;
+  usableAreas?: readonly VenueFloorRegion[];
+  voidAreas?: readonly VenueFloorRegion[];
+  planningBounds?: { x: number; y: number; width: number; height: number };
+  defaultObjectPosition?: { x: number; y: number };
   levels?: never;
   defaultLevelId?: never;
 };
