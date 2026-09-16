@@ -274,6 +274,22 @@ describe("hall venue template", () => {
     expect(table.width / venue.hall.width).toBe(1 / 16);
   });
 
+  it("loads Norman's Aurora Grove with the Westwood Ranch footprint and its own identity", () => {
+    const location = getLocationBySlug("norman");
+    const hall = getHallBySlug(location, "aurora-grove");
+    if (!location || !hall) throw new Error("Aurora Grove catalog entry missing");
+
+    const venue = createHallVenueTemplate(location, hall);
+    const table = createEventObject("round-table-60", { x: 660, y: 420 }, [], "aurora-grove-scale");
+
+    expect(venue.id).toBe("location_norman:hall_aurora_grove");
+    expect(venue.name).toBe("Norman · Aurora Grove");
+    expect(venue.hall).toEqual({ x: 192, y: 60, width: 960, height: 720 });
+    expect(venue.referenceAsset).toBeNull();
+    expect(venue.elements.every((element) => element.id.startsWith("aurora-grove"))).toBe(true);
+    expect(table.width / venue.hall.width).toBe(1 / 16);
+  });
+
   it("resolves Cypress as two independent venue templates without concatenating architecture", () => {
     const location = getLocationBySlug("cypress");
     const hall = getHallBySlug(location, "the-chateau");

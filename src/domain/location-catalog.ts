@@ -5,6 +5,7 @@ import type {
   VenueFloorRegion,
 } from "@/domain/floorplan";
 import type { InventoryCatalog, InventoryConfiguration } from "@/domain/inventory";
+import { createAuroraGroveConfiguration } from "@/domain/venues/aurora-grove";
 import { createHavenstoneReserveConfiguration } from "@/domain/venues/havenstone-reserve";
 import { createHeritagePineConfiguration } from "@/domain/venues/heritage-pine";
 import { createHiddenMagnoliaConfiguration } from "@/domain/venues/hidden-magnolia";
@@ -321,6 +322,15 @@ export const WEATHERFORD_WESTWOOD_RANCH_INVENTORY: InventoryCatalog = {
   },
 };
 
+export const NORMAN_INVENTORY: InventoryCatalog = {
+  scope: "hall",
+  limits: { ...WEATHERFORD_WESTWOOD_RANCH_INVENTORY.limits },
+  source: {
+    fileName: "user-confirmed",
+    note: "Aurora Grove matches Westwood Ranch's table inventory and 320-chair guest capacity.",
+  },
+};
+
 export const WALLISVILLE_FARMHOUSE_INVENTORY: InventoryCatalog = {
   scope: "hall",
   limits: {
@@ -548,6 +558,22 @@ export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
         configuration: {
           ...createWillowbrookReserveConfiguration(),
           inventory: EDMOND_INVENTORY,
+        },
+      },
+    ],
+  },
+  {
+    id: "location_norman",
+    slug: "norman",
+    name: "Norman",
+    halls: [
+      {
+        id: "hall_aurora_grove",
+        slug: "aurora-grove",
+        name: "Aurora Grove",
+        configuration: {
+          ...createAuroraGroveConfiguration(),
+          inventory: NORMAN_INVENTORY,
         },
       },
     ],

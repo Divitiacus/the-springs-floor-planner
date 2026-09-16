@@ -14,6 +14,7 @@ import {
   MAGNOLIA_MANOR_INVENTORY,
   MCKINNEY_INVENTORY,
   MCKINNEY_TUSCANY_HILL_INVENTORY,
+  NORMAN_INVENTORY,
   ROCKWALL_INVENTORY,
   isMultiLevelHallConfiguration,
   resolveInventoryConfiguration,
@@ -29,7 +30,7 @@ import {
 
 describe("location catalog", () => {
   it("defines Magnolia with exactly its two confirmed halls", () => {
-    expect(SPRINGS_LOCATIONS).toHaveLength(13);
+    expect(SPRINGS_LOCATIONS).toHaveLength(14);
     expect(SPRINGS_LOCATIONS[0]).toMatchObject({ name: "Magnolia", slug: "magnolia" });
     expect(SPRINGS_LOCATIONS[0].halls.map((hall) => hall.name)).toEqual([
       "Pinehaven Terrace",
@@ -726,6 +727,38 @@ describe("location catalog", () => {
     expect(curvedSteps.every((element) => element.placementBehavior === "blocked")).toBe(true);
     expect(configuration.fixedArchitecturalElements.some((element) => element.id.includes("stonecreek-reserve"))).toBe(false);
     expect(configuration.fixedArchitecturalElements.some((element) => element.kind === "stairs" && element.id.includes("stage"))).toBe(false);
+  });
+
+  it("defines Norman Aurora Grove with Westwood Ranch's inventory and curved stage steps", () => {
+    const location = getLocationBySlug("norman");
+    const hall = getHallBySlug(location, "aurora-grove");
+    if (!location || !hall?.configuration) throw new Error("Norman Aurora Grove configuration missing");
+
+    expect(location).toMatchObject({ id: "location_norman", slug: "norman", name: "Norman" });
+    expect(hall).toMatchObject({ id: "hall_aurora_grove", slug: "aurora-grove", name: "Aurora Grove" });
+    expect(NORMAN_INVENTORY).toMatchObject({
+      scope: "hall",
+      limits: WEATHERFORD_WESTWOOD_RANCH_INVENTORY.limits,
+    });
+    expect(resolveInventoryConfiguration(location, hall)).toEqual(WEATHERFORD_WESTWOOD_RANCH_INVENTORY.limits);
+
+    const configuration = singleLevel(hall.configuration);
+    const mainFloor = configuration.fixedArchitecturalElements.find(
+      (element) => element.kind === "area" && element.role === "main-floor",
+    );
+    const curvedSteps = configuration.fixedArchitecturalElements.filter(
+      (element) => element.kind === "path" && element.id.startsWith("aurora-grove-curved-stage-step"),
+    );
+
+    expect(configuration).toMatchObject({ physicalWidthInches: 1320, physicalHeightInches: 840 });
+    expect(mainFloor).toMatchObject({
+      id: "aurora-grove-main-floor",
+      shape: { x: 192, y: 60, width: 960, height: 720 },
+    });
+    expect(curvedSteps).toHaveLength(4);
+    expect(configuration.fixedArchitecturalElements.every((element) => element.id.startsWith("aurora-grove"))).toBe(true);
+    expect(configuration.fixedArchitecturalElements.some((element) => element.id.includes("westwood-ranch"))).toBe(false);
+    expect(configuration.floorplanAsset).toBeNull();
   });
 
   it("models Parker Manor's confirmed plan measurements and supplied table counts", () => {
