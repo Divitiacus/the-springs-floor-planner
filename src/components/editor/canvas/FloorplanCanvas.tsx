@@ -15,6 +15,7 @@ import type {
 import { OBJECT_DEFINITIONS, isGuestTable, TABLE_TYPES } from "@/domain/object-catalog";
 import type { ServicePlan } from "@/domain/service-markers";
 import { DEFAULT_SEAT_COLOR, getSeatServiceColor, NO_ALCOHOL_COLOR } from "@/domain/service-markers";
+import { getSeatNumbering } from "@/domain/seat-numbering";
 import type { EditorMode } from "@/components/editor/EditorToolbar";
 
 type Props = {
@@ -47,6 +48,7 @@ export function FloorplanCanvas({ layout, servicePlan, venue, selectedId, mode, 
   );
   const scale = fitScale * zoom;
   const hasArchitecturalBase = venue.referenceAsset?.visualRole === "architectural-base";
+  const seatNumbering = useMemo(() => getSeatNumbering(layout.objects), [layout.objects]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -133,6 +135,8 @@ export function FloorplanCanvas({ layout, servicePlan, venue, selectedId, mode, 
               key={object.id}
               object={object}
               servicePlan={servicePlan}
+              firstSeatNumber={seatNumbering.linkedChairSeats.get(object.id)?.firstSeatNumber ?? 1}
+              displaySeatCount={seatNumbering.totalSeatsByTableId.get(object.id) ?? object.seats}
               selected={object.id === selectedId}
               canDrag={mode === "select"}
               setNode={(node) => {
@@ -477,6 +481,8 @@ function getAreaBounds(element: Extract<FixedArchitectureElement, { kind: "area"
 type ObjectNodeProps = {
   object: EventObject;
   servicePlan: ServicePlan;
+  firstSeatNumber: number;
+  displaySeatCount?: number;
   selected: boolean;
   canDrag: boolean;
   setNode: (node: Konva.Group | null) => void;
@@ -485,7 +491,7 @@ type ObjectNodeProps = {
   onOpenDetails: () => void;
 };
 
-function EventObjectNode({ object, servicePlan, selected, canDrag, setNode, onSelect, onChange, onOpenDetails }: ObjectNodeProps) {
+function EventObjectNode({ object, servicePlan, firstSeatNumber, displaySeatCount, selected, canDrag, setNode, onSelect, onChange, onOpenDetails }: ObjectNodeProps) {
   const isRound = object.physicalDimensions.shape === "circle";
   const isDance = object.type === "dance-floor";
   const isChair = object.type === "chair";
@@ -543,46 +549,51 @@ function EventObjectNode({ object, servicePlan, selected, canDrag, setNode, onSe
         <Rect x={-object.width / 2} y={-object.height / 2} width={object.width} height={object.height} fill={fill} stroke={stroke} strokeWidth={chairNoAlcohol ? 3 : selected ? 2 : isChair ? 0 : 2} cornerRadius={isChair ? 2 : isDance ? 2 : 8} shadowColor="#405047" shadowBlur={selected ? 8 : isChair ? 0 : 3} shadowOpacity={0.14} />
       )}
       {isDance ? <DanceGrid width={object.width} height={object.height} /> : null}
-      {TABLE_TYPES.has(object.type) ? <SeatMarkers object={object} servicePlan={servicePlan} /> : null}
+      {TABLE_TYPES.has(object.type) ? <SeatMarkers object={object} servicePlan={servicePlan} firstSeatNumber={firstSeatNumber} /> : null}
+      {isChair ? (
+        <Text
+          x={-6}
+          y={-4.5}
+          width={12}
+          height={9}
+          align="center"
+          verticalAlign="middle"
+          text={String(firstSeatNumber)}
+          fontSize={7}
+          fontStyle="bold"
+          fill="#1f3328"
+          listening={false}
+        />
+      ) : null}
       {!isChair ? (
         <>
           <Text x={-object.width / 2 + 5} y={-8} width={object.width - 10} align="center" text={object.label} fontSize={Math.min(14, Math.max(10, object.width / 9))} fontStyle="bold" fill="#33473b" ellipsis />
-          {object.seats !== undefined ? <Text x={-object.width / 2 + 5} y={isRound ? 10 : 3} width={object.width - 10} height={10} align="center" verticalAlign="middle" text={`${object.seats} seats`} fontSize={9} fill="#79867e" /> : null}
+          {displaySeatCount !== undefined ? <Text x={-object.width / 2 + 5} y={isRound ? 10 : 3} width={object.width - 10} height={10} align="center" verticalAlign="middle" text={`${displaySeatCount} seats`} fontSize={9} fill="#79867e" /> : null}
         </>
       ) : null}
     </Group>
   );
 }
 
-function SeatMarkers({ object, servicePlan }: { object: EventObject; servicePlan: ServicePlan }) {
+function SeatMarkers({ object, servicePlan, firstSeatNumber }: { object: EventObject; servicePlan: ServicePlan; firstSeatNumber: number }) {
   const count = Math.min(object.seats ?? 0, 12);
   if (!count) return null;
   if (object.type === "half-moon-table") {
     return <>{Array.from({ length: count }, (_, index) => {
       const style = getSeatMarkerStyle(object, index, servicePlan);
-      return (
-        <Rect
-          key={index}
-          x={-object.width / 2 + ((index + 1) * object.width) / (count + 1) - 5}
-          y={object.height / 2 + 2}
-          width={10}
-          height={7}
-          cornerRadius={2}
-          {...style}
-        />
-      );
+      const x = -object.width / 2 + ((index + 1) * object.width) / (count + 1) - 6;
+      const y = object.height / 2 + 2;
+      return <NumberedRectSeat key={index} x={x} y={y} number={firstSeatNumber + index} style={style} />;
     })}</>;
   }
   if (object.physicalDimensions.shape === "circle") {
     return <>{Array.from({ length: count }, (_, index) => {
-      const angle = (Math.PI * 2 * index) / count;
+      const angle = (Math.PI * 2 * index) / count - Math.PI / 2;
       const radius = object.width / 2 + 8;
       const x = Math.cos(angle) * radius;
       const y = Math.sin(angle) * radius;
       const style = getSeatMarkerStyle(object, index, servicePlan);
-      return (
-        <Circle key={index} x={x} y={y} radius={4.5} {...style} />
-      );
+      return <NumberedRoundSeat key={index} x={x} y={y} number={firstSeatNumber + index} style={style} />;
     })}</>;
   }
   const perSide = Math.ceil(count / 2);
@@ -590,12 +601,31 @@ function SeatMarkers({ object, servicePlan }: { object: EventObject; servicePlan
     const top = index < perSide;
     const sideIndex = top ? index : index - perSide;
     const sideCount = top ? perSide : count - perSide;
-    const x = -object.width / 2 + ((sideIndex + 1) * object.width) / (sideCount + 1);
+    const visualIndex = top ? sideIndex : sideCount - sideIndex - 1;
+    const x = -object.width / 2 + ((visualIndex + 1) * object.width) / (sideCount + 1);
     const style = getSeatMarkerStyle(object, index, servicePlan);
-    return (
-      <Rect key={index} x={x - 5} y={top ? -object.height / 2 - 9 : object.height / 2 + 2} width={10} height={7} cornerRadius={2} {...style} />
-    );
+    return <NumberedRectSeat key={index} x={x - 6} y={top ? -object.height / 2 - 11 : object.height / 2 + 2} number={firstSeatNumber + index} style={style} />;
   })}</>;
+}
+
+type SeatMarkerStyle = ReturnType<typeof getSeatMarkerStyle>;
+
+function NumberedRoundSeat({ x, y, number, style }: { x: number; y: number; number: number; style: SeatMarkerStyle }) {
+  return (
+    <Group x={x} y={y} listening={false}>
+      <Circle radius={6} {...style} />
+      <Text x={-6} y={-4.5} width={12} height={9} align="center" verticalAlign="middle" text={String(number)} fontSize={6.5} fontStyle="bold" fill="#1f3328" />
+    </Group>
+  );
+}
+
+function NumberedRectSeat({ x, y, number, style }: { x: number; y: number; number: number; style: SeatMarkerStyle }) {
+  return (
+    <Group x={x} y={y} listening={false}>
+      <Rect width={12} height={9} cornerRadius={2} {...style} />
+      <Text width={12} height={9} align="center" verticalAlign="middle" text={String(number)} fontSize={6.5} fontStyle="bold" fill="#1f3328" />
+    </Group>
+  );
 }
 
 function getSeatMarkerStyle(object: EventObject, seatIndex: number, servicePlan: ServicePlan) {

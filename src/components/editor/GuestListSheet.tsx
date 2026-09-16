@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { ClipboardList, Download, Printer, Users } from "lucide-react";
 import type { EventObject } from "@/domain/floorplan";
 import { hasGuestDetails, serializeGuestListCsv } from "@/domain/guest-list-export";
+import { getSeatNumbering } from "@/domain/seat-numbering";
 import type { ServicePlan } from "@/domain/service-markers";
 import { DEFAULT_SEAT_COLOR, getSeatServiceColor, NO_ALCOHOL_COLOR } from "@/domain/service-markers";
 import { ServiceLegend } from "@/components/editor/ServiceLegend";
@@ -226,29 +227,7 @@ function SummaryBadge({ label, value }: { label: string; value: number }) {
 }
 
 function buildGuestRows(objects: readonly EventObject[], servicePlan: ServicePlan): GuestRow[] {
-  const linkedChairSeats = new Map<string, { tableNumber: number; firstSeatNumber: number }>();
-  const groups = new Map<string, EventObject[]>();
-  for (const object of objects) {
-    if (!object.linkedGroupId) continue;
-    const group = groups.get(object.linkedGroupId) ?? [];
-    group.push(object);
-    groups.set(object.linkedGroupId, group);
-  }
-  for (const group of groups.values()) {
-    const tables = group.filter((object) => object.tableNumber).sort((first, second) => first.zIndex - second.zIndex);
-    const chairs = group.filter((object) => object.type === "chair").sort((first, second) => first.zIndex - second.zIndex);
-    const nextSeatByTable = new Map(tables.map((table) => [table.id, Math.max(0, Math.floor(table.seats ?? 0)) + 1]));
-    for (const chair of chairs) {
-      const table = tables.reduce<EventObject | undefined>((nearest, candidate) => {
-        if (!nearest) return candidate;
-        return distanceBetween(chair, candidate) < distanceBetween(chair, nearest) ? candidate : nearest;
-      }, undefined);
-      if (!table?.tableNumber) continue;
-      const firstSeatNumber = nextSeatByTable.get(table.id) ?? 1;
-      linkedChairSeats.set(chair.id, { tableNumber: table.tableNumber, firstSeatNumber });
-      nextSeatByTable.set(table.id, firstSeatNumber + Math.max(0, Math.floor(chair.seats ?? 0)));
-    }
-  }
+  const { linkedChairSeats } = getSeatNumbering(objects);
 
   return objects
     .flatMap((object) => {
@@ -271,8 +250,4 @@ function buildGuestRows(objects: readonly EventObject[], servicePlan: ServicePla
       }));
     })
     .sort((first, second) => first.sortOrder - second.sortOrder || first.displaySeatNumber - second.displaySeatNumber || first.objectId.localeCompare(second.objectId));
-}
-
-function distanceBetween(first: EventObject, second: EventObject) {
-  return Math.hypot(first.x - second.x, first.y - second.y);
 }
