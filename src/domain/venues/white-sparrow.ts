@@ -1,9 +1,9 @@
 import type { FixedArchitectureElement, VenueFloorRegion } from "@/domain/floorplan";
 import type { HallConfiguration, HallLevelConfiguration } from "@/domain/location-catalog";
 
-const CANVAS_WIDTH = 1340;
+const CANVAS_WIDTH = 1560;
 const CANVAS_HEIGHT = 660;
-const HALL_X = 560;
+const HALL_X = 780;
 const HALL_Y = 90;
 const HALL_WIDTH = 720; // 60 feet
 const HALL_HEIGHT = 480; // 40 feet
@@ -79,16 +79,16 @@ export function createWhiteSparrowConfiguration(): HallConfiguration {
 function createDownstairsElements(common: Common): FixedArchitectureElement[] {
   return [
     floor(common, "white-sparrow-main-floor", "MAIN RECEPTION HALL · 60′ × 40′", HALL_X, HALL_Y, HALL_WIDTH, HALL_HEIGHT, "confirmed"),
-    blockedArea(common, "white-sparrow-service-wing", "catering", "SERVICE AREA", 60, HALL_Y, HALL_X - 60, HALL_HEIGHT, false),
-    blockedArea(common, "white-sparrow-kitchen", "catering", "KITCHEN", 80, 105, 220, 145),
-    blockedArea(common, "white-sparrow-storage", "closet", "STORAGE", 315, 105, 125, 145),
+    blockedArea(common, "white-sparrow-service-wing", "catering", "SERVICE AREA", 60, HALL_Y, HALL_WIDTH, HALL_HEIGHT, false),
+    blockedArea(common, "white-sparrow-kitchen", "catering", "KITCHEN", 60, HALL_Y, 250, 175),
+    blockedArea(common, "white-sparrow-storage", "closet", "STORAGE", 310, HALL_Y, 155, 175),
     lShapedBar(common),
-    label(common, "white-sparrow-bar-label", "BAR", 465, 146, 64, 9),
+    label(common, "white-sparrow-bar-label", "BAR", 505, 146, 90, 9),
     blockedArea(common, "white-sparrow-office", "closet", "OFFICE", 60, 395, 205, 175),
     blockedArea(common, "white-sparrow-restroom-west", "closet", "RESTROOM", 265, 395, 135, 175),
-    blockedArea(common, "white-sparrow-restroom-east", "closet", "RESTROOM", 430, 395, 130, 175),
-    stairs(common, "white-sparrow-downstairs-stairs-south", 430, 470, 130, 100, "horizontal", 10, "x"),
-    stairs(common, "white-sparrow-downstairs-stairs-east", 505, 380, 55, 90, "vertical", 7, "y"),
+    blockedArea(common, "white-sparrow-restroom-under-stairs", "closet", "RESTROOM\nUNDER STAIRS", 450, 395, 130, 175),
+    stairs(common, "white-sparrow-downstairs-stairs-south", 580, 470, 200, 100, "horizontal", 13, "x"),
+    stairs(common, "white-sparrow-downstairs-stairs-east", 720, 380, 60, 90, "vertical", 7, "y"),
     wall(common, "white-sparrow-hall-north-wall", [HALL_X, HALL_Y, HALL_X + HALL_WIDTH, HALL_Y]),
     wall(common, "white-sparrow-hall-east-wall", [HALL_X + HALL_WIDTH, HALL_Y, HALL_X + HALL_WIDTH, HALL_Y + HALL_HEIGHT]),
     wall(common, "white-sparrow-hall-south-wall", [HALL_X, HALL_Y + HALL_HEIGHT, HALL_X + HALL_WIDTH, HALL_Y + HALL_HEIGHT]),
@@ -104,10 +104,15 @@ function createDownstairsElements(common: Common): FixedArchitectureElement[] {
 function createUpstairsElements(common: Common): FixedArchitectureElement[] {
   return [
     floor(common, "white-sparrow-upstairs-balcony", "UPSTAIRS BALCONY · 31′4″", BALCONY_X, BALCONY_Y, BALCONY_WIDTH, BALCONY_HEIGHT, "confirmed"),
-    blockedArea(common, "white-sparrow-upstairs-suite-wing", "closet", "SUITES / SUPPORT AREA", 40, HALL_Y, BALCONY_X - 40, HALL_HEIGHT, false),
-    blockedArea(common, "white-sparrow-upstairs-stair-landing", "landing", "STAIR LANDING", 430, 380, 75, 90, false),
-    stairs(common, "white-sparrow-upstairs-east-flight", 505, 380, 55, 90, "vertical", 7, "y"),
-    stairs(common, "white-sparrow-upstairs-south-flight", 430, 470, 130, 100, "horizontal", 10, "x"),
+    blockedArea(common, "white-sparrow-upstairs-suite-wing", "closet", "SUITES / SUPPORT AREA", 60, HALL_Y, BALCONY_X - 60, HALL_HEIGHT, false),
+    blockedArea(common, "white-sparrow-upstairs-dressing-north", "closet", "DRESSING ROOM", 60, HALL_Y, 215, 145),
+    blockedArea(common, "white-sparrow-upstairs-restroom-north", "closet", "RESTROOM", 275, HALL_Y, BALCONY_X - 275, 145),
+    blockedArea(common, "white-sparrow-upstairs-grooms-suite", "closet", "GROOM'S SUITE", 60, 235, BALCONY_X - 60, 190),
+    blockedArea(common, "white-sparrow-upstairs-dressing-south", "closet", "DRESSING ROOM", 60, 425, 215, 145),
+    blockedArea(common, "white-sparrow-upstairs-restroom-south", "closet", "RESTROOM", 275, 425, BALCONY_X - 275, 145),
+    blockedArea(common, "white-sparrow-upstairs-stair-landing", "landing", "STAIR LANDING", 580, 380, 140, 90, false),
+    stairs(common, "white-sparrow-upstairs-east-flight", 720, 380, 60, 90, "vertical", 7, "y"),
+    stairs(common, "white-sparrow-upstairs-south-flight", 580, 470, 200, 100, "horizontal", 13, "x"),
     wall(common, "white-sparrow-balcony-west-wall", [BALCONY_X, BALCONY_Y, BALCONY_X, BALCONY_Y + BALCONY_HEIGHT]),
     railing(common, "white-sparrow-balcony-north-rail", [BALCONY_X, BALCONY_Y, BALCONY_X + BALCONY_WIDTH, BALCONY_Y]),
     railing(common, "white-sparrow-balcony-south-rail", [BALCONY_X, BALCONY_Y + BALCONY_HEIGHT, BALCONY_X + BALCONY_WIDTH, BALCONY_Y + BALCONY_HEIGHT]),
@@ -140,7 +145,7 @@ function lShapedBar(common: Common): FixedArchitectureElement {
     elevation: "floor",
     shape: {
       type: "polygon",
-      points: [440, 140, 535, 140, 535, 90, 560, 90, 560, 180, 440, 180],
+      points: [465, 140, 610, 140, 610, 90, 640, 90, 640, 180, 465, 180],
     },
     showLabel: false,
   };

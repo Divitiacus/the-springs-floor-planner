@@ -1387,7 +1387,7 @@ describe("location catalog", () => {
       "cocktail-table-plastic": 4,
       "cocktail-table-white-wood": 5,
       "display-table-32": 1,
-      chairs: 400,
+      chairs: 200,
     });
 
     if (!isMultiLevelHallConfiguration(hall.configuration)) throw new Error("White Sparrow must be multi-level");
@@ -1395,28 +1395,38 @@ describe("location catalog", () => {
     const [downstairs, upstairs] = hall.configuration.levels;
     expect(downstairs).toMatchObject({
       id: "level-1-reception-hall",
-      planningBounds: { x: 560, y: 90, width: 720, height: 480 },
+      planningBounds: { x: 780, y: 90, width: 720, height: 480 },
     });
     expect(upstairs).toMatchObject({
       id: "level-2-upstairs-balcony",
-      planningBounds: { x: 184, y: 90, width: 376, height: 360 },
+      planningBounds: { x: 404, y: 90, width: 376, height: 360 },
     });
     expect(upstairs.voidAreas?.[0]).toMatchObject({
-      shape: { type: "rectangle", x: 560, y: 90, width: 720, height: 480 },
+      shape: { type: "rectangle", x: 780, y: 90, width: 720, height: 480 },
     });
-    expect(isPositionOnFloor({ x: 300, y: 250 }, upstairs.usableAreas ?? [], upstairs.voidAreas ?? [])).toBe(true);
-    expect(isPositionOnFloor({ x: 800, y: 350 }, upstairs.usableAreas ?? [], upstairs.voidAreas ?? [])).toBe(false);
+    expect(isPositionOnFloor({ x: 520, y: 250 }, upstairs.usableAreas ?? [], upstairs.voidAreas ?? [])).toBe(true);
+    expect(isPositionOnFloor({ x: 1000, y: 350 }, upstairs.usableAreas ?? [], upstairs.voidAreas ?? [])).toBe(false);
 
     const kitchen = downstairs.fixedArchitecturalElements.find((element) => element.id === "white-sparrow-kitchen");
     const storage = downstairs.fixedArchitecturalElements.find((element) => element.id === "white-sparrow-storage");
     const bar = downstairs.fixedArchitecturalElements.find((element) => element.id === "white-sparrow-bar");
-    expect(kitchen).toMatchObject({ shape: { type: "rectangle", width: 220, height: 145 } });
-    expect(storage).toMatchObject({ shape: { type: "rectangle", width: 125, height: 145 } });
+    expect(kitchen).toMatchObject({ shape: { type: "rectangle", width: 250, height: 175 } });
+    expect(storage).toMatchObject({ shape: { type: "rectangle", width: 155, height: 175 } });
     expect(bar).toMatchObject({
       kind: "area",
       role: "bar",
       placementBehavior: "blocked",
-      shape: { type: "polygon", points: [440, 140, 535, 140, 535, 90, 560, 90, 560, 180, 440, 180] },
+      shape: { type: "polygon", points: [465, 140, 610, 140, 610, 90, 640, 90, 640, 180, 465, 180] },
+    });
+    expect(downstairs.fixedArchitecturalElements.find((element) => element.id === "white-sparrow-restroom-under-stairs")).toMatchObject({
+      kind: "area",
+      label: "RESTROOM\nUNDER STAIRS",
+      placementBehavior: "blocked",
+    });
+    expect(upstairs.fixedArchitecturalElements.find((element) => element.id === "white-sparrow-upstairs-grooms-suite")).toMatchObject({
+      kind: "area",
+      label: "GROOM'S SUITE",
+      shape: { type: "rectangle", width: 344, height: 190 },
     });
   });
 });
