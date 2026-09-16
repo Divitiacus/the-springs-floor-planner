@@ -1406,6 +1406,18 @@ describe("location catalog", () => {
     });
     expect(isPositionOnFloor({ x: 300, y: 250 }, upstairs.usableAreas ?? [], upstairs.voidAreas ?? [])).toBe(true);
     expect(isPositionOnFloor({ x: 800, y: 350 }, upstairs.usableAreas ?? [], upstairs.voidAreas ?? [])).toBe(false);
+
+    const kitchen = downstairs.fixedArchitecturalElements.find((element) => element.id === "white-sparrow-kitchen");
+    const storage = downstairs.fixedArchitecturalElements.find((element) => element.id === "white-sparrow-storage");
+    const bar = downstairs.fixedArchitecturalElements.find((element) => element.id === "white-sparrow-bar");
+    expect(kitchen).toMatchObject({ shape: { type: "rectangle", width: 220, height: 145 } });
+    expect(storage).toMatchObject({ shape: { type: "rectangle", width: 125, height: 145 } });
+    expect(bar).toMatchObject({
+      kind: "area",
+      role: "bar",
+      placementBehavior: "blocked",
+      shape: { type: "polygon", points: [440, 140, 535, 140, 535, 90, 560, 90, 560, 180, 440, 180] },
+    });
   });
 });
 

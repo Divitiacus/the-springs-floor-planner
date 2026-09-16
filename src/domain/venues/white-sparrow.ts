@@ -80,9 +80,10 @@ function createDownstairsElements(common: Common): FixedArchitectureElement[] {
   return [
     floor(common, "white-sparrow-main-floor", "MAIN RECEPTION HALL · 60′ × 40′", HALL_X, HALL_Y, HALL_WIDTH, HALL_HEIGHT, "confirmed"),
     blockedArea(common, "white-sparrow-service-wing", "catering", "SERVICE AREA", 60, HALL_Y, HALL_X - 60, HALL_HEIGHT, false),
-    blockedArea(common, "white-sparrow-kitchen", "catering", "KITCHEN", 60, HALL_Y, 250, 175),
-    blockedArea(common, "white-sparrow-storage", "closet", "STORAGE", 310, HALL_Y, 155, 175),
-    blockedArea(common, "white-sparrow-bar", "bar", "BAR", 405, 132, 155, 42),
+    blockedArea(common, "white-sparrow-kitchen", "catering", "KITCHEN", 80, 105, 220, 145),
+    blockedArea(common, "white-sparrow-storage", "closet", "STORAGE", 315, 105, 125, 145),
+    lShapedBar(common),
+    label(common, "white-sparrow-bar-label", "BAR", 465, 146, 64, 9),
     blockedArea(common, "white-sparrow-office", "closet", "OFFICE", 60, 395, 205, 175),
     blockedArea(common, "white-sparrow-restroom-west", "closet", "RESTROOM", 265, 395, 135, 175),
     blockedArea(common, "white-sparrow-restroom-east", "closet", "RESTROOM", 430, 395, 130, 175),
@@ -126,6 +127,23 @@ function floor(common: Common, id: string, areaLabel: string, x: number, y: numb
 
 function blockedArea(common: Common, id: string, role: Extract<FixedArchitectureElement, { kind: "area" }>["role"], areaLabel: string, x: number, y: number, width: number, height: number, showLabel = true): FixedArchitectureElement {
   return { ...common, id, kind: "area", role, label: areaLabel, placementBehavior: "blocked", elevation: "floor", shape: { type: "rectangle", x, y, width, height }, showLabel };
+}
+
+function lShapedBar(common: Common): FixedArchitectureElement {
+  return {
+    ...common,
+    id: "white-sparrow-bar",
+    kind: "area",
+    role: "bar",
+    label: "L-shaped fixed bar",
+    placementBehavior: "blocked",
+    elevation: "floor",
+    shape: {
+      type: "polygon",
+      points: [440, 140, 535, 140, 535, 90, 560, 90, 560, 180, 440, 180],
+    },
+    showLabel: false,
+  };
 }
 
 function wall(common: Common, id: string, points: number[]): FixedArchitectureElement {
