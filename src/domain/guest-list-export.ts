@@ -4,6 +4,7 @@ export type GuestListExportRow = {
   name: string;
   serviceNote: string;
   role: string;
+  rsvpReceived: boolean;
   noAlcohol: boolean;
 };
 
@@ -11,6 +12,7 @@ const CSV_HEADERS = [
   "Table",
   "Seat",
   "Guest Name",
+  "RSVP Received",
   "Service Note",
   "Role / Group",
   "Under 21 / No Alcohol",
@@ -24,6 +26,7 @@ export function serializeGuestListCsv(rows: readonly GuestListExportRow[]) {
       row.tableLabel,
       String(row.displaySeatNumber),
       row.name,
+      row.rsvpReceived ? "Yes" : "",
       row.serviceNote,
       row.role,
       row.noAlcohol ? "Yes" : "",
@@ -33,8 +36,8 @@ export function serializeGuestListCsv(rows: readonly GuestListExportRow[]) {
   return `\uFEFF${records.map((record) => record.map(escapeCsvValue).join(",")).join("\r\n")}`;
 }
 
-export function hasGuestDetails(row: Pick<GuestListExportRow, "name" | "serviceNote" | "role" | "noAlcohol">) {
-  return Boolean(row.name.trim() || row.serviceNote.trim() || row.role.trim() || row.noAlcohol);
+export function hasGuestDetails(row: Pick<GuestListExportRow, "name" | "serviceNote" | "role" | "rsvpReceived" | "noAlcohol">) {
+  return Boolean(row.name.trim() || row.serviceNote.trim() || row.role.trim() || row.rsvpReceived || row.noAlcohol);
 }
 
 function escapeCsvValue(value: string) {

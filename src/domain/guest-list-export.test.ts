@@ -10,6 +10,7 @@ describe("guest list CSV export", () => {
         name: 'Jordan "J" Smith',
         serviceNote: "Fish, gluten free",
         role: "Mother of bride",
+        rsvpReceived: true,
         noAlcohol: true,
       },
       {
@@ -18,12 +19,13 @@ describe("guest list CSV export", () => {
         name: "",
         serviceNote: "",
         role: "",
+        rsvpReceived: false,
         noAlcohol: false,
       },
     ]);
 
-    expect(csv).toContain('"Table","Seat","Guest Name","Service Note","Role / Group","Under 21 / No Alcohol"');
-    expect(csv).toContain('"Table 3","2","Jordan ""J"" Smith","Fish, gluten free","Mother of bride","Yes"');
+    expect(csv).toContain('"Table","Seat","Guest Name","RSVP Received","Service Note","Role / Group","Under 21 / No Alcohol"');
+    expect(csv).toContain('"Table 3","2","Jordan ""J"" Smith","Yes","Fish, gluten free","Mother of bride","Yes"');
     expect(csv).not.toContain('"Table 3","3"');
   });
 
@@ -35,6 +37,7 @@ describe("guest list CSV export", () => {
         name: "=HYPERLINK(\"bad\")",
         serviceNote: "",
         role: "",
+        rsvpReceived: false,
         noAlcohol: false,
       },
     ]);

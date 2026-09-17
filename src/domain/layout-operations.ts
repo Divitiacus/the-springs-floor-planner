@@ -88,6 +88,7 @@ export function updateObject(layout: FloorplanLayout, id: string, patch: Partial
         seatMeals: normalizeSeatField(updatedSource.seatMeals, updatedSource.seats),
         seatRoles: normalizeSeatField(updatedSource.seatRoles, updatedSource.seats),
         seatNoAlcohol: normalizeSeatFlag(updatedSource.seatNoAlcohol, updatedSource.seats),
+        seatRsvpReceived: normalizeSeatFlag(updatedSource.seatRsvpReceived, updatedSource.seats),
       };
     }
     if (!source.linkedGroupId || object.linkedGroupId !== source.linkedGroupId) return object;
@@ -144,6 +145,7 @@ export type GuestDetailsPatch = {
   meal?: string;
   role?: string;
   noAlcohol?: boolean;
+  rsvpReceived?: boolean;
 };
 
 export function updateGuestDetails(
@@ -160,13 +162,15 @@ export function updateGuestDetails(
   const seatMeals = normalizeSeatField(source.seatMeals, seatCount) ?? [];
   const seatRoles = normalizeSeatField(source.seatRoles, seatCount) ?? [];
   const seatNoAlcohol = normalizeSeatFlag(source.seatNoAlcohol, seatCount) ?? [];
+  const seatRsvpReceived = normalizeSeatFlag(source.seatRsvpReceived, seatCount) ?? [];
   if (patch.name !== undefined) seatAssignments[seatIndex] = patch.name.slice(0, 80);
   if (patch.meal !== undefined) seatMeals[seatIndex] = patch.meal.slice(0, 80);
   if (patch.role !== undefined) seatRoles[seatIndex] = patch.role.slice(0, 80);
   if (patch.noAlcohol !== undefined) seatNoAlcohol[seatIndex] = patch.noAlcohol;
+  if (patch.rsvpReceived !== undefined) seatRsvpReceived[seatIndex] = patch.rsvpReceived;
 
   return touch(layout, layout.objects.map((object) => object.id === id
-    ? { ...object, seatAssignments, seatMeals, seatRoles, seatNoAlcohol }
+    ? { ...object, seatAssignments, seatMeals, seatRoles, seatNoAlcohol, seatRsvpReceived }
     : object));
 }
 
@@ -181,6 +185,7 @@ export function normalizePhysicalFootprints(layout: FloorplanLayout): FloorplanL
         seatMeals: normalizeSeatField(constrained.seatMeals, constrained.seats),
         seatRoles: normalizeSeatField(constrained.seatRoles, constrained.seats),
         seatNoAlcohol: normalizeSeatFlag(constrained.seatNoAlcohol, constrained.seats),
+        seatRsvpReceived: normalizeSeatFlag(constrained.seatRsvpReceived, constrained.seats),
       };
     })),
   };
@@ -208,6 +213,7 @@ export function duplicateObject(layout: FloorplanLayout, id: string, newId = cry
     seatMeals: undefined,
     seatRoles: undefined,
     seatNoAlcohol: undefined,
+    seatRsvpReceived: undefined,
     linkedGroupId: undefined,
   };
   return touch(layout, [...layout.objects, copy]);

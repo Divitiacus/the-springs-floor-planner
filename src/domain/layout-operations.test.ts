@@ -467,6 +467,7 @@ describe("floorplan object operations", () => {
       seatMeals: ["Chicken", "Vegetarian"],
       seatRoles: ["VIP", "Wedding party"],
       seatNoAlcohol: [false, true],
+      seatRsvpReceived: [true, false],
       linkedGroupId: "head-table",
     };
     const layout = duplicateObject(addObject(createEmptyLayout(), table), table.id, "copy");
@@ -477,6 +478,7 @@ describe("floorplan object operations", () => {
       seatMeals: undefined,
       seatRoles: undefined,
       seatNoAlcohol: undefined,
+      seatRsvpReceived: undefined,
       linkedGroupId: undefined,
     });
   });
@@ -614,25 +616,27 @@ describe("persistence", () => {
     const chair = createEventObject("chair", { x: 275, y: 180 }, [table], "chair");
     let layout = addObject(addObject(createEmptyLayout("hall_rockwall_manor"), table), chair);
 
-    layout = updateGuestDetails(layout, table.id, 0, { name: "Jason", meal: "Chicken", role: "Best man", noAlcohol: true });
-    layout = updateGuestDetails(layout, chair.id, 0, { name: "Jordan", meal: "Vegetarian", role: "Vendor", noAlcohol: false });
+    layout = updateGuestDetails(layout, table.id, 0, { name: "Jason", meal: "Chicken", role: "Best man", noAlcohol: true, rsvpReceived: true });
+    layout = updateGuestDetails(layout, chair.id, 0, { name: "Jordan", meal: "Vegetarian", role: "Vendor", noAlcohol: false, rsvpReceived: false });
 
     expect(layout.objects.find((object) => object.id === table.id)).toMatchObject({
       seatAssignments: ["Jason", "", "", "", "", "", "", "", "", ""],
       seatMeals: ["Chicken", "", "", "", "", "", "", "", "", ""],
       seatRoles: ["Best man", "", "", "", "", "", "", "", "", ""],
       seatNoAlcohol: [true, false, false, false, false, false, false, false, false, false],
+      seatRsvpReceived: [true, false, false, false, false, false, false, false, false, false],
     });
     expect(layout.objects.find((object) => object.id === chair.id)).toMatchObject({ seatAssignments: ["Jordan"] });
   });
 
-  it("round-trips guest service details and linked seating groups through version 7 editable files", () => {
+  it("round-trips RSVP and guest service details through version 8 editable files", () => {
     const table = {
       ...createEventObject("rectangle-table-8", { x: 220, y: 180 }, [], "table"),
       seatAssignments: ["Jason", "Bailey", "Casey", "Dakota", "Emery", "Finley", "Gray", "Harper", "", ""],
       seatMeals: ["Chicken", "Vegetarian", "", "", "", "", "", "", "", ""],
       seatRoles: ["Best man", "Mother of bride", "", "", "", "", "", "", "", ""],
       seatNoAlcohol: [false, true, false, false, false, false, false, false, false, false],
+      seatRsvpReceived: [true, false, true, false, false, false, false, false, false, false],
       linkedGroupId: "family-table",
     };
     const chair = {
@@ -647,17 +651,33 @@ describe("persistence", () => {
     const serialized = serializePortableFloorplan(layout);
     const reopened = deserializeFloorplan(serialized);
 
-    expect(JSON.parse(serialized).v).toBe(7);
+    expect(JSON.parse(serialized).v).toBe(8);
     expect(reopened.objects).toMatchObject([
       {
         seatAssignments: table.seatAssignments,
         seatMeals: table.seatMeals,
         seatRoles: table.seatRoles,
         seatNoAlcohol: table.seatNoAlcohol,
+        seatRsvpReceived: table.seatRsvpReceived,
         linkedGroupId: "family-table",
       },
       { seatAssignments: ["Jordan"], linkedGroupId: "family-table" },
     ]);
+  });
+
+  it("still opens version 7 guest files without RSVP data", () => {
+    const reopened = deserializeFloorplan(
+      '{"v":7,"h":"hall_rockwall_manor","n":"Service Plan","o":[["chair",null,220,180,10,7,0,"Chair",null,1,0,null,["Jason"],null,["Fish"],["Family"],[false]]]}',
+    );
+
+    expect(reopened.objects[0]).toMatchObject({
+      type: "chair",
+      seatAssignments: ["Jason"],
+      seatMeals: ["Fish"],
+      seatRoles: ["Family"],
+      seatNoAlcohol: [false],
+    });
+    expect(reopened.objects[0].seatRsvpReceived).toBeUndefined();
   });
 
   it("still opens version 5 named-seating files", () => {

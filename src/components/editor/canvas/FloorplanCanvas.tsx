@@ -631,7 +631,7 @@ function EventObjectNode({ object, servicePlan, firstSeatNumber, displaySeatCoun
       ) : null}
       {!isChair && !isChairRow ? (
         <>
-          <Text x={-object.width / 2 + 5} y={-8} width={object.width - 10} align="center" text={object.label} fontSize={Math.min(14, Math.max(10, object.width / 9))} fontStyle="bold" fill="#33473b" ellipsis />
+          <Text x={-object.width / 2 + 5} y={-8} width={object.width - 10} align="center" text={object.label} fontSize={Math.min(14, Math.max(10, object.width / 9))} fontStyle="bold" fill={object.tableNumber !== undefined ? "#9a6a18" : "#33473b"} ellipsis />
           {displaySeatCount !== undefined ? <Text x={-object.width / 2 + 5} y={isRound ? 10 : 3} width={object.width - 10} height={10} align="center" verticalAlign="middle" text={`${displaySeatCount} seats`} fontSize={9} fill="#79867e" /> : null}
         </>
       ) : null}

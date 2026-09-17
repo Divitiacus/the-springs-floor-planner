@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
-import { ClipboardList, Download, Printer, Users } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ChevronDown, ChevronRight, ClipboardList, Download, Printer, Users } from "lucide-react";
 import type { EventObject } from "@/domain/floorplan";
 import { hasGuestDetails, serializeGuestListCsv } from "@/domain/guest-list-export";
 import { getSeatNumbering } from "@/domain/seat-numbering";
@@ -9,7 +9,7 @@ import type { ServicePlan } from "@/domain/service-markers";
 import { DEFAULT_SEAT_COLOR, getSeatServiceColor, NO_ALCOHOL_COLOR } from "@/domain/service-markers";
 import { ServiceLegend } from "@/components/editor/ServiceLegend";
 
-type GuestPatch = { name?: string; meal?: string; role?: string; noAlcohol?: boolean };
+type GuestPatch = { name?: string; meal?: string; role?: string; noAlcohol?: boolean; rsvpReceived?: boolean };
 
 type Props = {
   objects: readonly EventObject[];
@@ -29,14 +29,28 @@ type GuestRow = {
   name: string;
   meal: string;
   role: string;
+  rsvpReceived: boolean;
   noAlcohol: boolean;
   serviceColor?: string;
   sortOrder: number;
 };
 
+type GuestTableGroup = {
+  key: string;
+  label: string;
+  tableNumber?: number;
+  rows: GuestRow[];
+  namedGuests: number;
+  rsvpGuests: number;
+  awaitingGuests: number;
+};
+
 export function GuestListSheet({ objects, servicePlan, eventName, venueName, onPrint, onUpdateGuest }: Props) {
   const rows = useMemo(() => buildGuestRows(objects, servicePlan), [objects, servicePlan]);
+  const tableGroups = useMemo(() => groupGuestRows(rows), [rows]);
+  const [expandedTableKeys, setExpandedTableKeys] = useState<Set<string>>(() => new Set());
   const namedGuests = rows.filter((row) => row.name.trim()).length;
+  const rsvpGuests = rows.filter((row) => row.rsvpReceived).length;
   const noAlcoholGuests = rows.filter((row) => row.noAlcohol).length;
 
   const exportCsv = () => {
@@ -46,6 +60,7 @@ export function GuestListSheet({ objects, servicePlan, eventName, venueName, onP
       name: row.name,
       serviceNote: row.meal,
       role: row.role,
+      rsvpReceived: row.rsvpReceived,
       noAlcohol: row.noAlcohol,
     })));
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
@@ -82,6 +97,7 @@ export function GuestListSheet({ objects, servicePlan, eventName, venueName, onP
           <div className="guest-list-summary flex gap-2">
             <SummaryBadge label="Seats" value={rows.length} />
             <SummaryBadge label="Named" value={namedGuests} />
+            <SummaryBadge label="RSVPs" value={rsvpGuests} />
             <SummaryBadge label="No alcohol" value={noAlcoholGuests} />
           </div>
         </div>
@@ -93,61 +109,132 @@ export function GuestListSheet({ objects, servicePlan, eventName, venueName, onP
         </div>
       ) : null}
 
+      {rows.length ? (
+        <div className="guest-list-collapse-actions flex shrink-0 items-center justify-between gap-3 border-b border-[#dce2dd] bg-[#f7f9f7] px-7 py-2.5">
+          <p className="text-[11px] font-semibold text-[#6f7e75]">
+            {tableGroups.length} {tableGroups.length === 1 ? "table" : "tables"} · Select a table to see its guests
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="rounded-lg border border-[#ccd7d0] bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-[#496052] shadow-sm hover:bg-[#eef3ef]"
+              onClick={() => setExpandedTableKeys(new Set(tableGroups.map((group) => group.key)))}
+            >
+              Expand all
+            </button>
+            <button
+              type="button"
+              className="rounded-lg border border-[#ccd7d0] bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-[#496052] shadow-sm hover:bg-[#eef3ef]"
+              onClick={() => setExpandedTableKeys(new Set())}
+            >
+              Collapse all
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       <div className="guest-list-scroll subtle-scrollbar min-h-0 flex-1 overflow-auto p-6">
         {rows.length ? (
           <div className="mx-auto max-w-7xl overflow-hidden rounded-xl border border-[#d8dfda] bg-white shadow-sm">
             <table className="w-full table-fixed border-collapse text-left">
               <thead className="sticky top-0 z-10 bg-[#eaf0ec] text-[10px] font-bold uppercase tracking-[0.13em] text-[#53675b] shadow-[0_1px_0_#ccd6cf]">
                 <tr>
-                  <th className="w-[15%] px-4 py-3">Table / seat</th>
-                  <th className="w-[24%] border-l border-[#d5ddd7] px-4 py-3">Guest name</th>
-                  <th className="w-[25%] border-l border-[#d5ddd7] px-4 py-3">Service note</th>
-                  <th className="w-[23%] border-l border-[#d5ddd7] px-4 py-3">Role / group</th>
-                  <th className="w-[13%] border-l border-[#d5ddd7] px-3 py-3 text-center">Under 21 / no alcohol</th>
+                  <th className="w-[14%] px-4 py-3">Table / seat</th>
+                  <th className="w-[22%] border-l border-[#d5ddd7] px-4 py-3">Guest name</th>
+                  <th className="w-[10%] border-l border-[#d5ddd7] px-3 py-3 text-center">RSVP received</th>
+                  <th className="w-[22%] border-l border-[#d5ddd7] px-4 py-3">Service note</th>
+                  <th className="w-[20%] border-l border-[#d5ddd7] px-4 py-3">Role / group</th>
+                  <th className="w-[12%] border-l border-[#d5ddd7] px-3 py-3 text-center">Under 21 / no alcohol</th>
                 </tr>
               </thead>
-              <tbody>
-                {rows.map((row, rowIndex) => (
-                  <tr key={`${row.objectId}:${row.seatIndex}`} className={`${rowIndex % 2 ? "bg-[#fbfcfa]" : "bg-white"} ${hasGuestDetails({ name: row.name, serviceNote: row.meal, role: row.role, noAlcohol: row.noAlcohol }) ? "" : "guest-list-row-empty"}`}>
-                    <td className="border-t border-[#e2e7e3] px-4 py-2.5 align-middle">
-                      <span className="block text-sm font-bold text-[#31473b]">{row.tableNumber ? `Table ${row.tableNumber}` : row.tableLabel}</span>
-                      <span className="mt-0.5 block text-[10px] text-[#8a958e]">Seat {row.displaySeatNumber}</span>
-                    </td>
-                    <GuestCell
-                      ariaLabel={`${row.tableLabel}, seat ${row.displaySeatNumber}, guest name`}
-                      placeholder="Guest name"
-                      value={row.name}
-                      onChange={(value) => onUpdateGuest(row.objectId, row.seatIndex, { name: value })}
-                    />
-                    <ServiceCell
-                      ariaLabel={`${row.tableLabel}, seat ${row.displaySeatNumber}, service note`}
-                      color={row.serviceColor}
-                      isDefault={Boolean(row.meal.trim() && !row.serviceColor)}
-                      value={row.meal}
-                      onChange={(value) => onUpdateGuest(row.objectId, row.seatIndex, { meal: value })}
-                    />
-                    <GuestCell
-                      ariaLabel={`${row.tableLabel}, seat ${row.displaySeatNumber}, role or group`}
-                      placeholder="e.g. Mother of bride, Sales team"
-                      value={row.role}
-                      onChange={(value) => onUpdateGuest(row.objectId, row.seatIndex, { role: value })}
-                    />
-                    <td className="border-l border-t border-[#e2e7e3] px-3 text-center">
-                      <label className="guest-list-no-alcohol-control inline-flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-[10px] font-bold text-[#527180] hover:bg-[#edf7fa]">
-                        <input
-                          type="checkbox"
-                          aria-label={`${row.tableLabel}, seat ${row.displaySeatNumber}, under 21 or no alcohol`}
-                          className="size-4 accent-[#4198b5]"
-                          checked={row.noAlcohol}
-                          onChange={(event) => onUpdateGuest(row.objectId, row.seatIndex, { noAlcohol: event.target.checked })}
+              {tableGroups.map((group, groupIndex) => {
+                const isExpanded = expandedTableKeys.has(group.key);
+                const isFullyRsvped = group.rsvpGuests > 0 && group.awaitingGuests === 0;
+                return (
+                  <tbody key={group.key}>
+                    <tr className="guest-list-table-summary border-t border-[#cfd9d2] bg-[#f4f7f4]">
+                      <td colSpan={6} className="p-0">
+                        <button
+                          type="button"
+                          aria-expanded={isExpanded}
+                          aria-label={`${group.label}, ${group.rsvpGuests} RSVP'd, ${group.awaitingGuests} awaiting`}
+                          className="flex w-full items-center justify-between gap-4 px-4 py-3 text-left hover:bg-[#eaf1ec] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#537563]"
+                          onClick={() => setExpandedTableKeys((current) => toggleTableKey(current, group.key))}
+                        >
+                          <span className="flex min-w-0 items-center gap-3">
+                            <span className="guest-list-table-toggle-icon grid size-7 shrink-0 place-items-center rounded-full border border-[#c9d6ce] bg-white text-[#486353]">
+                              {isExpanded ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
+                            </span>
+                            <span>
+                              <span className={`block text-sm font-extrabold ${isFullyRsvped ? "text-[#b07a1e]" : "text-[#31473b]"}`}>{group.label}</span>
+                              <span className="mt-0.5 block text-[10px] font-semibold text-[#869189]">{group.rows.length} {group.rows.length === 1 ? "seat" : "seats"} · {group.namedGuests} named</span>
+                            </span>
+                          </span>
+                          <span className="flex shrink-0 items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.08em]">
+                            <span className="rounded-full bg-[#e2f0e7] px-3 py-1.5 text-[#397054]">{group.rsvpGuests} RSVP’d</span>
+                            <span className={`rounded-full px-3 py-1.5 ${group.awaitingGuests ? "bg-[#f6ead5] text-[#946717]" : "bg-[#ebefec] text-[#758079]"}`}>{group.awaitingGuests} awaiting</span>
+                          </span>
+                        </button>
+                      </td>
+                    </tr>
+                    {group.rows.map((row, rowIndex) => (
+                      <tr key={`${row.objectId}:${row.seatIndex}`} className={`${isExpanded ? "" : "guest-list-row-collapsed hidden"} ${(groupIndex + rowIndex) % 2 ? "bg-[#fbfcfa]" : "bg-white"} ${hasGuestDetails({ name: row.name, serviceNote: row.meal, role: row.role, rsvpReceived: row.rsvpReceived, noAlcohol: row.noAlcohol }) ? "" : "guest-list-row-empty"}`}>
+                        <td className="border-t border-[#e2e7e3] px-4 py-2.5 align-middle">
+                          <span className={`block text-sm font-bold ${row.tableNumber ? "text-[#9a6a18]" : "text-[#31473b]"}`}>{row.tableNumber ? `Table ${row.tableNumber}` : row.tableLabel}</span>
+                          <span className="mt-0.5 block text-[10px] text-[#8a958e]">Seat {row.displaySeatNumber}</span>
+                        </td>
+                        <GuestCell
+                          ariaLabel={`${row.tableLabel}, seat ${row.displaySeatNumber}, guest name`}
+                          placeholder="Guest name"
+                          value={row.name}
+                          onChange={(value) => onUpdateGuest(row.objectId, row.seatIndex, { name: value })}
                         />
-                        <span className="size-3 rounded-full border-2 bg-white" style={{ borderColor: NO_ALCOHOL_COLOR }} aria-hidden="true" />
-                        <span className="guest-list-no-alcohol-print hidden">{row.noAlcohol ? "YES" : ""}</span>
-                      </label>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
+                        <td className="border-l border-t border-[#e2e7e3] px-3 text-center">
+                          <label className="guest-list-rsvp-control inline-flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-[10px] font-bold text-[#3f6d55] hover:bg-[#eef6f1]">
+                            <input
+                              type="checkbox"
+                              aria-label={`${row.tableLabel}, seat ${row.displaySeatNumber}, RSVP received`}
+                              className="size-4 accent-[#3f795d]"
+                              checked={row.rsvpReceived}
+                              onChange={(event) => onUpdateGuest(row.objectId, row.seatIndex, { rsvpReceived: event.target.checked })}
+                            />
+                            <span className={`guest-list-rsvp-status ${row.rsvpReceived ? "text-[#3f795d]" : row.name.trim() ? "text-[#9a6a18]" : "text-[#a5ada8]"}`}>
+                              {row.rsvpReceived ? "Received" : row.name.trim() ? "Awaiting" : "—"}
+                            </span>
+                            <span className="guest-list-rsvp-print hidden">{row.rsvpReceived ? "YES" : ""}</span>
+                          </label>
+                        </td>
+                        <ServiceCell
+                          ariaLabel={`${row.tableLabel}, seat ${row.displaySeatNumber}, service note`}
+                          color={row.serviceColor}
+                          isDefault={Boolean(row.meal.trim() && !row.serviceColor)}
+                          value={row.meal}
+                          onChange={(value) => onUpdateGuest(row.objectId, row.seatIndex, { meal: value })}
+                        />
+                        <GuestCell
+                          ariaLabel={`${row.tableLabel}, seat ${row.displaySeatNumber}, role or group`}
+                          placeholder="e.g. Mother of bride, Sales team"
+                          value={row.role}
+                          onChange={(value) => onUpdateGuest(row.objectId, row.seatIndex, { role: value })}
+                        />
+                        <td className="border-l border-t border-[#e2e7e3] px-3 text-center">
+                          <label className="guest-list-no-alcohol-control inline-flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-[10px] font-bold text-[#527180] hover:bg-[#edf7fa]">
+                            <input
+                              type="checkbox"
+                              aria-label={`${row.tableLabel}, seat ${row.displaySeatNumber}, under 21 or no alcohol`}
+                              className="size-4 accent-[#4198b5]"
+                              checked={row.noAlcohol}
+                              onChange={(event) => onUpdateGuest(row.objectId, row.seatIndex, { noAlcohol: event.target.checked })}
+                            />
+                            <span className="size-3 rounded-full border-2 bg-white" style={{ borderColor: NO_ALCOHOL_COLOR }} aria-hidden="true" />
+                            <span className="guest-list-no-alcohol-print hidden">{row.noAlcohol ? "YES" : ""}</span>
+                          </label>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                );
+              })}
             </table>
           </div>
         ) : (
@@ -226,6 +313,47 @@ function SummaryBadge({ label, value }: { label: string; value: number }) {
   );
 }
 
+function toggleTableKey(current: Set<string>, key: string) {
+  const next = new Set(current);
+  if (next.has(key)) next.delete(key);
+  else next.add(key);
+  return next;
+}
+
+function groupGuestRows(rows: readonly GuestRow[]): GuestTableGroup[] {
+  const groups = new Map<string, GuestTableGroup>();
+
+  for (const row of rows) {
+    const key = row.tableNumber !== undefined ? `table:${row.tableNumber}` : `object:${row.objectId}`;
+    const existing = groups.get(key);
+    if (existing) {
+      existing.rows.push(row);
+      continue;
+    }
+    groups.set(key, {
+      key,
+      label: row.tableLabel,
+      tableNumber: row.tableNumber,
+      rows: [row],
+      namedGuests: 0,
+      rsvpGuests: 0,
+      awaitingGuests: 0,
+    });
+  }
+
+  return Array.from(groups.values()).map((group) => {
+    const namedRows = group.rows.filter((row) => row.name.trim());
+    const rsvpGuests = group.rows.filter((row) => row.rsvpReceived).length;
+    const awaitingGuests = namedRows.filter((row) => !row.rsvpReceived).length;
+    return {
+      ...group,
+      namedGuests: namedRows.length,
+      rsvpGuests,
+      awaitingGuests,
+    };
+  });
+}
+
 function buildGuestRows(objects: readonly EventObject[], servicePlan: ServicePlan): GuestRow[] {
   const { linkedChairSeats } = getSeatNumbering(objects);
 
@@ -244,6 +372,7 @@ function buildGuestRows(objects: readonly EventObject[], servicePlan: ServicePla
         name: object.seatAssignments?.[seatIndex] ?? "",
         meal: object.seatMeals?.[seatIndex] ?? "",
         role: object.seatRoles?.[seatIndex] ?? "",
+        rsvpReceived: object.seatRsvpReceived?.[seatIndex] === true,
         noAlcohol: object.seatNoAlcohol?.[seatIndex] === true,
         serviceColor: getSeatServiceColor(object, seatIndex, servicePlan),
         sortOrder: tableNumber ?? 100000 + object.zIndex,

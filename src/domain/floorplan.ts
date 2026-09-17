@@ -64,6 +64,7 @@ export type EventObject = {
   seatMeals?: string[];
   seatRoles?: string[];
   seatNoAlcohol?: boolean[];
+  seatRsvpReceived?: boolean[];
   linkedGroupId?: string;
   zIndex: number;
 };
