@@ -19,6 +19,7 @@ import { createStonebrookConfiguration } from "@/domain/venues/stonebrook";
 import { createStonecreekReserveConfiguration } from "@/domain/venues/stonecreek-reserve";
 import { createSunsetPointeConfiguration } from "@/domain/venues/sunset-pointe";
 import { createSycamoreGroveConfiguration } from "@/domain/venues/sycamore-grove";
+import { createTimberviewLodgeConfiguration } from "@/domain/venues/timberview-lodge";
 import { createVillaTuscanaConfiguration } from "@/domain/venues/villa-tuscana";
 import { createValleyViewConfiguration } from "@/domain/venues/valley-view";
 import { createWestwoodRanchConfiguration } from "@/domain/venues/westwood-ranch";
@@ -364,6 +365,26 @@ export const NORMAN_INVENTORY: InventoryCatalog = {
   },
 };
 
+export const ALVARADO_TIMBERVIEW_LODGE_INVENTORY: InventoryCatalog = {
+  scope: "hall",
+  limits: {
+    "round-table-60": 28,
+    "rectangle-table-6": 2,
+    "rectangle-table-8": 6,
+    "farmhouse-table-6": 0,
+    "parson-table-7": 5,
+    "sweetheart-table": 2,
+    "sweetheart-table-48": 1,
+    "cocktail-table-32": 6,
+    "cocktail-table-36": 0,
+    chairs: 224,
+  },
+  source: {
+    fileName: "temporary-user-direction",
+    note: "Timberview Lodge quantities are temporarily copied from Denton Oakview Lodge at the user's direction. This is an independent Alvarado inventory record and should be replaced when Alvarado quantities are confirmed.",
+  },
+};
+
 export const WALLISVILLE_FARMHOUSE_INVENTORY: InventoryCatalog = {
   scope: "hall",
   limits: {
@@ -511,6 +532,22 @@ export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
         configuration: {
           ...createOakviewLodgeConfiguration(),
           inventory: DENTON_OAKVIEW_LODGE_INVENTORY,
+        },
+      },
+    ],
+  },
+  {
+    id: "location_alvarado",
+    slug: "alvarado",
+    name: "Alvarado",
+    halls: [
+      {
+        id: "hall_timberview_lodge",
+        slug: "timberview-lodge",
+        name: "Timberview Lodge",
+        configuration: {
+          ...createTimberviewLodgeConfiguration(),
+          inventory: ALVARADO_TIMBERVIEW_LODGE_INVENTORY,
         },
       },
     ],

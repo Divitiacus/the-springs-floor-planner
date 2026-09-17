@@ -220,9 +220,12 @@ function VenueLayer({ venue }: { venue: VenueTemplate }) {
   // usableAreas independently enforce their irregular placement boundary.
   const useVectorFloor = venue.referenceAsset === null && floorElements.length > 0;
   const grid = venue.elements.flatMap((element) => {
-    if (element.kind !== "area" || !gridAreaRoles.has(element.role) || element.shape.type !== "rectangle") return [];
+    if (element.kind !== "area" || !gridAreaRoles.has(element.role)) return [];
 
-    const { x, y, width, height } = element.shape;
+    const bounds = element.shape.type === "rectangle"
+      ? element.shape
+      : polygonBounds(element.shape.points);
+    const { x, y, width, height } = bounds;
     const lines = [];
     for (let gridX = firstGridLineAfter(x, venue.hall.x); gridX < x + width; gridX += 60) {
       lines.push(<Line key={`${element.id}-grid-x-${gridX}`} points={[gridX, y, gridX, y + height]} stroke="#e7e9e5" strokeWidth={1} />);
@@ -230,7 +233,24 @@ function VenueLayer({ venue }: { venue: VenueTemplate }) {
     for (let gridY = firstGridLineAfter(y, venue.hall.y); gridY < y + height; gridY += 60) {
       lines.push(<Line key={`${element.id}-grid-y-${gridY}`} points={[x, gridY, x + width, gridY]} stroke="#e7e9e5" strokeWidth={1} />);
     }
-    return lines;
+    if (element.shape.type === "rectangle") return lines;
+
+    const points = element.shape.points;
+    return [
+      <Group
+        key={`${element.id}-grid`}
+        clipFunc={(context: Konva.Context) => {
+          context.beginPath();
+          context.moveTo(points[0], points[1]);
+          for (let index = 2; index < points.length; index += 2) {
+            context.lineTo(points[index], points[index + 1]);
+          }
+          context.closePath();
+        }}
+      >
+        {lines}
+      </Group>,
+    ];
   });
 
   return (
@@ -301,6 +321,19 @@ function formatFeetAndInches(inches: number) {
 
   const remainderLabel = Number.isInteger(remainder) ? String(remainder) : `${Math.floor(remainder)}½`;
   return `${feet}′${remainderLabel}″`;
+}
+
+function polygonBounds(points: number[]) {
+  const xs = points.filter((_, index) => index % 2 === 0);
+  const ys = points.filter((_, index) => index % 2 === 1);
+  const x = Math.min(...xs);
+  const y = Math.min(...ys);
+  return {
+    x,
+    y,
+    width: Math.max(...xs) - x,
+    height: Math.max(...ys) - y,
+  };
 }
 
 function FixedArchitectureNode({ element }: { element: FixedArchitectureElement }) {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { isPositionOnFloor, isRectangleFootprintOnFloor } from "@/domain/floor-regions";
 import {
+  ALVARADO_TIMBERVIEW_LODGE_INVENTORY,
   ANGLETON_INVENTORY,
   CYPRESS_CHATEAU_INVENTORY,
   DENTON_INVENTORY,
@@ -32,7 +33,7 @@ import {
 
 describe("location catalog", () => {
   it("defines Magnolia with exactly its two confirmed halls", () => {
-    expect(SPRINGS_LOCATIONS).toHaveLength(15);
+    expect(SPRINGS_LOCATIONS).toHaveLength(16);
     expect(SPRINGS_LOCATIONS[0]).toMatchObject({ name: "Magnolia", slug: "magnolia" });
     expect(SPRINGS_LOCATIONS[0].halls.map((hall) => hall.name)).toEqual([
       "Pinehaven Terrace",
@@ -394,6 +395,55 @@ describe("location catalog", () => {
       slug: "oakview-lodge",
       name: "Oakview Lodge",
     });
+  });
+
+  it("defines Alvarado Timberview Lodge with independent temporary Lodge inventory", () => {
+    const location = getLocationBySlug("alvarado");
+    const hall = getHallBySlug(location, "timberview-lodge");
+    if (!location || !hall?.configuration) throw new Error("Alvarado Timberview Lodge configuration missing");
+
+    expect(location).toMatchObject({ id: "location_alvarado", slug: "alvarado", name: "Alvarado" });
+    expect(hall).toMatchObject({ id: "hall_timberview_lodge", slug: "timberview-lodge", name: "Timberview Lodge" });
+    expect(ALVARADO_TIMBERVIEW_LODGE_INVENTORY).not.toBe(DENTON_OAKVIEW_LODGE_INVENTORY);
+    expect(ALVARADO_TIMBERVIEW_LODGE_INVENTORY.limits).not.toBe(DENTON_OAKVIEW_LODGE_INVENTORY.limits);
+    expect(ALVARADO_TIMBERVIEW_LODGE_INVENTORY.limits).toEqual(DENTON_OAKVIEW_LODGE_INVENTORY.limits);
+    expect(resolveInventoryConfiguration(location, hall)).toEqual(ALVARADO_TIMBERVIEW_LODGE_INVENTORY.limits);
+
+    const configuration = singleLevel(hall.configuration);
+    const elements = configuration.fixedArchitecturalElements;
+    expect(configuration).toMatchObject({
+      physicalWidthInches: 1513,
+      physicalHeightInches: 1048,
+      physicalDimensionStatus: "source-traced",
+      planningBounds: { x: 55, y: 55, width: 1403, height: 938 },
+      floorplanAsset: null,
+    });
+    expect(configuration.usableAreas).toHaveLength(3);
+    expect(elements.every((element) => element.id.startsWith("timberview-lodge"))).toBe(true);
+    expect(elements.some((element) => element.id.includes("oakview-lodge"))).toBe(false);
+    expect(elements.find((element) => element.id === "timberview-lodge-bar")).toMatchObject({
+      role: "bar",
+      measurementStatus: "source-traced",
+      shape: { type: "rectangle", width: 262, height: 159 },
+    });
+    expect(elements.find((element) => element.id === "timberview-lodge-buffet")).toMatchObject({
+      role: "buffet",
+      measurementStatus: "confirmed",
+      shape: { type: "rectangle", width: 168, height: 50 },
+    });
+    expect(elements.find((element) => element.id === "timberview-lodge-double-sided-fireplace")).toMatchObject({
+      role: "fireplace",
+      measurementStatus: "source-traced",
+      shape: { type: "rectangle", width: 62, height: 139 },
+    });
+    expect(elements.find((element) => element.id === "timberview-lodge-west-window-bar-area")).toBeUndefined();
+    expect(elements.find((element) => element.id === "timberview-lodge-east-reception-wall")).toBeUndefined();
+    expect(elements.find((element) => element.id === "timberview-lodge-closet-extension-wall")).toBeUndefined();
+    expect(elements.filter((element) => element.kind === "door")).toHaveLength(5);
+    expect(elements.filter((element) => element.kind === "door").every((element) => element.rotation % 90 === 0)).toBe(true);
+    expect(isPositionOnFloor({ x: 760, y: 520 }, configuration.usableAreas ?? [], [])).toBe(true);
+    expect(isPositionOnFloor({ x: 820, y: 280 }, configuration.usableAreas ?? [], [])).toBe(true);
+    expect(isPositionOnFloor({ x: 650, y: 95 }, configuration.usableAreas ?? [], [])).toBe(false);
   });
 
   it.each([

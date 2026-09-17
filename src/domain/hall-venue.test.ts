@@ -175,6 +175,27 @@ describe("hall venue template", () => {
     expect(table.width / venue.hall.width).toBeCloseTo(60 / 1336, 12);
   });
 
+  it("loads Alvarado Timberview Lodge as an independent measured venue", () => {
+    const location = getLocationBySlug("alvarado");
+    const hall = getHallBySlug(location, "timberview-lodge");
+    if (!location || !hall) throw new Error("Alvarado Timberview Lodge catalog entry missing");
+
+    const venue = createHallVenueTemplate(location, hall);
+    const table = createEventObject("round-table-60", { x: 760, y: 520 }, [], "timberview-scale");
+
+    expect(venue.id).toBe("location_alvarado:hall_timberview_lodge");
+    expect(venue.name).toBe("Alvarado · Timberview Lodge");
+    expect(venue.hall).toEqual({ x: 55, y: 55, width: 1403, height: 938 });
+    expect(venue.physicalWidthInches).toBe(1513);
+    expect(venue.physicalHeightInches).toBe(1048);
+    expect(venue.physicalDimensionStatus).toBe("source-traced");
+    expect(venue.referenceAsset).toBeNull();
+    expect(venue.usableAreas).toHaveLength(3);
+    expect(venue.defaultObjectPosition).toEqual({ x: 779, y: 515 });
+    expect(table.width / 480).toBe(1 / 8);
+    expect(venue.elements.every((element) => element.id.startsWith("timberview-lodge"))).toBe(true);
+  });
+
   it("loads Valley View without repeating its identical location and hall name", () => {
     const location = getLocationBySlug("valley-view");
     const hall = getHallBySlug(location, "valley-view");
