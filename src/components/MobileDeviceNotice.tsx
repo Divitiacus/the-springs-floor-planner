@@ -3,31 +3,21 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MonitorUp } from "lucide-react";
 
-const DISMISSAL_STORAGE_KEY = "springs-floor-planner:mobile-notice-dismissed:v1";
 const PHONE_SIZED_VIEWPORT = "(max-width: 900px)";
 
 export function MobileDeviceNotice() {
   const [isOpen, setIsOpen] = useState(false);
   const continueButtonRef = useRef<HTMLButtonElement>(null);
+  const dismissedForPageLoadRef = useRef(false);
 
   const dismiss = useCallback(() => {
-    try {
-      window.localStorage.setItem(DISMISSAL_STORAGE_KEY, "true");
-    } catch {
-      // Storage can be unavailable in private browsing; dismissal still works for this page view.
-    }
+    dismissedForPageLoadRef.current = true;
     setIsOpen(false);
   }, []);
 
   useEffect(() => {
-    try {
-      if (window.localStorage.getItem(DISMISSAL_STORAGE_KEY) === "true") return;
-    } catch {
-      // Continue without persistence when storage is unavailable.
-    }
-
     const viewport = window.matchMedia(PHONE_SIZED_VIEWPORT);
-    const syncVisibility = () => setIsOpen(viewport.matches);
+    const syncVisibility = () => setIsOpen(viewport.matches && !dismissedForPageLoadRef.current);
     syncVisibility();
     viewport.addEventListener("change", syncVisibility);
     return () => viewport.removeEventListener("change", syncVisibility);
