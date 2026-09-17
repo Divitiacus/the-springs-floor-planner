@@ -66,6 +66,7 @@ describe("location catalog", () => {
       ["level-1-main-floor", "main-floor", "Level 1 — Main Floor"],
       ["level-2-balcony", "balcony", "Level 2 — Balcony"],
       ["ceremony-site", "ceremony-site", "Ceremony Site"],
+      ["patio", "patio", "Patio"],
     ]);
     expect(levels.slice(0, 2).every((level) => level.physicalWidthInches === 1840 && level.physicalHeightInches === 980)).toBe(true);
 
@@ -175,6 +176,38 @@ describe("location catalog", () => {
     expect(isPositionOnFloor({ x: 480, y: 320 }, ceremonySite.usableAreas ?? [], ceremonySite.voidAreas ?? [])).toBe(false);
     expect(isRectangleFootprintOnFloor({ x: 293, y: 320 }, 180, 22, 0, ceremonySite.usableAreas ?? [], [])).toBe(true);
     expect(isRectangleFootprintOnFloor({ x: 430, y: 320 }, 300, 22, 0, ceremonySite.usableAreas ?? [], [])).toBe(false);
+
+    const patio = levels.find((level) => level.id === "patio");
+    if (!patio) throw new Error("Cypress patio missing");
+    expect(patio).toMatchObject({
+      inventoryGroupId: "reception",
+      physicalWidthInches: 1040,
+      physicalHeightInches: 540,
+      planningBounds: { x: 70, y: 70, width: 900, height: 348 },
+      floorplanAsset: null,
+    });
+    expect(patio.usableAreas?.map((region) => region.id)).toEqual([
+      "chateau-patio-main-dining-surface",
+      "chateau-patio-raised-seating",
+    ]);
+    expect(patio.usableAreas?.[0]).toMatchObject({
+      id: "chateau-patio-main-dining-surface",
+      kind: "usable-floor",
+      measurementStatus: "confirmed",
+      shape: { type: "polygon" },
+    });
+    expect(patio.fixedArchitecturalElements.find((element) => element.id === "chateau-patio-building-facade")).toMatchObject({
+      kind: "path",
+      placementBehavior: "blocked",
+    });
+    expect(isPositionOnFloor({ x: 240, y: 240 }, patio.usableAreas ?? [], [])).toBe(true);
+    expect(isPositionOnFloor({ x: 240, y: 350 }, patio.usableAreas ?? [], [])).toBe(true);
+    expect(isPositionOnFloor({ x: 240, y: 275 }, patio.usableAreas ?? [], [])).toBe(true);
+    expect(isPositionOnFloor({ x: 520, y: 250 }, patio.usableAreas ?? [], [])).toBe(true);
+    expect(isPositionOnFloor({ x: 520, y: 350 }, patio.usableAreas ?? [], [])).toBe(false);
+    expect(isRectangleFootprintOnFloor({ x: 260, y: 250 }, 180, 22, 0, patio.usableAreas ?? [], [])).toBe(true);
+    expect(isRectangleFootprintOnFloor({ x: 520, y: 250 }, 100, 22, 0, patio.usableAreas ?? [], [])).toBe(true);
+    expect(isRectangleFootprintOnFloor({ x: 520, y: 330 }, 180, 22, 0, patio.usableAreas ?? [], [])).toBe(false);
   });
 
   it("defines Wallisville Farmhouse with stable routing, confirmed scale, and a 250-guest planning limit", () => {

@@ -290,7 +290,7 @@ describe("hall venue template", () => {
     expect(table.width / venue.hall.width).toBe(1 / 16);
   });
 
-  it("resolves Cypress as three independent planning templates without concatenating architecture", () => {
+  it("resolves Cypress as four independent planning templates without concatenating architecture", () => {
     const location = getLocationBySlug("cypress");
     const hall = getHallBySlug(location, "the-chateau");
     if (!location || !hall) throw new Error("Cypress The Chateau catalog entry missing");
@@ -298,9 +298,10 @@ describe("hall venue template", () => {
     const mainFloor = createHallVenueTemplate(location, hall, "level-1-main-floor");
     const balcony = createHallVenueTemplate(location, hall, "level-2-balcony");
     const ceremonySite = createHallVenueTemplate(location, hall, "ceremony-site");
+    const patio = createHallVenueTemplate(location, hall, "patio");
     const levels = createHallVenueTemplates(location, hall);
 
-    expect(levels.map((level) => level.levelId)).toEqual(["level-1-main-floor", "level-2-balcony", "ceremony-site"]);
+    expect(levels.map((level) => level.levelId)).toEqual(["level-1-main-floor", "level-2-balcony", "ceremony-site", "patio"]);
     expect(mainFloor.levelName).toBe("Level 1 — Main Floor");
     expect(mainFloor).toMatchObject({
       coordinateUnit: "inches",
@@ -354,6 +355,17 @@ describe("hall venue template", () => {
     });
     expect(ceremonySite.elements.some((element) => element.id === "chateau-ceremony-platform")).toBe(true);
     expect(ceremonySite.elements.some((element) => element.id === "chateau-stage")).toBe(false);
+    expect(patio).toMatchObject({
+      levelName: "Patio",
+      inventoryGroupId: "reception",
+      coordinateUnit: "inches",
+      physicalWidthInches: 1040,
+      physicalHeightInches: 540,
+      hall: { x: 70, y: 70, width: 900, height: 348 },
+      referenceAsset: null,
+    });
+    expect(patio.elements.some((element) => element.id === "chateau-patio-surface")).toBe(true);
+    expect(patio.usableAreas?.[0]?.shape.type).toBe("polygon");
     expect(() => createHallVenueTemplate(location, hall, "roof")).toThrow(/not configured/);
   });
 });

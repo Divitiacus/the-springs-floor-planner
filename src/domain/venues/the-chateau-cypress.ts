@@ -24,6 +24,18 @@ const CEREMONY_TURF_WIDTH = 258;
 const CEREMONY_LEFT_TURF_X = 164;
 const CEREMONY_RIGHT_TURF_X = 537;
 
+const PATIO_CANVAS_WIDTH = 1040;
+const PATIO_CANVAS_HEIGHT = 540;
+const PATIO_X = 70;
+const PATIO_Y = 70;
+const PATIO_WIDTH = 900; // 75′
+const PATIO_HEIGHT = 348; // 29′
+const PATIO_BOTTOM = PATIO_Y + PATIO_HEIGHT;
+const PATIO_BUILDING_CENTER_X = PATIO_X + PATIO_WIDTH / 2;
+const PATIO_BUILDING_RADIUS = 110;
+const PATIO_RAISED_SECTION_Y = PATIO_Y + 202;
+const PATIO_UPPER_CURVE_DEPTH = 80;
+
 // The supplied plans are landscape drawings of the same building. In this
 // orientation the confirmed 55′ hall axis is horizontal and the confirmed 69′
 // axis is vertical. One coordinate unit is one physical inch on both levels.
@@ -41,12 +53,13 @@ const STAGE_DEPTH = 174; // 14′6″
 
 type Common = { fixed: true; measurementStatus: "source-traced" };
 
-/** Cypress · The Chateau, modeled as two indoor levels plus the outdoor ceremony site. */
+/** Cypress · The Chateau, modeled as two indoor levels plus the outdoor ceremony site and back patio. */
 export function createTheChateauCypressConfiguration(): HallConfiguration {
   const common: Common = { fixed: true, measurementStatus: "source-traced" };
   const mainFloorElements = createMainFloorElements(common);
   const balconyElements = createBalconyElements(common);
   const ceremonySiteElements = createCeremonySiteElements(common);
+  const patioElements = createPatioElements(common);
   const levels: HallLevelConfiguration[] = [
     {
       id: "level-1-main-floor",
@@ -135,12 +148,195 @@ export function createTheChateauCypressConfiguration(): HallConfiguration {
       fixedArchitecturalElements: ceremonySiteElements,
       floorplanAsset: null,
     },
+    {
+      id: "patio",
+      slug: "patio",
+      name: "Patio",
+      inventoryGroupId: "reception",
+      physicalWidthInches: PATIO_CANVAS_WIDTH,
+      physicalHeightInches: PATIO_CANVAS_HEIGHT,
+      physicalDimensionStatus: "source-traced",
+      physicalDimensionNote:
+        "The supplied Cypress site diagram confirms a 75-foot-wide by 29-foot-deep back patio. The main patio, continuous raised seating section, step edge, curved railing, building footprint, and perimeter railing are source-traced from that diagram and the supplied photograph.",
+      planningBounds: {
+        x: PATIO_X,
+        y: PATIO_Y,
+        width: PATIO_WIDTH,
+        height: PATIO_HEIGHT,
+      },
+      defaultObjectPosition: { x: PATIO_X + 210, y: PATIO_Y + 150 },
+      usableAreas: createPatioUsableAreas(),
+      voidAreas: [],
+      fixedArchitecturalElements: patioElements,
+      floorplanAsset: null,
+    },
   ];
 
   return {
     levels,
     defaultLevelId: "level-1-main-floor",
   };
+}
+
+function createPatioElements(common: Common): FixedArchitectureElement[] {
+  return [
+    {
+      ...area(common, "chateau-patio-floor", "main-floor", "Back Patio", PATIO_X, PATIO_Y, PATIO_WIDTH, PATIO_HEIGHT, "allowed", "confirmed"),
+      showOutline: false,
+      showLabel: false,
+    },
+    path(common, "chateau-patio-surface", "Main Patio Dining Surface", patioMainSurfacePath(), "allowed", {
+      fill: "rgba(226, 216, 202, 0.72)",
+      stroke: "#8d7c69",
+      strokeWidth: 2.5,
+    }, "confirmed", "Confirmed 75-foot width and 29-foot depth with a source-traced curved building edge."),
+    path(common, "chateau-patio-raised-seating", "Raised Patio Seating", patioRaisedSurfacePath(), "allowed", {
+      fill: "#ded0bb",
+      stroke: "#9a8064",
+      strokeWidth: 2,
+      elevation: "raised",
+    }),
+    path(common, "chateau-patio-building-facade", "Building Footprint", patioBuildingPath(), "blocked", {
+      fill: "#f7f4ed",
+      stroke: "#6d665c",
+      strokeWidth: 3,
+    }),
+    path(common, "chateau-patio-curved-railing", "Curved Railing", patioCurvedRailingPath(), "blocked", {
+      stroke: "#66736c",
+      strokeWidth: 4,
+    }),
+    path(common, "chateau-patio-left-step", "Raised Step", `M ${PATIO_X} ${PATIO_RAISED_SECTION_Y} H ${PATIO_BUILDING_CENTER_X - PATIO_BUILDING_RADIUS}`, "restricted", {
+      stroke: "#b17f52",
+      strokeWidth: 3,
+      dash: [10, 6],
+    }),
+    path(common, "chateau-patio-right-step", "Raised Step", `M ${PATIO_BUILDING_CENTER_X + PATIO_BUILDING_RADIUS} ${PATIO_RAISED_SECTION_Y} H ${PATIO_X + PATIO_WIDTH}`, "restricted", {
+      stroke: "#b17f52",
+      strokeWidth: 3,
+      dash: [10, 6],
+    }),
+    railing(common, "chateau-patio-north-railing", [PATIO_X, PATIO_Y, PATIO_X + PATIO_WIDTH, PATIO_Y]),
+    railing(common, "chateau-patio-west-railing", [PATIO_X, PATIO_Y, PATIO_X, PATIO_BOTTOM]),
+    railing(common, "chateau-patio-east-railing", [PATIO_X + PATIO_WIDTH, PATIO_Y, PATIO_X + PATIO_WIDTH, PATIO_BOTTOM]),
+    railing(common, "chateau-patio-southwest-railing", [PATIO_X, PATIO_BOTTOM, PATIO_BUILDING_CENTER_X - PATIO_BUILDING_RADIUS, PATIO_BOTTOM]),
+    railing(common, "chateau-patio-southeast-railing", [PATIO_BUILDING_CENTER_X + PATIO_BUILDING_RADIUS, PATIO_BOTTOM, PATIO_X + PATIO_WIDTH, PATIO_BOTTOM]),
+    label(common, "chateau-patio-surface-label", "BACK PATIO · DINING AREA", PATIO_BUILDING_CENTER_X - 130, PATIO_Y + 54, 260, 12),
+    label(common, "chateau-patio-raised-label", "RAISED SEATING", PATIO_BUILDING_CENTER_X - 75, PATIO_RAISED_SECTION_Y - 22, 150, 10),
+    label(common, "chateau-patio-left-step-label", "RAISED STEP", PATIO_X + 92, PATIO_RAISED_SECTION_Y - 19, 150, 9),
+    label(common, "chateau-patio-right-step-label", "RAISED STEP", PATIO_X + PATIO_WIDTH - 242, PATIO_RAISED_SECTION_Y - 19, 150, 9),
+    label(common, "chateau-patio-width-label", "75′ OVERALL WIDTH", PATIO_BUILDING_CENTER_X - 110, 28, 220, 11),
+    label(common, "chateau-patio-depth-label", "29′ OVERALL DEPTH", PATIO_X + PATIO_WIDTH + 28, PATIO_Y + 76, 200, 11, 90),
+  ];
+}
+
+function createPatioUsableAreas(): VenueFloorRegion[] {
+  return [
+    floorRegion("chateau-patio-main-dining-surface", "Main Patio Dining Surface", "usable-floor", {
+      type: "polygon",
+      points: patioMainUsablePolygon(),
+    }, "confirmed"),
+    floorRegion("chateau-patio-raised-seating", "Continuous Raised Patio Seating", "usable-floor", {
+      type: "polygon",
+      points: patioRaisedUsablePolygon(),
+    }),
+  ];
+}
+
+function patioMainSurfacePath() {
+  const radius = PATIO_BUILDING_RADIUS;
+  const centerX = PATIO_BUILDING_CENTER_X;
+  const horizontalControl = radius * 0.5522848;
+  const verticalControl = PATIO_UPPER_CURVE_DEPTH * 0.5522848;
+  return [
+    `M ${PATIO_X} ${PATIO_Y} H ${PATIO_X + PATIO_WIDTH} V ${PATIO_RAISED_SECTION_Y}`,
+    `H ${centerX + radius}`,
+    `C ${centerX + radius} ${PATIO_RAISED_SECTION_Y - verticalControl}, ${centerX + horizontalControl} ${PATIO_RAISED_SECTION_Y - PATIO_UPPER_CURVE_DEPTH}, ${centerX} ${PATIO_RAISED_SECTION_Y - PATIO_UPPER_CURVE_DEPTH}`,
+    `C ${centerX - horizontalControl} ${PATIO_RAISED_SECTION_Y - PATIO_UPPER_CURVE_DEPTH}, ${centerX - radius} ${PATIO_RAISED_SECTION_Y - verticalControl}, ${centerX - radius} ${PATIO_RAISED_SECTION_Y}`,
+    `H ${PATIO_X} Z`,
+  ].join(" ");
+}
+
+function patioRaisedSurfacePath() {
+  const radius = PATIO_BUILDING_RADIUS;
+  const centerX = PATIO_BUILDING_CENTER_X;
+  const upperHorizontalControl = radius * 0.5522848;
+  const upperVerticalControl = PATIO_UPPER_CURVE_DEPTH * 0.5522848;
+  const lowerControl = radius * 0.5522848;
+  return [
+    `M ${PATIO_X} ${PATIO_RAISED_SECTION_Y} H ${centerX - radius}`,
+    `C ${centerX - radius} ${PATIO_RAISED_SECTION_Y - upperVerticalControl}, ${centerX - upperHorizontalControl} ${PATIO_RAISED_SECTION_Y - PATIO_UPPER_CURVE_DEPTH}, ${centerX} ${PATIO_RAISED_SECTION_Y - PATIO_UPPER_CURVE_DEPTH}`,
+    `C ${centerX + upperHorizontalControl} ${PATIO_RAISED_SECTION_Y - PATIO_UPPER_CURVE_DEPTH}, ${centerX + radius} ${PATIO_RAISED_SECTION_Y - upperVerticalControl}, ${centerX + radius} ${PATIO_RAISED_SECTION_Y}`,
+    `H ${PATIO_X + PATIO_WIDTH} V ${PATIO_BOTTOM} H ${centerX + radius}`,
+    `C ${centerX + radius} ${PATIO_BOTTOM - lowerControl}, ${centerX + lowerControl} ${PATIO_BOTTOM - radius}, ${centerX} ${PATIO_BOTTOM - radius}`,
+    `C ${centerX - lowerControl} ${PATIO_BOTTOM - radius}, ${centerX - radius} ${PATIO_BOTTOM - lowerControl}, ${centerX - radius} ${PATIO_BOTTOM}`,
+    `H ${PATIO_X} Z`,
+  ].join(" ");
+}
+
+function patioBuildingPath() {
+  const radius = PATIO_BUILDING_RADIUS;
+  const centerX = PATIO_BUILDING_CENTER_X;
+  const lowerControl = radius * 0.5522848;
+  return [
+    `M ${centerX - radius} ${PATIO_BOTTOM}`,
+    `C ${centerX - radius} ${PATIO_BOTTOM - lowerControl}, ${centerX - lowerControl} ${PATIO_BOTTOM - radius}, ${centerX} ${PATIO_BOTTOM - radius}`,
+    `C ${centerX + lowerControl} ${PATIO_BOTTOM - radius}, ${centerX + radius} ${PATIO_BOTTOM - lowerControl}, ${centerX + radius} ${PATIO_BOTTOM}`,
+    "Z",
+  ].join(" ");
+}
+
+function patioCurvedRailingPath() {
+  const radius = PATIO_BUILDING_RADIUS;
+  const centerX = PATIO_BUILDING_CENTER_X;
+  const horizontalControl = radius * 0.5522848;
+  const verticalControl = PATIO_UPPER_CURVE_DEPTH * 0.5522848;
+  return [
+    `M ${centerX - radius} ${PATIO_RAISED_SECTION_Y}`,
+    `C ${centerX - radius} ${PATIO_RAISED_SECTION_Y - verticalControl}, ${centerX - horizontalControl} ${PATIO_RAISED_SECTION_Y - PATIO_UPPER_CURVE_DEPTH}, ${centerX} ${PATIO_RAISED_SECTION_Y - PATIO_UPPER_CURVE_DEPTH}`,
+    `C ${centerX + horizontalControl} ${PATIO_RAISED_SECTION_Y - PATIO_UPPER_CURVE_DEPTH}, ${centerX + radius} ${PATIO_RAISED_SECTION_Y - verticalControl}, ${centerX + radius} ${PATIO_RAISED_SECTION_Y}`,
+  ].join(" ");
+}
+
+function patioMainUsablePolygon() {
+  const arc = Array.from({ length: 17 }, (_, index) => {
+    const angle = Math.PI * index / 16;
+    return {
+      x: PATIO_BUILDING_CENTER_X + PATIO_BUILDING_RADIUS * Math.cos(angle),
+      y: PATIO_RAISED_SECTION_Y - PATIO_UPPER_CURVE_DEPTH * Math.sin(angle),
+    };
+  });
+  return [
+    PATIO_X, PATIO_Y,
+    PATIO_X + PATIO_WIDTH, PATIO_Y,
+    PATIO_X + PATIO_WIDTH, PATIO_RAISED_SECTION_Y,
+    ...arc.flatMap((point) => [point.x, point.y]),
+    PATIO_X, PATIO_RAISED_SECTION_Y,
+  ];
+}
+
+function patioRaisedUsablePolygon() {
+  const upperArc = Array.from({ length: 17 }, (_, index) => {
+    const angle = Math.PI - Math.PI * index / 16;
+    return {
+      x: PATIO_BUILDING_CENTER_X + PATIO_BUILDING_RADIUS * Math.cos(angle),
+      y: PATIO_RAISED_SECTION_Y - PATIO_UPPER_CURVE_DEPTH * Math.sin(angle),
+    };
+  });
+  const lowerArc = Array.from({ length: 17 }, (_, index) => {
+    const angle = Math.PI * index / 16;
+    return {
+      x: PATIO_BUILDING_CENTER_X + PATIO_BUILDING_RADIUS * Math.cos(angle),
+      y: PATIO_BOTTOM - PATIO_BUILDING_RADIUS * Math.sin(angle),
+    };
+  });
+  return [
+    PATIO_X, PATIO_RAISED_SECTION_Y,
+    ...upperArc.flatMap((point) => [point.x, point.y]),
+    PATIO_X + PATIO_WIDTH, PATIO_RAISED_SECTION_Y,
+    PATIO_X + PATIO_WIDTH, PATIO_BOTTOM,
+    ...lowerArc.flatMap((point) => [point.x, point.y]),
+    PATIO_X, PATIO_BOTTOM,
+  ];
 }
 
 function createCeremonySiteElements(common: Common): FixedArchitectureElement[] {
@@ -507,6 +703,10 @@ function areaWithNote(common: Common, id: string, role: Extract<FixedArchitectur
 
 function wall(common: Common, id: string, points: number[]): FixedArchitectureElement {
   return { ...common, id, kind: "wall", label: "Fixed Wall", placementBehavior: "blocked", points };
+}
+
+function railing(common: Common, id: string, points: number[]): FixedArchitectureElement {
+  return { ...common, id, kind: "railing", label: "Fixed Railing", placementBehavior: "blocked", points };
 }
 
 function path(common: Common, id: string, pathLabel: string, data: string, placementBehavior: Extract<FixedArchitectureElement, { kind: "path" }>["placementBehavior"], style: Pick<Extract<FixedArchitectureElement, { kind: "path" }>, "fill" | "stroke" | "strokeWidth" | "dash" | "opacity" | "elevation">, measurementStatus: Extract<FixedArchitectureElement, { kind: "path" }>["measurementStatus"] = "source-traced", physicalNote?: string): Extract<FixedArchitectureElement, { kind: "path" }> {
