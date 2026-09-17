@@ -267,10 +267,13 @@ function VenueLayer({ venue }: { venue: VenueTemplate }) {
       {venue.elements.filter((element) => element.kind === "area" && !floorAreaRoles.has(element.role) && element.role !== "landing").map((element) => (
         <FixedArchitectureNode key={element.id} element={element} />
       ))}
-      {venue.elements.filter((element) => element.kind === "wall" || element.kind === "railing" || element.kind === "path").map((element) => (
+      {venue.elements.filter((element) => element.kind === "wall" || element.kind === "railing" || (element.kind === "path" && !element.id.includes("stair-treads"))).map((element) => (
         <FixedArchitectureNode key={element.id} element={element} />
       ))}
       {venue.elements.filter((element) => element.kind === "area" && element.role === "landing").map((element) => (
+        <FixedArchitectureNode key={element.id} element={element} />
+      ))}
+      {venue.elements.filter((element) => element.kind === "path" && element.id.includes("stair-treads")).map((element) => (
         <FixedArchitectureNode key={element.id} element={element} />
       ))}
       {venue.elements.filter((element) => element.kind !== "area" && element.kind !== "wall" && element.kind !== "railing" && element.kind !== "path").map((element) => (

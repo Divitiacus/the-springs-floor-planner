@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { isPositionOnFloor, isRectangleFootprintOnFloor } from "@/domain/floor-regions";
 import {
   ALVARADO_TIMBERVIEW_LODGE_INVENTORY,
+  ARLINGTON_FOUNTAINVIEW_TERRACE_INVENTORY,
   ANGLETON_INVENTORY,
   CYPRESS_CHATEAU_INVENTORY,
   DENTON_INVENTORY,
@@ -34,7 +35,7 @@ import {
 
 describe("location catalog", () => {
   it("defines Magnolia with exactly its two confirmed halls", () => {
-    expect(SPRINGS_LOCATIONS).toHaveLength(17);
+    expect(SPRINGS_LOCATIONS).toHaveLength(18);
     expect(SPRINGS_LOCATIONS[0]).toMatchObject({ name: "Magnolia", slug: "magnolia" });
     expect(SPRINGS_LOCATIONS[0].halls.map((hall) => hall.name)).toEqual([
       "Pinehaven Terrace",
@@ -277,6 +278,135 @@ describe("location catalog", () => {
       x: 451,
       width: 210,
     });
+  });
+
+  it("defines Arlington Fountainview Terrace as three independent planning spaces", () => {
+    const location = getLocationBySlug("arlington");
+    const hall = getHallBySlug(location, "fountainview-terrace");
+    if (!location || !hall?.configuration) throw new Error("Arlington Fountainview Terrace configuration missing");
+
+    expect(location).toMatchObject({ id: "location_arlington", name: "Arlington" });
+    expect(hall).toMatchObject({ id: "hall_fountainview_terrace", name: "Fountainview Terrace" });
+    expect(ARLINGTON_FOUNTAINVIEW_TERRACE_INVENTORY.limits).toEqual({
+      "round-table-60": 30,
+      "round-table-48": 3,
+      "rectangle-table-6": 10,
+      "rectangle-table-8": 12,
+      "cocktail-table-32": 15,
+      chairs: 350,
+    });
+    expect(resolveInventoryConfiguration(location, hall)).toEqual(ARLINGTON_FOUNTAINVIEW_TERRACE_INVENTORY.limits);
+    expect(ARLINGTON_FOUNTAINVIEW_TERRACE_INVENTORY.source.note).toContain("Linen sizes are intentionally excluded");
+
+    if (!isMultiLevelHallConfiguration(hall.configuration)) throw new Error("Expected three Fountainview Terrace levels");
+    expect(hall.configuration.defaultLevelId).toBe("grand-ballroom");
+    expect(hall.configuration.levels.map((level) => [level.id, level.name, level.inventoryGroupId])).toEqual([
+      ["grand-ballroom", "Grand Ballroom", "indoor"],
+      ["indoor-chapel", "Indoor Chapel", "indoor"],
+      ["garden-ceremony", "Garden Ceremony", "garden"],
+    ]);
+
+    const [ballroom, chapel, garden] = hall.configuration.levels;
+    expect(ballroom).toMatchObject({
+      physicalWidthInches: 1152,
+      physicalHeightInches: 684,
+      physicalDimensionStatus: "confirmed",
+      planningBounds: { x: 60, y: 60, width: 1032, height: 564 },
+    });
+    expect(ballroom.fixedArchitecturalElements.find((element) => element.id === "fountainview-terrace-ballroom-long-bar")).toMatchObject({
+      kind: "area",
+      role: "bar",
+      measurementStatus: "confirmed",
+      shape: { type: "rectangle", width: 141.60000000000002, height: 36 },
+    });
+    expect(ballroom.fixedArchitecturalElements.find((element) => element.id === "fountainview-terrace-ballroom-buffet")).toMatchObject({
+      kind: "area",
+      role: "buffet",
+      shape: { type: "rectangle", width: 174, height: 42 },
+    });
+    expect(chapel).toMatchObject({
+      physicalWidthInches: 1260,
+      physicalHeightInches: 840,
+      physicalDimensionStatus: "source-traced",
+      planningBounds: { x: 60, y: 60, width: 1140, height: 720 },
+    });
+    expect(chapel.fixedArchitecturalElements.find((element) => element.id === "fountainview-terrace-chapel-stage")).toMatchObject({
+      role: "stage",
+      elevation: "raised",
+      measurementStatus: "confirmed",
+      shape: { type: "polygon" },
+    });
+    expect(chapel.usableAreas?.find((region) => region.id === "fountainview-terrace-chapel-seating-floor")).toMatchObject({
+      measurementStatus: "confirmed",
+      shape: { type: "rectangle", x: 540, y: 60, width: 660, height: 720 },
+    });
+    expect(chapel.usableAreas?.find((region) => region.id === "fountainview-terrace-chapel-lounge-floor")).toMatchObject({
+      measurementStatus: "source-traced",
+      shape: { type: "polygon", points: [60, 60, 228, 60, 228, 126, 480, 126, 480, 60, 540, 60, 540, 780, 60, 780] },
+    });
+    expect(chapel.fixedArchitecturalElements.find((element) => element.id === "fountainview-terrace-chapel-building-floor")).toMatchObject({
+      kind: "area",
+      role: "main-floor",
+      shape: { type: "polygon", points: [60, 60, 228, 60, 228, 126, 480, 126, 480, 60, 1200, 60, 1200, 780, 60, 780] },
+    });
+    expect(chapel.fixedArchitecturalElements.some((element) => element.id.includes("curved-aisle"))).toBe(false);
+    expect(chapel.fixedArchitecturalElements.some((element) => element.id === "fountainview-terrace-chapel-closet-piano-rail")).toBe(false);
+    expect(chapel.fixedArchitecturalElements.some((element) => element.id === "fountainview-terrace-chapel-restroom-north-stub")).toBe(false);
+    expect(chapel.fixedArchitecturalElements.find((element) => element.id === "fountainview-terrace-chapel-left-enclosing-wall")).toMatchObject({
+      kind: "wall",
+      points: [540, 282, 540, 588],
+    });
+    expect(chapel.fixedArchitecturalElements.find((element) => element.id === "fountainview-terrace-chapel-floor-left-return")).toMatchObject({
+      kind: "railing",
+      points: [540, 282, 624, 282, 624, 300],
+    });
+    expect(chapel.fixedArchitecturalElements.find((element) => element.id === "fountainview-terrace-chapel-lounge-triangle")).toMatchObject({
+      kind: "railing",
+      points: [540, 282, 492, 282, 540, 390],
+    });
+    expect(chapel.fixedArchitecturalElements.find((element) => element.id === "fountainview-terrace-chapel-lounge-triangle-fill")).toMatchObject({
+      kind: "area",
+      role: "closet",
+      shape: { type: "polygon", points: [540, 282, 492, 282, 540, 390] },
+      showLabel: false,
+      showOutline: false,
+    });
+    expect(chapel.fixedArchitecturalElements.find((element) => element.id === "fountainview-terrace-chapel-southwest-closet")).toMatchObject({
+      kind: "area",
+      role: "closet",
+      shape: { type: "rectangle", x: 60, y: 648, width: 160, height: 132 },
+      showLabel: false,
+    });
+    expect(chapel.fixedArchitecturalElements.find((element) => element.id === "fountainview-terrace-chapel-seating-boundary")).toMatchObject({
+      kind: "railing",
+      points: [666, 636, 1098, 636, 1128, 588, 1128, 264],
+    });
+    expect(chapel.fixedArchitecturalElements.find((element) => element.id === "fountainview-terrace-chapel-seating-boundary-left")).toMatchObject({
+      kind: "railing",
+      points: [624, 300, 624, 588],
+    });
+    expect(chapel.fixedArchitecturalElements.find((element) => element.id === "fountainview-terrace-chapel-stair-block")).toMatchObject({
+      kind: "area",
+      shape: { type: "polygon", points: [624, 588, 666, 540, 714, 588, 666, 636] },
+    });
+    expect(chapel.fixedArchitecturalElements.some((element) => element.id === "fountainview-terrace-chapel-stairs-label")).toBe(false);
+    expect(chapel.fixedArchitecturalElements.some((element) => element.id === "fountainview-terrace-chapel-title")).toBe(false);
+    expect(ballroom.fixedArchitecturalElements.filter((element) => element.id.startsWith("fountainview-terrace-ballroom-south-west-doors") && element.kind === "door")).toHaveLength(2);
+    expect(ballroom.fixedArchitecturalElements.find((element) => element.id === "fountainview-terrace-ballroom-south-wall-west-2")).toMatchObject({
+      kind: "wall",
+      points: [360, 588, 664, 588, 664, 624, 740, 624],
+    });
+    expect(garden).toMatchObject({
+      physicalWidthInches: 840,
+      physicalHeightInches: 912,
+      physicalDimensionStatus: "provisional",
+    });
+    expect(garden.physicalDimensionNote).toContain("58-by-5-foot aisle");
+    expect(garden.fixedArchitecturalElements.find((element) => element.id === "fountainview-terrace-garden-gazebo")).toMatchObject({
+      role: "stage",
+      measurementStatus: "confirmed",
+    });
+    expect(hall.configuration.levels.flatMap((level) => level.fixedArchitecturalElements).every((element) => element.id.startsWith("fountainview-terrace-"))).toBe(true);
   });
 
   it("defines Wallisville Farmhouse with stable routing, confirmed scale, and a 250-guest planning limit", () => {

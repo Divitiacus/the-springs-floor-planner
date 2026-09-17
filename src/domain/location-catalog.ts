@@ -6,6 +6,7 @@ import type {
 } from "@/domain/floorplan";
 import type { InventoryCatalog, InventoryConfiguration } from "@/domain/inventory";
 import { createAuroraGroveConfiguration } from "@/domain/venues/aurora-grove";
+import { createFountainviewTerraceConfiguration } from "@/domain/venues/fountainview-terrace";
 import { createHavenstoneReserveConfiguration } from "@/domain/venues/havenstone-reserve";
 import { createHeritagePineConfiguration } from "@/domain/venues/heritage-pine";
 import { createHiddenMagnoliaConfiguration } from "@/domain/venues/hidden-magnolia";
@@ -468,6 +469,25 @@ export const WAXAHACHIE_INVENTORY: InventoryCatalog = {
   },
 };
 
+export const ARLINGTON_FOUNTAINVIEW_TERRACE_INVENTORY: InventoryCatalog = {
+  scope: "hall",
+  limits: {
+    "round-table-60": 30,
+    "round-table-48": 3,
+    "rectangle-table-6": 10,
+    "rectangle-table-8": 12,
+    "cocktail-table-32": 15,
+    chairs: 350,
+  },
+  source: {
+    fileName: "user-supplied Fountainview Terrace table and chair guide",
+    note: "The table quantities and 350 indoor white Chiavari chairs are source-confirmed. Cocktail-table diameter was not supplied, so the 32-inch planner object is a provisional footprint. The separate outdoor pool contains 300 white garden chairs. Space capacities are Grand Ballroom 300, Indoor Chapel 250, and Garden Ceremony 250. Linen sizes are intentionally excluded.",
+  },
+  additionalItems: [
+    { sourceItemKey: "white-garden-chairs", name: "White garden chairs", quantity: 300, note: "Outdoor use only" },
+  ],
+};
+
 export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
   {
     id: "location_magnolia",
@@ -566,6 +586,22 @@ export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
         configuration: {
           ...createTimberviewLodgeConfiguration(),
           inventory: ALVARADO_TIMBERVIEW_LODGE_INVENTORY,
+        },
+      },
+    ],
+  },
+  {
+    id: "location_arlington",
+    slug: "arlington",
+    name: "Arlington",
+    halls: [
+      {
+        id: "hall_fountainview_terrace",
+        slug: "fountainview-terrace",
+        name: "Fountainview Terrace",
+        configuration: {
+          ...createFountainviewTerraceConfiguration(),
+          inventory: ARLINGTON_FOUNTAINVIEW_TERRACE_INVENTORY,
         },
       },
     ],

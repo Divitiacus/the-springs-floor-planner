@@ -225,6 +225,39 @@ describe("hall venue template", () => {
     expect(table.width / venue.hall.width).toBe(1 / 15);
   });
 
+  it("loads Arlington Fountainview Terrace with ballroom, chapel, and garden tabs", () => {
+    const location = getLocationBySlug("arlington");
+    const hall = getHallBySlug(location, "fountainview-terrace");
+    if (!location || !hall) throw new Error("Arlington Fountainview Terrace catalog entry missing");
+
+    const venue = createHallVenueTemplate(location, hall);
+    const levels = createHallVenueTemplates(location, hall);
+    const table = createEventObject("round-table-60", { x: 576, y: 342 }, [], "fountainview-scale");
+
+    expect(venue.id).toBe("location_arlington:hall_fountainview_terrace");
+    expect(venue.name).toBe("Arlington · Fountainview Terrace");
+    expect(venue.levelId).toBe("grand-ballroom");
+    expect(venue.inventoryGroupId).toBe("indoor");
+    expect(venue.hall).toEqual({ x: 60, y: 60, width: 1032, height: 564 });
+    expect(venue.physicalWidthInches).toBe(1152);
+    expect(venue.physicalHeightInches).toBe(684);
+    expect(table.width / venue.hall.width).toBeCloseTo(60 / 1032, 12);
+    expect(levels.map((level) => [level.levelId, level.levelName])).toEqual([
+      ["grand-ballroom", "Grand Ballroom"],
+      ["indoor-chapel", "Indoor Chapel"],
+      ["garden-ceremony", "Garden Ceremony"],
+    ]);
+    expect(levels[1]).toMatchObject({
+      inventoryGroupId: "indoor",
+      hall: { x: 60, y: 60, width: 1140, height: 720 },
+      physicalDimensionStatus: "source-traced",
+    });
+    expect(levels[2]).toMatchObject({
+      inventoryGroupId: "garden",
+      physicalDimensionStatus: "provisional",
+    });
+  });
+
   it("loads Valley View without repeating its identical location and hall name", () => {
     const location = getLocationBySlug("valley-view");
     const hall = getHallBySlug(location, "valley-view");
