@@ -1,5 +1,5 @@
 import type { FixedArchitectureElement, VenueFloorRegion } from "@/domain/floorplan";
-import type { HallConfiguration } from "@/domain/location-catalog";
+import type { HallConfiguration, HallLevelConfiguration } from "@/domain/location-catalog";
 
 const CANVAS_MARGIN = 55;
 const SOURCE_LEFT = 73;
@@ -35,9 +35,27 @@ const HEARTH_TOP = MAIN_BOTTOM;
 const HEARTH_RIGHT = tx(377);
 const HEARTH_BOTTOM = ty(563);
 
+const CEREMONY_MARGIN = 60;
+const CEREMONY_PLATFORM_WIDTH = 390; // 32′6″
+const CEREMONY_PLATFORM_DEPTH = 198; // 16′6″
+const CEREMONY_TURF_WIDTH = 228; // 19′
+const CEREMONY_TURF_DEPTH = 492; // 41′
+const CEREMONY_AISLE_WIDTH = 48; // 4′
+const CEREMONY_AISLE_LENGTH = 780; // 65′, interpreted as the full aisle run toward the building
+const CEREMONY_AISLE_DISPLAY_LENGTH = CEREMONY_TURF_DEPTH + 72; // Compressed after the turf with a drafting break
+const CEREMONY_SEATING_WIDTH = CEREMONY_TURF_WIDTH * 2 + CEREMONY_AISLE_WIDTH;
+const CEREMONY_PLATFORM_X = CEREMONY_MARGIN + (CEREMONY_SEATING_WIDTH - CEREMONY_PLATFORM_WIDTH) / 2;
+const CEREMONY_PLATFORM_Y = 50;
+const CEREMONY_TURF_Y = CEREMONY_PLATFORM_Y + CEREMONY_PLATFORM_DEPTH;
+const CEREMONY_LEFT_TURF_X = CEREMONY_MARGIN;
+const CEREMONY_AISLE_X = CEREMONY_LEFT_TURF_X + CEREMONY_TURF_WIDTH;
+const CEREMONY_RIGHT_TURF_X = CEREMONY_AISLE_X + CEREMONY_AISLE_WIDTH;
+const CEREMONY_CANVAS_WIDTH = CEREMONY_SEATING_WIDTH + CEREMONY_MARGIN * 2;
+const CEREMONY_CANVAS_HEIGHT = CEREMONY_TURF_Y + CEREMONY_AISLE_DISPLAY_LENGTH + CEREMONY_MARGIN;
+
 type Common = { fixed: true; measurementStatus: "source-traced" };
 
-/** Alvarado's Timberview Lodge reception floor, traced independently from the supplied venue plan. */
+/** Alvarado's Timberview Lodge reception floor and outdoor ceremony site. */
 export function createTimberviewLodgeConfiguration(): HallConfiguration {
   const common: Common = { fixed: true, measurementStatus: "source-traced" };
   const defaultObjectPosition = rotatePoint(tx(265), ty(315));
@@ -66,19 +84,153 @@ export function createTimberviewLodgeConfiguration(): HallConfiguration {
     ),
   );
 
+  const levels: HallLevelConfiguration[] = [
+    {
+      id: "reception",
+      slug: "reception",
+      name: "Reception",
+      inventoryGroupId: "reception",
+      physicalWidthInches: PLAN_HEIGHT + CANVAS_MARGIN * 2,
+      physicalHeightInches: PLAN_WIDTH + CANVAS_MARGIN * 2,
+      physicalDimensionStatus: "source-traced",
+      physicalDimensionNote:
+        "Timberview Lodge is calibrated from the supplied Alvarado plan's confirmed 40-foot reception-room width and 80-foot length, then displayed in landscape orientation with the entrance at left. The lounge, west-side bar, staircase, buffet, chair/table closet, pillars, window walls, and double-sided fireplace are independently traced from the Alvarado sources; no Denton architecture is shared.",
+      planningBounds: { x: PLAN_LEFT, y: PLAN_TOP, width: PLAN_HEIGHT, height: PLAN_WIDTH },
+      defaultObjectPosition,
+      usableAreas: createUsableAreas().map(rotateFloorRegion),
+      voidAreas: [],
+      fixedArchitecturalElements,
+      floorplanAsset: null,
+    },
+    createCeremonySiteLevel(common),
+  ];
+
+  return { levels, defaultLevelId: "reception" };
+}
+
+function createCeremonySiteLevel(common: Common): HallLevelConfiguration {
   return {
-    physicalWidthInches: PLAN_HEIGHT + CANVAS_MARGIN * 2,
-    physicalHeightInches: PLAN_WIDTH + CANVAS_MARGIN * 2,
+    id: "ceremony-site",
+    slug: "ceremony-site",
+    name: "Ceremony Site",
+    inventoryGroupId: "ceremony",
+    physicalWidthInches: CEREMONY_CANVAS_WIDTH,
+    physicalHeightInches: CEREMONY_CANVAS_HEIGHT,
     physicalDimensionStatus: "source-traced",
     physicalDimensionNote:
-      "Timberview Lodge is calibrated from the supplied Alvarado plan's confirmed 40-foot reception-room width and 80-foot length, then displayed in landscape orientation with the entrance at left. The lounge, west-side bar, staircase, buffet, chair/table closet, pillars, window walls, and double-sided fireplace are independently traced from the Alvarado sources; no Denton architecture is shared.",
-    planningBounds: { x: PLAN_LEFT, y: PLAN_TOP, width: PLAN_HEIGHT, height: PLAN_WIDTH },
-    defaultObjectPosition,
-    usableAreas: createUsableAreas().map(rotateFloorRegion),
+      `The supplied Alvarado ceremony drawing labels a 32.5-foot by 16.5-foot ceremony pavilion, two 19-foot by 41-foot artificial-turf seating areas, and a 4-foot center aisle. The separate ${CEREMONY_AISLE_LENGTH / 12}-foot annotation is interpreted as the full center-aisle run toward the building because the aisle visibly continues beyond the 41-foot turf areas. A drafting break compresses that continuation on screen while preserving the ${CEREMONY_AISLE_LENGTH / 12}-foot label.`,
+    planningBounds: {
+      x: CEREMONY_MARGIN,
+      y: CEREMONY_PLATFORM_Y,
+      width: CEREMONY_SEATING_WIDTH,
+      height: CEREMONY_PLATFORM_DEPTH + CEREMONY_AISLE_DISPLAY_LENGTH,
+    },
+    defaultObjectPosition: {
+      x: CEREMONY_LEFT_TURF_X + CEREMONY_TURF_WIDTH / 2,
+      y: CEREMONY_TURF_Y + 150,
+    },
+    usableAreas: createCeremonyUsableAreas(),
     voidAreas: [],
-    fixedArchitecturalElements,
+    fixedArchitecturalElements: createCeremonyElements(common),
     floorplanAsset: null,
   };
+}
+
+function createCeremonyElements(common: Common): FixedArchitectureElement[] {
+  const turfNote = "Artificial-turf seating area confirmed at 19 feet wide by 41 feet deep in the supplied Alvarado ceremony drawing.";
+  const aisleNote = "The drawing labels the center aisle at 4 feet wide and separately shows 65 feet along its run; this is interpreted as the full aisle length toward the building.";
+  return [
+    {
+      ...common,
+      id: "timberview-lodge-ceremony-center-aisle",
+      kind: "path",
+      label: "Center Aisle",
+      physicalNote: aisleNote,
+      placementBehavior: "restricted",
+      elevation: "floor",
+      data: rectanglePath(CEREMONY_AISLE_X, CEREMONY_TURF_Y, CEREMONY_AISLE_WIDTH, CEREMONY_AISLE_DISPLAY_LENGTH),
+      fill: "rgba(220, 205, 181, 0.72)",
+      stroke: "#9b876c",
+      strokeWidth: 2,
+    },
+    ceremonyTurf(common, "timberview-lodge-ceremony-left-turf", "Left Seating Turf", CEREMONY_LEFT_TURF_X, turfNote),
+    ceremonyTurf(common, "timberview-lodge-ceremony-right-turf", "Right Seating Turf", CEREMONY_RIGHT_TURF_X, turfNote),
+    {
+      ...areaWithNote(
+        common,
+        "timberview-lodge-ceremony-platform",
+        "stage",
+        "CEREMONY PAVILION",
+        CEREMONY_PLATFORM_X,
+        CEREMONY_PLATFORM_Y,
+        CEREMONY_PLATFORM_WIDTH,
+        CEREMONY_PLATFORM_DEPTH,
+        "blocked",
+        "confirmed",
+        "Ceremony pavilion dimensions are labeled 32.5 feet by 16.5 feet in the supplied drawing.",
+      ),
+      elevation: "raised",
+    },
+    label(common, "timberview-lodge-ceremony-platform-dimensions", "32′6″ W × 16′6″ D", CEREMONY_PLATFORM_X + 78, CEREMONY_PLATFORM_Y + 145, CEREMONY_PLATFORM_WIDTH - 156, 9),
+    label(common, "timberview-lodge-ceremony-turf-length", "41′", CEREMONY_LEFT_TURF_X - 24, CEREMONY_TURF_Y + 180, 132, 9, 90),
+    label(common, "timberview-lodge-ceremony-left-turf-width", "19′", CEREMONY_LEFT_TURF_X + 54, CEREMONY_TURF_Y + CEREMONY_TURF_DEPTH + 16, 120, 9),
+    label(common, "timberview-lodge-ceremony-right-turf-width", "19′", CEREMONY_RIGHT_TURF_X + 54, CEREMONY_TURF_Y + CEREMONY_TURF_DEPTH + 16, 120, 9),
+    label(common, "timberview-lodge-ceremony-aisle-dimensions", "4′ WIDE · 65′ AISLE", CEREMONY_AISLE_X + 32, CEREMONY_TURF_Y + 306, 240, 9, 90),
+    aisleBreak(common),
+    label(common, "timberview-lodge-ceremony-building-label", "TO BUILDING", CEREMONY_AISLE_X - 76, CEREMONY_TURF_Y + CEREMONY_AISLE_DISPLAY_LENGTH + 22, 200, 9),
+  ];
+}
+
+function aisleBreak(common: Common): FixedArchitectureElement {
+  const y = CEREMONY_TURF_Y + CEREMONY_TURF_DEPTH + 28;
+  return {
+    ...common,
+    id: "timberview-lodge-ceremony-aisle-break",
+    kind: "path",
+    label: "Aisle continuation break",
+    physicalNote: "Drafting break indicates that the 65-foot aisle continues toward the building beyond the compressed on-screen plan.",
+    placementBehavior: "restricted",
+    elevation: "floor",
+    data: [
+      `M ${CEREMONY_AISLE_X - 8} ${y - 7} L ${CEREMONY_AISLE_X + 9} ${y + 2} L ${CEREMONY_AISLE_X + 24} ${y - 7} L ${CEREMONY_AISLE_X + 41} ${y + 2} L ${CEREMONY_AISLE_X + CEREMONY_AISLE_WIDTH + 8} ${y - 7}`,
+      `M ${CEREMONY_AISLE_X - 8} ${y + 7} L ${CEREMONY_AISLE_X + 9} ${y + 16} L ${CEREMONY_AISLE_X + 24} ${y + 7} L ${CEREMONY_AISLE_X + 41} ${y + 16} L ${CEREMONY_AISLE_X + CEREMONY_AISLE_WIDTH + 8} ${y + 7}`,
+    ].join(" "),
+    fill: "transparent",
+    stroke: "#6f6253",
+    strokeWidth: 3,
+  };
+}
+
+function ceremonyTurf(common: Common, id: string, turfLabel: string, x: number, physicalNote: string): FixedArchitectureElement {
+  return {
+    ...common,
+    id,
+    kind: "path",
+    label: turfLabel,
+    physicalNote,
+    placementBehavior: "allowed",
+    elevation: "floor",
+    data: rectanglePath(x, CEREMONY_TURF_Y, CEREMONY_TURF_WIDTH, CEREMONY_TURF_DEPTH),
+    fill: "rgba(210, 224, 204, 0.78)",
+    stroke: "#7f9778",
+    strokeWidth: 2,
+  };
+}
+
+function createCeremonyUsableAreas(): VenueFloorRegion[] {
+  const common = {
+    kind: "usable-floor" as const,
+    placementBehavior: "allowed" as const,
+    measurementStatus: "confirmed" as const,
+  };
+  return [
+    floorRegion(common, "timberview-lodge-ceremony-left-seating", "Left Artificial Turf Seating", CEREMONY_LEFT_TURF_X, CEREMONY_TURF_Y, CEREMONY_TURF_WIDTH, CEREMONY_TURF_DEPTH),
+    floorRegion(common, "timberview-lodge-ceremony-right-seating", "Right Artificial Turf Seating", CEREMONY_RIGHT_TURF_X, CEREMONY_TURF_Y, CEREMONY_TURF_WIDTH, CEREMONY_TURF_DEPTH),
+  ];
+}
+
+function rectanglePath(x: number, y: number, width: number, height: number) {
+  return `M ${x} ${y} H ${x + width} V ${y + height} H ${x} Z`;
 }
 
 function rotatePoint(x: number, y: number) {

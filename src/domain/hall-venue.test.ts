@@ -181,6 +181,7 @@ describe("hall venue template", () => {
     if (!location || !hall) throw new Error("Alvarado Timberview Lodge catalog entry missing");
 
     const venue = createHallVenueTemplate(location, hall);
+    const levels = createHallVenueTemplates(location, hall);
     const table = createEventObject("round-table-60", { x: 760, y: 520 }, [], "timberview-scale");
 
     expect(venue.id).toBe("location_alvarado:hall_timberview_lodge");
@@ -194,6 +195,16 @@ describe("hall venue template", () => {
     expect(venue.defaultObjectPosition).toEqual({ x: 779, y: 515 });
     expect(table.width / 480).toBe(1 / 8);
     expect(venue.elements.every((element) => element.id.startsWith("timberview-lodge"))).toBe(true);
+    expect(venue.levelId).toBe("reception");
+    expect(venue.inventoryGroupId).toBe("reception");
+    expect(levels.map((level) => level.levelId)).toEqual(["reception", "ceremony-site"]);
+    expect(levels[1]).toMatchObject({
+      levelName: "Ceremony Site",
+      inventoryGroupId: "ceremony",
+      hall: { x: 60, y: 50, width: 504, height: 762 },
+      physicalWidthInches: 624,
+      physicalHeightInches: 872,
+    });
   });
 
   it("loads Valley View without repeating its identical location and hall name", () => {

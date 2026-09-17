@@ -409,16 +409,24 @@ describe("location catalog", () => {
     expect(ALVARADO_TIMBERVIEW_LODGE_INVENTORY.limits).toEqual(DENTON_OAKVIEW_LODGE_INVENTORY.limits);
     expect(resolveInventoryConfiguration(location, hall)).toEqual(ALVARADO_TIMBERVIEW_LODGE_INVENTORY.limits);
 
-    const configuration = singleLevel(hall.configuration);
-    const elements = configuration.fixedArchitecturalElements;
-    expect(configuration).toMatchObject({
+    const configuration = hall.configuration;
+    if (!isMultiLevelHallConfiguration(configuration)) throw new Error("Expected Alvarado reception and ceremony levels");
+    expect(configuration.defaultLevelId).toBe("reception");
+    expect(configuration.levels.map((level) => level.id)).toEqual(["reception", "ceremony-site"]);
+
+    const reception = configuration.levels.find((level) => level.id === "reception");
+    const ceremony = configuration.levels.find((level) => level.id === "ceremony-site");
+    if (!reception || !ceremony) throw new Error("Alvarado level missing");
+    const elements = reception.fixedArchitecturalElements;
+    expect(reception).toMatchObject({
+      inventoryGroupId: "reception",
       physicalWidthInches: 1513,
       physicalHeightInches: 1048,
       physicalDimensionStatus: "source-traced",
       planningBounds: { x: 55, y: 55, width: 1403, height: 938 },
       floorplanAsset: null,
     });
-    expect(configuration.usableAreas).toHaveLength(3);
+    expect(reception.usableAreas).toHaveLength(3);
     expect(elements.every((element) => element.id.startsWith("timberview-lodge"))).toBe(true);
     expect(elements.some((element) => element.id.includes("oakview-lodge"))).toBe(false);
     expect(elements.find((element) => element.id === "timberview-lodge-bar")).toMatchObject({
@@ -441,9 +449,37 @@ describe("location catalog", () => {
     expect(elements.find((element) => element.id === "timberview-lodge-closet-extension-wall")).toBeUndefined();
     expect(elements.filter((element) => element.kind === "door")).toHaveLength(5);
     expect(elements.filter((element) => element.kind === "door").every((element) => element.rotation % 90 === 0)).toBe(true);
-    expect(isPositionOnFloor({ x: 760, y: 520 }, configuration.usableAreas ?? [], [])).toBe(true);
-    expect(isPositionOnFloor({ x: 820, y: 280 }, configuration.usableAreas ?? [], [])).toBe(true);
-    expect(isPositionOnFloor({ x: 650, y: 95 }, configuration.usableAreas ?? [], [])).toBe(false);
+    expect(isPositionOnFloor({ x: 760, y: 520 }, reception.usableAreas ?? [], [])).toBe(true);
+    expect(isPositionOnFloor({ x: 820, y: 280 }, reception.usableAreas ?? [], [])).toBe(true);
+    expect(isPositionOnFloor({ x: 650, y: 95 }, reception.usableAreas ?? [], [])).toBe(false);
+
+    expect(ceremony).toMatchObject({
+      inventoryGroupId: "ceremony",
+      physicalWidthInches: 624,
+      physicalHeightInches: 872,
+      planningBounds: { x: 60, y: 50, width: 504, height: 762 },
+      floorplanAsset: null,
+    });
+    expect(ceremony.usableAreas?.map((region) => region.id)).toEqual([
+      "timberview-lodge-ceremony-left-seating",
+      "timberview-lodge-ceremony-right-seating",
+    ]);
+    expect(ceremony.fixedArchitecturalElements.find((element) => element.id === "timberview-lodge-ceremony-platform")).toMatchObject({
+      role: "stage",
+      measurementStatus: "confirmed",
+      shape: { type: "rectangle", width: 390, height: 198 },
+    });
+    expect(ceremony.fixedArchitecturalElements.find((element) => element.id === "timberview-lodge-ceremony-center-aisle")).toMatchObject({
+      kind: "path",
+      placementBehavior: "restricted",
+    });
+    expect(ceremony.fixedArchitecturalElements.find((element) => element.id === "timberview-lodge-ceremony-aisle-break")).toMatchObject({
+      kind: "path",
+      placementBehavior: "restricted",
+    });
+    expect(isPositionOnFloor({ x: 174, y: 400 }, ceremony.usableAreas ?? [], [])).toBe(true);
+    expect(isPositionOnFloor({ x: 312, y: 400 }, ceremony.usableAreas ?? [], [])).toBe(false);
+    expect(isPositionOnFloor({ x: 174, y: 900 }, ceremony.usableAreas ?? [], [])).toBe(false);
   });
 
   it.each([
