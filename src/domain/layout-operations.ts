@@ -98,6 +98,7 @@ export function updateSeatingDetails(
   seatAssignments: readonly string[],
   linkedObjectIds: readonly string[],
   groupId = crypto.randomUUID(),
+  linkedSeatAssignments: Readonly<Record<string, readonly string[]>> = {},
 ): FloorplanLayout {
   const source = layout.objects.find((object) => object.id === id);
   if (!source) return layout;
@@ -112,8 +113,12 @@ export function updateSeatingDetails(
       ...object,
       ...(wasInEditedGroup || isRequested ? { linkedGroupId: isRequested ? targetGroupId : undefined } : {}),
     };
-    return object.id === id
-      ? { ...next, seatAssignments: normalizeSeatAssignments(seatAssignments, object.seats) }
+    if (object.id === id) {
+      return { ...next, seatAssignments: normalizeSeatAssignments(seatAssignments, object.seats) };
+    }
+    const linkedAssignments = linkedSeatAssignments[object.id];
+    return linkedAssignments
+      ? { ...next, seatAssignments: normalizeSeatAssignments(linkedAssignments, object.seats) }
       : next;
   });
 

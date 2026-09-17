@@ -4,12 +4,17 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link2, Unlink, Users, X } from "lucide-react";
 import type { EventObject } from "@/domain/floorplan";
 import { getObjectDisplayName, isLinkableSeatingObject } from "@/domain/object-catalog";
+import { getSeatNumbering } from "@/domain/seat-numbering";
 
 type Props = {
   object: EventObject;
   candidates: readonly EventObject[];
   onClose: () => void;
-  onSave: (seatAssignments: string[], linkedObjectIds: string[]) => void;
+  onSave: (
+    seatAssignments: string[],
+    linkedObjectIds: string[],
+    linkedSeatAssignments: Readonly<Record<string, string[]>>,
+  ) => void;
 };
 
 export function SeatingDetailsDialog({ object, candidates, onClose, onSave }: Props) {
@@ -23,11 +28,47 @@ export function SeatingDetailsDialog({ object, candidates, onClose, onSave }: Pr
       ? candidates.filter((candidate) => candidate.linkedGroupId === object.linkedGroupId).map((candidate) => candidate.id)
       : [],
   ));
+  const [linkedSeatAssignments, setLinkedSeatAssignments] = useState<Record<string, string[]>>(() => Object.fromEntries(
+    candidates.map((candidate) => [
+      candidate.id,
+      Array.from(
+        { length: Math.max(0, Math.floor(candidate.seats ?? 0)) },
+        (_, index) => candidate.seatAssignments?.[index] ?? "",
+      ),
+    ]),
+  ));
   const canLink = isLinkableSeatingObject(object.type);
   const linkCandidates = useMemo(
     () => canLink ? candidates.filter((candidate) => isLinkableSeatingObject(candidate.type)) : [],
     [canLink, candidates],
   );
+  const linkedChairSeats = useMemo(() => {
+    if (object.tableNumber === undefined) return [];
+    const pendingGroupId = "pending-seat-details";
+    const pendingObjects = [
+      { ...object, linkedGroupId: pendingGroupId },
+      ...candidates.map((candidate) => ({
+        ...candidate,
+        linkedGroupId: linkedIds.has(candidate.id) ? pendingGroupId : undefined,
+      })),
+    ];
+    const numbering = getSeatNumbering(pendingObjects);
+
+    return candidates
+      .filter((candidate) => candidate.type === "chair" && linkedIds.has(candidate.id))
+      .flatMap((candidate) => {
+        const assignment = numbering.linkedChairSeats.get(candidate.id);
+        if (!assignment || assignment.tableId !== object.id) return [];
+        const candidateSeatCount = Math.max(0, Math.floor(candidate.seats ?? 0));
+        return Array.from({ length: candidateSeatCount }, (_, seatIndex) => ({
+          objectId: candidate.id,
+          seatIndex,
+          displaySeatNumber: assignment.firstSeatNumber + seatIndex,
+        }));
+      })
+      .sort((first, second) => first.displaySeatNumber - second.displaySeatNumber || first.objectId.localeCompare(second.objectId));
+  }, [candidates, linkedIds, object]);
+  const totalSeatCount = seatCount + linkedChairSeats.length;
 
   useEffect(() => {
     firstInputRef.current?.focus();
@@ -40,7 +81,17 @@ export function SeatingDetailsDialog({ object, candidates, onClose, onSave }: Pr
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
-    onSave(seatAssignments.map((name) => name.trim()), [...linkedIds]);
+    const attachedChairIds = new Set(linkedChairSeats.map((seat) => seat.objectId));
+    onSave(
+      seatAssignments.map((name) => name.trim()),
+      [...linkedIds],
+      Object.fromEntries(
+        [...attachedChairIds].map((objectId) => [
+          objectId,
+          (linkedSeatAssignments[objectId] ?? []).map((name) => name.trim()),
+        ]),
+      ),
+    );
   };
 
   return (
@@ -73,7 +124,7 @@ export function SeatingDetailsDialog({ object, candidates, onClose, onSave }: Pr
             <div className="flex items-center gap-2 text-[#385545]">
               <Users size={17} />
               <h3 className="text-sm font-bold">Guest names</h3>
-              <span className="rounded-full bg-[#e8f0eb] px-2 py-0.5 text-[10px] font-bold">{seatCount} {seatCount === 1 ? "seat" : "seats"}</span>
+              <span className="rounded-full bg-[#e8f0eb] px-2 py-0.5 text-[10px] font-bold">{totalSeatCount} {totalSeatCount === 1 ? "seat" : "seats"}</span>
             </div>
             {seatCount ? (
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -90,12 +141,30 @@ export function SeatingDetailsDialog({ object, candidates, onClose, onSave }: Pr
                     />
                   </label>
                 ))}
+                {linkedChairSeats.map(({ objectId, seatIndex, displaySeatNumber }) => (
+                  <label key={`${objectId}:${seatIndex}`} className="block text-[11px] font-semibold text-[#5c6a62]">
+                    <span className="mb-1.5 flex items-center gap-1.5">
+                      Seat {displaySeatNumber}
+                      <span className="rounded-full bg-[#edf2ef] px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-[0.08em] text-[#718078]">Linked chair</span>
+                    </span>
+                    <input
+                      value={linkedSeatAssignments[objectId]?.[seatIndex] ?? ""}
+                      maxLength={80}
+                      placeholder="Guest name"
+                      className="h-10 w-full rounded-lg border border-[#b9c9bf] bg-[#f8fbf9] px-3 text-sm text-[#2e4036] outline-none transition focus:border-[#688773] focus:ring-2 focus:ring-[#8baa96]/20"
+                      onChange={(event) => setLinkedSeatAssignments((current) => ({
+                        ...current,
+                        [objectId]: (current[objectId] ?? []).map((value, linkedSeatIndex) => linkedSeatIndex === seatIndex ? event.target.value : value),
+                      }))}
+                    />
+                  </label>
+                ))}
               </div>
             ) : (
               <p className="mt-4 rounded-xl border border-dashed border-[#d9dfdb] bg-[#f7f8f5] p-4 text-xs leading-5 text-[#77847c]">This object has no assigned seats. Set its seat count in the Properties panel first.</p>
             )}
-            {seatCount > 1 ? (
-              <p className="mt-3 text-[10px] leading-4 text-[#87938c]">Seat numbers follow the visible chair markers clockwise on round tables, and top row then bottom row on rectangle tables.</p>
+            {totalSeatCount > 1 ? (
+              <p className="mt-3 text-[10px] leading-4 text-[#87938c]">Seat numbers match the visible chair markers. Linked end chairs continue after the table’s built-in seats.</p>
             ) : null}
           </section>
 

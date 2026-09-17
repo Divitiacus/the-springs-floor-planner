@@ -405,8 +405,8 @@ export function FloorPlanner({ venue, levelVenues, locationName, inventory }: Pr
           object={detailsObject}
           candidates={activeLayout.objects.filter((object) => object.id !== detailsObject.id)}
           onClose={() => setDetailsObjectId(null)}
-          onSave={(seatAssignments, linkedObjectIds) => {
-            editor.updateDetails(detailsObject.id, seatAssignments, linkedObjectIds);
+          onSave={(seatAssignments, linkedObjectIds, linkedSeatAssignments) => {
+            editor.updateDetails(detailsObject.id, seatAssignments, linkedObjectIds, linkedSeatAssignments);
             setDetailsObjectId(null);
           }}
         />

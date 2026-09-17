@@ -133,10 +133,15 @@ export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner 
   );
 
   const updateDetails = useCallback(
-    (id: string, seatAssignments: readonly string[], linkedObjectIds: readonly string[]) => {
+    (
+      id: string,
+      seatAssignments: readonly string[],
+      linkedObjectIds: readonly string[],
+      linkedSeatAssignments: Readonly<Record<string, readonly string[]>> = {},
+    ) => {
       const source = layout.objects.find((object) => object.id === id);
       const groupId = source?.linkedGroupId ?? crypto.randomUUID();
-      commit(updateSeatingDetails(layout, id, seatAssignments, linkedObjectIds, groupId));
+      commit(updateSeatingDetails(layout, id, seatAssignments, linkedObjectIds, groupId, linkedSeatAssignments));
       setNotice(linkedObjectIds.length ? "Guest names and linked objects saved" : "Guest names saved");
     },
     [commit, layout],

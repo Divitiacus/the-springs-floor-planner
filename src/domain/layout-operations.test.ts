@@ -413,6 +413,32 @@ describe("floorplan object operations", () => {
     expect(layout.objects[0].seatAssignments).toEqual(["A", "B", "C", "D", "E"]);
   });
 
+  it("saves guest names for linked end chairs from the table details", () => {
+    const table = {
+      ...createEventObject("rectangle-table-8", { x: 200, y: 200 }, [], "table"),
+      seats: 7,
+    };
+    const firstChair = createEventObject("chair", { x: 145, y: 200 }, [table], "first-chair");
+    const secondChair = createEventObject("chair", { x: 255, y: 200 }, [table, firstChair], "second-chair");
+    const layout = addObject(addObject(addObject(createEmptyLayout(), table), firstChair), secondChair);
+
+    const updated = updateSeatingDetails(
+      layout,
+      table.id,
+      ["Jason", "Audrey", "Jenny", "Paul", "Andy", "Amanda", "Mom"],
+      [firstChair.id, secondChair.id],
+      "nine-seat-table",
+      {
+        [firstChair.id]: ["Seat Eight"],
+        [secondChair.id]: ["Seat Nine"],
+      },
+    );
+
+    expect(updated.objects.find((object) => object.id === table.id)?.seatAssignments).toEqual(["Jason", "Audrey", "Jenny", "Paul", "Andy", "Amanda", "Mom"]);
+    expect(updated.objects.find((object) => object.id === firstChair.id)).toMatchObject({ seatAssignments: ["Seat Eight"], linkedGroupId: "nine-seat-table" });
+    expect(updated.objects.find((object) => object.id === secondChair.id)).toMatchObject({ seatAssignments: ["Seat Nine"], linkedGroupId: "nine-seat-table" });
+  });
+
   it("duplicates seating objects without copying guest names or link membership", () => {
     const table = {
       ...createEventObject("rectangle-table-6", { x: 200, y: 200 }, [], "table"),
