@@ -2,7 +2,14 @@
 
 import { ArrowDown, ArrowUp, Copy, MousePointer2, Trash2, UsersRound } from "lucide-react";
 import type { EventObject } from "@/domain/floorplan";
-import { describePhysicalDimensions, getObjectDisplayName, OBJECT_DEFINITIONS, TABLE_TYPES } from "@/domain/object-catalog";
+import {
+  CHAIR_ROW_MAX_SEATS,
+  describePhysicalDimensions,
+  getChairRowMinimumWidth,
+  getObjectDisplayName,
+  OBJECT_DEFINITIONS,
+  TABLE_TYPES,
+} from "@/domain/object-catalog";
 
 type Props = {
   object: EventObject | null;
@@ -54,6 +61,18 @@ export function PropertiesPanel({ object, onChange, onDuplicate, onDelete, onReo
               </div>
             ) : null}
 
+            {object.type === "chair-row" ? (
+              <Field label={`Seats in row (max ${CHAIR_ROW_MAX_SEATS})`}>
+                <input
+                  type="number"
+                  min={2}
+                  max={CHAIR_ROW_MAX_SEATS}
+                  value={object.seats ?? 10}
+                  onChange={(event) => onChange(object.id, { seats: numberOrZero(event.target.value) })}
+                />
+              </Field>
+            ) : null}
+
             {object.seats !== undefined ? (
               <button
                 type="button"
@@ -66,20 +85,34 @@ export function PropertiesPanel({ object, onChange, onDuplicate, onDelete, onReo
 
             <div className="rounded-lg border border-[#e0e5e1] bg-[#f8f9f7] px-3 py-2.5">
               <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#87928c]">Physical size</p>
-              <p className="mt-1 text-xs font-semibold text-[#536158]">{describePhysicalDimensions(object.physicalDimensions)}</p>
+              <p className="mt-1 text-xs font-semibold text-[#536158]">
+                {object.type === "chair-row"
+                  ? `${Math.round(object.width)} in wide · ${formatChairPitch(object)} in chair pitch`
+                  : describePhysicalDimensions(object.physicalDimensions)}
+              </p>
             </div>
 
             {definition?.resizable ? (
               <div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className={object.type === "chair-row" ? "grid grid-cols-1" : "grid grid-cols-2 gap-3"}>
                   <Field label="Planning width">
-                    <NumberInput value={Math.round(object.width)} onValue={(width) => onChange(object.id, { width: Math.max(20, width) })} />
+                    <NumberInput
+                      min={object.type === "chair-row" ? getChairRowMinimumWidth(object.seats) : 20}
+                      value={Math.round(object.width)}
+                      onValue={(width) => onChange(object.id, { width: Math.max(object.type === "chair-row" ? getChairRowMinimumWidth(object.seats) : 20, width) })}
+                    />
                   </Field>
-                  <Field label="Planning height">
-                    <NumberInput value={Math.round(object.height)} onValue={(height) => onChange(object.id, { height: Math.max(20, height) })} />
-                  </Field>
+                  {object.type === "chair-row" ? null : (
+                    <Field label="Planning height">
+                      <NumberInput value={Math.round(object.height)} onValue={(height) => onChange(object.id, { height: Math.max(20, height) })} />
+                    </Field>
+                  )}
                 </div>
-                <p className="mt-1.5 text-[10px] leading-4 text-[#8a958e]">Display footprint only; physical measurements are not configured.</p>
+                <p className="mt-1.5 text-[10px] leading-4 text-[#8a958e]">
+                  {object.type === "chair-row"
+                    ? "Drag either side handle to widen or squeeze the row. Chair legs stay aligned while the seat cushions retain a visible gap."
+                    : "Display footprint only; physical measurements are not configured."}
+                </p>
               </div>
             ) : null}
 
@@ -117,8 +150,8 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function NumberInput({ value, disabled, onValue }: { value: number; disabled?: boolean; onValue: (value: number) => void }) {
-  return <input type="number" min={20} value={value} disabled={disabled} onChange={(event) => onValue(numberOrZero(event.target.value))} />;
+function NumberInput({ value, min = 20, disabled, onValue }: { value: number; min?: number; disabled?: boolean; onValue: (value: number) => void }) {
+  return <input type="number" min={min} value={value} disabled={disabled} onChange={(event) => onValue(numberOrZero(event.target.value))} />;
 }
 
 function ActionButton({ children, danger, onClick }: { children: React.ReactNode; danger?: boolean; onClick: () => void }) {
@@ -132,4 +165,9 @@ function ActionButton({ children, danger, onClick }: { children: React.ReactNode
 function numberOrZero(value: string) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function formatChairPitch(object: EventObject) {
+  const seats = Math.max(2, Math.floor(object.seats ?? 2));
+  return ((object.width - object.width / seats) / (seats - 1)).toFixed(1);
 }

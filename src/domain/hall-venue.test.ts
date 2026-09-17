@@ -290,16 +290,17 @@ describe("hall venue template", () => {
     expect(table.width / venue.hall.width).toBe(1 / 16);
   });
 
-  it("resolves Cypress as two independent venue templates without concatenating architecture", () => {
+  it("resolves Cypress as three independent planning templates without concatenating architecture", () => {
     const location = getLocationBySlug("cypress");
     const hall = getHallBySlug(location, "the-chateau");
     if (!location || !hall) throw new Error("Cypress The Chateau catalog entry missing");
 
     const mainFloor = createHallVenueTemplate(location, hall, "level-1-main-floor");
     const balcony = createHallVenueTemplate(location, hall, "level-2-balcony");
+    const ceremonySite = createHallVenueTemplate(location, hall, "ceremony-site");
     const levels = createHallVenueTemplates(location, hall);
 
-    expect(levels.map((level) => level.levelId)).toEqual(["level-1-main-floor", "level-2-balcony"]);
+    expect(levels.map((level) => level.levelId)).toEqual(["level-1-main-floor", "level-2-balcony", "ceremony-site"]);
     expect(mainFloor.levelName).toBe("Level 1 — Main Floor");
     expect(mainFloor).toMatchObject({
       coordinateUnit: "inches",
@@ -342,6 +343,17 @@ describe("hall venue template", () => {
       "chateau-level-2-rotunda-void",
       "chateau-level-2-main-hall-void",
     ]);
+    expect(ceremonySite).toMatchObject({
+      levelName: "Ceremony Site",
+      inventoryGroupId: "ceremony",
+      coordinateUnit: "inches",
+      physicalWidthInches: 960,
+      physicalHeightInches: 780,
+      hall: { x: 95, y: 55, width: 769, height: 670.5 },
+      referenceAsset: null,
+    });
+    expect(ceremonySite.elements.some((element) => element.id === "chateau-ceremony-platform")).toBe(true);
+    expect(ceremonySite.elements.some((element) => element.id === "chateau-stage")).toBe(false);
     expect(() => createHallVenueTemplate(location, hall, "roof")).toThrow(/not configured/);
   });
 });

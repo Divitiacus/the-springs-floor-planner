@@ -17,16 +17,17 @@ import {
   updateObject,
 } from "@/domain/layout-operations";
 import { deserializeFloorplan, serializeFloorplan, STORAGE_KEY } from "@/domain/persistence";
-import type { InventoryConfiguration } from "@/domain/inventory";
+import type { InventoryConfiguration, InventoryGrouping } from "@/domain/inventory";
 import { validateLayoutInventory } from "@/domain/inventory";
 
 type EditorConfiguration = {
   venueTemplateId: string;
   inventory: InventoryConfiguration;
   inventoryOwner: string;
+  inventoryGrouping?: InventoryGrouping;
 };
 
-export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner }: EditorConfiguration) {
+export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner, inventoryGrouping }: EditorConfiguration) {
   const storageKey = `${STORAGE_KEY}:${venueTemplateId}`;
   const [history, setHistory] = useState(() => createHistory(createEmptyLayout(venueTemplateId)));
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -44,7 +45,7 @@ export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner 
             ...parsedLayout,
             name: parsedLayout.name === "Miller–Reed Wedding" ? "" : parsedLayout.name,
           });
-          const validation = validateLayoutInventory(savedLayout, inventory, inventoryOwner);
+          const validation = validateLayoutInventory(savedLayout, inventory, inventoryOwner, inventoryGrouping);
           if (!validation.valid) throw new Error(validation.message);
           setHistory(createHistory(savedLayout));
         }
@@ -55,7 +56,7 @@ export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner 
       }
     }, 0);
     return () => window.clearTimeout(timeout);
-  }, [inventory, inventoryOwner, storageKey]);
+  }, [inventory, inventoryGrouping, inventoryOwner, storageKey]);
 
   useEffect(() => {
     if (!notice) return;
@@ -73,14 +74,14 @@ export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner 
   }, []);
 
   const commitValidated = useCallback((next: FloorplanLayout) => {
-    const validation = validateLayoutInventory(next, inventory, inventoryOwner);
+    const validation = validateLayoutInventory(next, inventory, inventoryOwner, inventoryGrouping);
     if (!validation.valid) {
       setNotice(validation.message);
       return false;
     }
     commit(next);
     return true;
-  }, [commit, inventory, inventoryOwner]);
+  }, [commit, inventory, inventoryGrouping, inventoryOwner]);
 
   const add = useCallback(
     (selection: EventObjectSelection, position: { x: number; y: number }, levelId?: string) => {
@@ -179,7 +180,7 @@ export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner 
 
   const importLayout = useCallback((imported: FloorplanLayout) => {
     const normalized = normalizePhysicalFootprints(imported);
-    const validation = validateLayoutInventory(normalized, inventory, inventoryOwner);
+    const validation = validateLayoutInventory(normalized, inventory, inventoryOwner, inventoryGrouping);
     if (!validation.valid) {
       setNotice(validation.message);
       return false;
@@ -188,7 +189,7 @@ export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner 
     setSelectedId(null);
     setNotice("Saved plan opened");
     return true;
-  }, [inventory, inventoryOwner]);
+  }, [inventory, inventoryGrouping, inventoryOwner]);
 
   return {
     layout,

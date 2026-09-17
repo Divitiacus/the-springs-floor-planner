@@ -8,6 +8,22 @@ const MAIN_FLOOR_IMAGE_HEIGHT = 945;
 const BALCONY_IMAGE_WIDTH = 1840;
 const BALCONY_IMAGE_HEIGHT = 960;
 
+const CEREMONY_CANVAS_WIDTH = 960;
+const CEREMONY_CANVAS_HEIGHT = 780;
+const CEREMONY_SITE_X = 95;
+const CEREMONY_SITE_Y = 55;
+const CEREMONY_SITE_WIDTH = 769; // 64′1″
+const CEREMONY_SITE_HEIGHT = 670.5; // 55′10½″
+const CEREMONY_TURF_Y = 130;
+const CEREMONY_TURF_CUTOUT_WIDTH = 96;
+const CEREMONY_TURF_CUTOUT_DEPTH = 64;
+const CEREMONY_TURF_CURVE_Y = CEREMONY_TURF_Y + CEREMONY_TURF_CUTOUT_DEPTH;
+const CEREMONY_TURF_CURVE_CONTROL_Y = CEREMONY_TURF_Y + CEREMONY_TURF_CUTOUT_DEPTH * 0.55;
+const CEREMONY_TURF_BOTTOM = 640;
+const CEREMONY_TURF_WIDTH = 258;
+const CEREMONY_LEFT_TURF_X = 164;
+const CEREMONY_RIGHT_TURF_X = 537;
+
 // The supplied plans are landscape drawings of the same building. In this
 // orientation the confirmed 55′ hall axis is horizontal and the confirmed 69′
 // axis is vertical. One coordinate unit is one physical inch on both levels.
@@ -25,16 +41,18 @@ const STAGE_DEPTH = 174; // 14′6″
 
 type Common = { fixed: true; measurementStatus: "source-traced" };
 
-/** Cypress · The Chateau, modeled as two independent levels at one scale. */
+/** Cypress · The Chateau, modeled as two indoor levels plus the outdoor ceremony site. */
 export function createTheChateauCypressConfiguration(): HallConfiguration {
   const common: Common = { fixed: true, measurementStatus: "source-traced" };
   const mainFloorElements = createMainFloorElements(common);
   const balconyElements = createBalconyElements(common);
+  const ceremonySiteElements = createCeremonySiteElements(common);
   const levels: HallLevelConfiguration[] = [
     {
       id: "level-1-main-floor",
       slug: "main-floor",
       name: "Level 1 — Main Floor",
+      inventoryGroupId: "reception",
       physicalWidthInches: CANVAS_WIDTH,
       physicalHeightInches: CANVAS_HEIGHT,
       physicalDimensionStatus: "source-traced",
@@ -65,6 +83,7 @@ export function createTheChateauCypressConfiguration(): HallConfiguration {
       id: "level-2-balcony",
       slug: "balcony",
       name: "Level 2 — Balcony",
+      inventoryGroupId: "reception",
       physicalWidthInches: CANVAS_WIDTH,
       physicalHeightInches: CANVAS_HEIGHT,
       physicalDimensionStatus: "source-traced",
@@ -91,12 +110,167 @@ export function createTheChateauCypressConfiguration(): HallConfiguration {
         measurementStatus: "source-traced",
       },
     },
+    {
+      id: "ceremony-site",
+      slug: "ceremony-site",
+      name: "Ceremony Site",
+      inventoryGroupId: "ceremony",
+      physicalWidthInches: CEREMONY_CANVAS_WIDTH,
+      physicalHeightInches: CEREMONY_CANVAS_HEIGHT,
+      physicalDimensionStatus: "source-traced",
+      physicalDimensionNote:
+        "The supplied ceremony-site diagram confirms the 64′1″ overall width and 55′10½″ overall depth. The two artificial-turf seating banks, center aisle, curved ceremony platform, walls, and entry are source-traced from that diagram and the supplied photographs.",
+      planningBounds: {
+        x: CEREMONY_SITE_X,
+        y: CEREMONY_SITE_Y,
+        width: CEREMONY_SITE_WIDTH,
+        height: CEREMONY_SITE_HEIGHT,
+      },
+      defaultObjectPosition: {
+        x: CEREMONY_LEFT_TURF_X + CEREMONY_TURF_WIDTH / 2,
+        y: 300,
+      },
+      usableAreas: createCeremonySiteUsableAreas(),
+      voidAreas: [],
+      fixedArchitecturalElements: ceremonySiteElements,
+      floorplanAsset: null,
+    },
   ];
 
   return {
     levels,
     defaultLevelId: "level-1-main-floor",
   };
+}
+
+function createCeremonySiteElements(common: Common): FixedArchitectureElement[] {
+  const centerX = CEREMONY_SITE_X + CEREMONY_SITE_WIDTH / 2;
+  const southY = CEREMONY_SITE_Y + CEREMONY_SITE_HEIGHT;
+  const entryHalfWidth = 54;
+
+  return [
+    {
+      ...area(
+        common,
+        "chateau-ceremony-site-floor",
+        "main-floor",
+        "Secret Garden Ceremony Site",
+        CEREMONY_SITE_X,
+        CEREMONY_SITE_Y,
+        CEREMONY_SITE_WIDTH,
+        CEREMONY_SITE_HEIGHT,
+        "allowed",
+        "confirmed",
+      ),
+      showOutline: false,
+    },
+    path(common, "chateau-ceremony-left-turf", "Artificial Turf", ceremonyTurfPath("left"), "allowed", {
+      fill: "#dce8d7",
+      stroke: "#7f9878",
+      strokeWidth: 2,
+    }),
+    path(common, "chateau-ceremony-right-turf", "Artificial Turf", ceremonyTurfPath("right"), "allowed", {
+      fill: "#dce8d7",
+      stroke: "#7f9878",
+      strokeWidth: 2,
+    }),
+    path(common, "chateau-ceremony-platform", "Curved Ceremony Platform", ceremonyPlatformPath(centerX), "blocked", {
+      fill: "#d8c0a3",
+      stroke: "#8f755b",
+      strokeWidth: 3,
+      elevation: "raised",
+    }, "source-traced", "Curved brick ceremony platform and steps traced from the supplied plan and photographs."),
+    wall(common, "chateau-ceremony-north-wall", [CEREMONY_SITE_X, CEREMONY_SITE_Y, CEREMONY_SITE_X + CEREMONY_SITE_WIDTH, CEREMONY_SITE_Y]),
+    wall(common, "chateau-ceremony-west-wall", [CEREMONY_SITE_X, CEREMONY_SITE_Y, CEREMONY_SITE_X, southY]),
+    wall(common, "chateau-ceremony-east-wall", [CEREMONY_SITE_X + CEREMONY_SITE_WIDTH, CEREMONY_SITE_Y, CEREMONY_SITE_X + CEREMONY_SITE_WIDTH, southY]),
+    wall(common, "chateau-ceremony-southwest-wall", [CEREMONY_SITE_X, southY, centerX - entryHalfWidth, southY]),
+    wall(common, "chateau-ceremony-southeast-wall", [centerX + entryHalfWidth, southY, CEREMONY_SITE_X + CEREMONY_SITE_WIDTH, southY]),
+    label(common, "chateau-ceremony-left-turf-label", "ARTIFICIAL TURF · SEATING", CEREMONY_LEFT_TURF_X + 24, CEREMONY_TURF_CURVE_Y + 18, CEREMONY_TURF_WIDTH - 48, 10),
+    label(common, "chateau-ceremony-right-turf-label", "ARTIFICIAL TURF · SEATING", CEREMONY_RIGHT_TURF_X + 24, CEREMONY_TURF_CURVE_Y + 18, CEREMONY_TURF_WIDTH - 48, 10),
+    label(common, "chateau-ceremony-width-label", "64′1″ OVERALL WIDTH", centerX - 120, 25, 240, 11),
+    label(common, "chateau-ceremony-depth-label", "55′10½″ OVERALL DEPTH", CEREMONY_SITE_X + CEREMONY_SITE_WIDTH + 34, 286, 240, 11, 90),
+  ];
+}
+
+function createCeremonySiteUsableAreas(): VenueFloorRegion[] {
+  return [
+    floorRegion("chateau-ceremony-left-seating", "Left Artificial Turf Seating", "usable-floor", {
+      type: "polygon",
+      points: ceremonyTurfPolygon("left"),
+    }),
+    floorRegion("chateau-ceremony-right-seating", "Right Artificial Turf Seating", "usable-floor", {
+      type: "polygon",
+      points: ceremonyTurfPolygon("right"),
+    }),
+  ];
+}
+
+function ceremonyPlatformPath(centerX: number) {
+  const radius = 75;
+  const wallY = CEREMONY_SITE_Y;
+  const bottomY = wallY + radius;
+  return `M ${centerX - radius} ${wallY} H ${centerX + radius} C ${centerX + radius} ${wallY + 42}, ${centerX + 42} ${bottomY}, ${centerX} ${bottomY} C ${centerX - 42} ${bottomY}, ${centerX - radius} ${wallY + 42}, ${centerX - radius} ${wallY} Z`;
+}
+
+function ceremonyTurfPath(side: "left" | "right") {
+  if (side === "left") {
+    const innerX = CEREMONY_LEFT_TURF_X + CEREMONY_TURF_WIDTH;
+    const curveStartX = innerX - CEREMONY_TURF_CUTOUT_WIDTH;
+    const secondControlX = curveStartX + CEREMONY_TURF_CUTOUT_WIDTH * (46 / 120);
+    return `M ${CEREMONY_LEFT_TURF_X} ${CEREMONY_TURF_Y} H ${curveStartX} C ${curveStartX} ${CEREMONY_TURF_CURVE_CONTROL_Y}, ${secondControlX} ${CEREMONY_TURF_CURVE_Y}, ${innerX} ${CEREMONY_TURF_CURVE_Y} V ${CEREMONY_TURF_BOTTOM} H ${CEREMONY_LEFT_TURF_X} Z`;
+  }
+
+  const innerX = CEREMONY_RIGHT_TURF_X;
+  const curveEndX = innerX + CEREMONY_TURF_CUTOUT_WIDTH;
+  const firstControlX = innerX + CEREMONY_TURF_CUTOUT_WIDTH * (74 / 120);
+  return `M ${innerX} ${CEREMONY_TURF_CURVE_Y} C ${firstControlX} ${CEREMONY_TURF_CURVE_Y}, ${curveEndX} ${CEREMONY_TURF_CURVE_CONTROL_Y}, ${curveEndX} ${CEREMONY_TURF_Y} H ${CEREMONY_RIGHT_TURF_X + CEREMONY_TURF_WIDTH} V ${CEREMONY_TURF_BOTTOM} H ${innerX} Z`;
+}
+
+function ceremonyTurfPolygon(side: "left" | "right") {
+  if (side === "left") {
+    const endX = CEREMONY_LEFT_TURF_X + CEREMONY_TURF_WIDTH;
+    const startX = endX - CEREMONY_TURF_CUTOUT_WIDTH;
+    const curve = cubicBezierPoints(
+      { x: startX, y: CEREMONY_TURF_Y },
+      { x: startX, y: CEREMONY_TURF_CURVE_CONTROL_Y },
+      { x: startX + CEREMONY_TURF_CUTOUT_WIDTH * (46 / 120), y: CEREMONY_TURF_CURVE_Y },
+      { x: endX, y: CEREMONY_TURF_CURVE_Y },
+      10,
+    );
+    return [
+      CEREMONY_LEFT_TURF_X, CEREMONY_TURF_Y,
+      ...curve.flatMap((point) => [point.x, point.y]),
+      endX, CEREMONY_TURF_BOTTOM,
+      CEREMONY_LEFT_TURF_X, CEREMONY_TURF_BOTTOM,
+    ];
+  }
+
+  const startX = CEREMONY_RIGHT_TURF_X;
+  const endX = startX + CEREMONY_TURF_CUTOUT_WIDTH;
+  const curve = cubicBezierPoints(
+    { x: startX, y: CEREMONY_TURF_CURVE_Y },
+    { x: startX + CEREMONY_TURF_CUTOUT_WIDTH * (74 / 120), y: CEREMONY_TURF_CURVE_Y },
+    { x: endX, y: CEREMONY_TURF_CURVE_CONTROL_Y },
+    { x: endX, y: CEREMONY_TURF_Y },
+    10,
+  );
+  return [
+    ...curve.flatMap((point) => [point.x, point.y]),
+    CEREMONY_RIGHT_TURF_X + CEREMONY_TURF_WIDTH, CEREMONY_TURF_Y,
+    CEREMONY_RIGHT_TURF_X + CEREMONY_TURF_WIDTH, CEREMONY_TURF_BOTTOM,
+    CEREMONY_RIGHT_TURF_X, CEREMONY_TURF_BOTTOM,
+  ];
+}
+
+function cubicBezierPoints(start: { x: number; y: number }, control1: { x: number; y: number }, control2: { x: number; y: number }, end: { x: number; y: number }, segments: number) {
+  return Array.from({ length: segments + 1 }, (_, index) => {
+    const t = index / segments;
+    const inverse = 1 - t;
+    return {
+      x: inverse ** 3 * start.x + 3 * inverse ** 2 * t * control1.x + 3 * inverse * t ** 2 * control2.x + t ** 3 * end.x,
+      y: inverse ** 3 * start.y + 3 * inverse ** 2 * t * control1.y + 3 * inverse * t ** 2 * control2.y + t ** 3 * end.y,
+    };
+  });
 }
 
 function createMainFloorElements(common: Common): FixedArchitectureElement[] {

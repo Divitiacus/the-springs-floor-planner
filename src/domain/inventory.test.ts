@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { addObject, createEmptyLayout, createEventObject, duplicateObject, updateObject } from "@/domain/layout-operations";
-import { getInventoryUsage, validateLayoutInventory, type InventoryConfiguration } from "@/domain/inventory";
+import { getInventoryUsage, validateLayoutInventory, type InventoryConfiguration, type InventoryGrouping } from "@/domain/inventory";
 import { getHallBySlug, getLocationBySlug, resolveInventoryConfiguration } from "@/domain/location-catalog";
 import { deserializeFloorplan, serializeFloorplan } from "@/domain/persistence";
 import { feetToInches, inchesToFeet } from "@/domain/physical-units";
@@ -46,6 +46,30 @@ describe("physical units", () => {
 });
 
 describe("inventory validation", () => {
+  it("counts every chair in a row and keeps ceremony inventory separate from reception", () => {
+    const receptionRow = {
+      ...createEventObject("chair-row", { x: 0, y: 0 }, [], "reception-row"),
+      levelId: "level-1-main-floor",
+    };
+    const ceremonyRow = {
+      ...createEventObject("chair-row", { x: 0, y: 80 }, [receptionRow], "ceremony-row"),
+      levelId: "ceremony-site",
+    };
+    const layout = addObject(addObject(createEmptyLayout(), receptionRow), ceremonyRow);
+    const grouping: InventoryGrouping = {
+      defaultGroupId: "reception",
+      groupByLevelId: {
+        "level-1-main-floor": "reception",
+        "ceremony-site": "ceremony",
+      },
+    };
+
+    expect(getInventoryUsage(layout).chairs).toBe(20);
+    expect(getInventoryUsage(layout, grouping, "ceremony").chairs).toBe(10);
+    expect(validateLayoutInventory(layout, { chairs: 10 }, "Cypress")).toMatchObject({ valid: false, code: "chair-limit" });
+    expect(validateLayoutInventory(layout, { chairs: 10 }, "Cypress", grouping)).toEqual({ valid: true });
+  });
+
   it("rejects a table added beyond its configured inventory", () => {
     const first = createEventObject("round-table-60", { x: 0, y: 0 }, [], "one");
     const second = createEventObject("round-table-60", { x: 80, y: 0 }, [first], "two");

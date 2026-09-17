@@ -5,10 +5,11 @@ import Link from "next/link";
 import { ChevronDown, ClipboardList, Download, FileUp, LayoutGrid, Printer } from "lucide-react";
 import type { EventObject, EventObjectSelection } from "@/domain/floorplan";
 import type { VenueTemplate } from "@/domain/floorplan";
-import type { InventoryConfiguration } from "@/domain/inventory";
+import type { InventoryConfiguration, InventoryGrouping } from "@/domain/inventory";
 import { getInventoryUsage } from "@/domain/inventory";
-import { isPositionOnFloor } from "@/domain/floor-regions";
+import { isPositionOnFloor, isRectangleFootprintOnFloor } from "@/domain/floor-regions";
 import { getLayoutStats } from "@/domain/layout-operations";
+import { CHAIR_ROW_DEFAULT_PITCH, CHAIR_ROW_MAX_SEATS, OBJECT_DEFINITIONS } from "@/domain/object-catalog";
 import { deserializeFloorplan, serializePortableFloorplan } from "@/domain/persistence";
 import { buildServicePlan } from "@/domain/service-markers";
 import { useFloorplanEditor } from "@/hooks/useFloorplanEditor";
@@ -29,10 +30,29 @@ type Props = {
 };
 
 export function FloorPlanner({ venue, levelVenues, locationName, inventory }: Props) {
-  const editor = useFloorplanEditor({ venueTemplateId: venue.id, inventory, inventoryOwner: locationName });
   const availableLevels = useMemo(() => levelVenues?.length ? levelVenues : [venue], [levelVenues, venue]);
   const isMultiLevel = availableLevels.length > 1;
   const defaultLevelId = venue.levelId;
+  const inventoryGrouping = useMemo<InventoryGrouping | undefined>(() => {
+    const groupedLevels = availableLevels.filter((level) => level.inventoryGroupId);
+    const defaultGroupId = venue.inventoryGroupId ?? groupedLevels[0]?.inventoryGroupId;
+    if (!defaultGroupId) return undefined;
+
+    const groupByLevelId: Record<string, string> = {};
+    for (const level of groupedLevels) {
+      if (!level.levelId || !level.inventoryGroupId) continue;
+      groupByLevelId[level.levelId] = level.inventoryGroupId;
+      if (level.levelId === "level-1-main-floor") groupByLevelId["main-floor"] = level.inventoryGroupId;
+      if (level.levelId === "level-2-balcony") groupByLevelId.balcony = level.inventoryGroupId;
+    }
+    return { defaultGroupId, groupByLevelId };
+  }, [availableLevels, venue.inventoryGroupId]);
+  const editor = useFloorplanEditor({
+    venueTemplateId: venue.id,
+    inventory,
+    inventoryOwner: locationName,
+    inventoryGrouping,
+  });
   const [activeLevelId, setActiveLevelId] = useState(defaultLevelId);
   const activeVenue = availableLevels.find((candidate) => candidate.levelId === activeLevelId) ?? venue;
   const hasToggleableReference = Boolean(activeVenue.referenceAsset && activeVenue.referenceAsset.visualRole !== "architectural-base");
@@ -62,12 +82,20 @@ export function FloorPlanner({ venue, levelVenues, locationName, inventory }: Pr
   const showNotice = editor.showNotice;
   const redo = editor.redo;
   const undo = editor.undo;
-  const inventoryUsage = getInventoryUsage(editor.layout);
+  const inventoryUsage = getInventoryUsage(editor.layout, inventoryGrouping, activeVenue.inventoryGroupId);
   const addOnActiveLevel = useCallback(
     (selection: EventObjectSelection, position: { x: number; y: number }) => {
-      if (activeVenue.usableAreas && !isPositionOnFloor(position, activeVenue.usableAreas, activeVenue.voidAreas ?? [])) {
-        showNotice("That area is open to the floor below or outside the balcony walkway.");
-        return;
+      if (activeVenue.usableAreas) {
+        const definition = OBJECT_DEFINITIONS[selection.type];
+        const isOnFloor = selection.type === "chair-row"
+          ? isRectangleFootprintOnFloor(position, definition.width, definition.height, 0, activeVenue.usableAreas, activeVenue.voidAreas ?? [])
+          : isPositionOnFloor(position, activeVenue.usableAreas, activeVenue.voidAreas ?? []);
+        if (!isOnFloor) {
+          showNotice(selection.type === "chair-row"
+            ? "Keep the entire chair row inside one usable seating area."
+            : "That area is open to the floor below or outside the usable floor.");
+          return;
+        }
       }
       addObject(selection, position, isMultiLevel ? activeLevelId : undefined);
     },
@@ -83,13 +111,30 @@ export function FloorPlanner({ venue, levelVenues, locationName, inventory }: Pr
       const movingObjects = object.linkedGroupId
         ? activeLayout.objects.filter((candidate) => candidate.linkedGroupId === object.linkedGroupId)
         : [object];
-      const allOnFloor = movingObjects.every((candidate) => isPositionOnFloor(
-        { x: candidate.x + deltaX, y: candidate.y + deltaY },
-        activeVenue.usableAreas ?? [],
-        activeVenue.voidAreas ?? [],
-      ));
+      const allOnFloor = movingObjects.every((candidate) => {
+        const nextPosition = { x: candidate.x + deltaX, y: candidate.y + deltaY };
+        if (candidate.type !== "chair-row") {
+          return isPositionOnFloor(nextPosition, activeVenue.usableAreas ?? [], activeVenue.voidAreas ?? []);
+        }
+        const nextSeatCount = candidate.id === id && typeof patch.seats === "number"
+          ? Math.max(2, Math.min(CHAIR_ROW_MAX_SEATS, Math.floor(patch.seats)))
+          : candidate.seats;
+        const nextWidth = candidate.id === id
+          ? patch.width ?? (typeof patch.seats === "number" ? (nextSeatCount ?? 2) * CHAIR_ROW_DEFAULT_PITCH : candidate.width)
+          : candidate.width;
+        return isRectangleFootprintOnFloor(
+          nextPosition,
+          nextWidth,
+          candidate.id === id ? patch.height ?? candidate.height : candidate.height,
+          candidate.id === id ? patch.rotation ?? candidate.rotation : candidate.rotation,
+          activeVenue.usableAreas ?? [],
+          activeVenue.voidAreas ?? [],
+        );
+      });
       if (!allOnFloor) {
-        showNotice("A linked object would move outside the usable floor area.");
+        showNotice(object.type === "chair-row"
+          ? "Keep the entire chair row inside one usable seating area."
+          : "A linked object would move outside the usable floor area.");
         return;
       }
     }

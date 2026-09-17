@@ -26,6 +26,7 @@ export type EventObjectType =
   | "buffet"
   | "photo-booth"
   | "dance-floor"
+  | "chair-row"
   | "chair";
 
 export type DanceFloorVariant = "12x12" | "16x16" | "20x20";
@@ -212,6 +213,7 @@ export type VenueTemplate = {
   levelId?: string;
   levelSlug?: string;
   levelName?: string;
+  inventoryGroupId?: string;
   coordinateUnit: "inches";
   physicalWidthInches: number;
   physicalHeightInches: number;

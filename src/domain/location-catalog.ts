@@ -32,6 +32,7 @@ export type HallLevelConfiguration = {
   id: string;
   slug: string;
   name: string;
+  inventoryGroupId?: string;
   physicalWidthInches: number;
   physicalHeightInches: number;
   physicalDimensionStatus: ArchitectureMeasurementStatus;
@@ -348,10 +349,18 @@ export const WEATHERFORD_WESTWOOD_RANCH_INVENTORY: InventoryCatalog = {
 
 export const NORMAN_INVENTORY: InventoryCatalog = {
   scope: "hall",
-  limits: { ...WEATHERFORD_WESTWOOD_RANCH_INVENTORY.limits },
+  limits: {
+    "round-table-60": 40,
+    "rectangle-table-6": 8,
+    "rectangle-table-8": 10,
+    "parson-table-7": 6,
+    "sweetheart-table-32": 3,
+    "cocktail-table-32": 6,
+    chairs: 320,
+  },
   source: {
     fileName: "user-confirmed",
-    note: "Aurora Grove matches Westwood Ranch's table inventory and 320-chair guest capacity.",
+    note: "Aurora Grove table quantities are user-confirmed and maintained independently from Katy's Stonecreek Reserve inventory. Its previously confirmed 320-chair guest capacity remains unchanged.",
   },
 };
 

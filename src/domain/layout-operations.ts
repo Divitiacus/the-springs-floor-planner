@@ -1,5 +1,15 @@
 import type { EventObject, EventObjectType, EventObjectVariant, FloorplanLayout } from "@/domain/floorplan";
-import { getObjectVariant, isGuestTable, OBJECT_DEFINITIONS, TABLE_TYPES } from "@/domain/object-catalog";
+import {
+  CHAIR_ROW_DEFAULT_PITCH,
+  CHAIR_ROW_DEFAULT_SEATS,
+  CHAIR_ROW_HEIGHT,
+  CHAIR_ROW_MAX_SEATS,
+  getChairRowMinimumWidth,
+  getObjectVariant,
+  isGuestTable,
+  OBJECT_DEFINITIONS,
+  TABLE_TYPES,
+} from "@/domain/object-catalog";
 
 const now = () => new Date().toISOString();
 
@@ -53,6 +63,10 @@ export function updateObject(layout: FloorplanLayout, id: string, patch: Partial
   const source = layout.objects.find((object) => object.id === id);
   if (!source) return layout;
   const allowedPatch = { ...patch };
+  if (source.type === "chair-row" && typeof allowedPatch.seats === "number") {
+    allowedPatch.seats = Math.max(2, Math.min(CHAIR_ROW_MAX_SEATS, Math.floor(allowedPatch.seats)));
+    if (allowedPatch.width === undefined) allowedPatch.width = allowedPatch.seats * CHAIR_ROW_DEFAULT_PITCH;
+  }
   if (!OBJECT_DEFINITIONS[source.type].resizable) {
     delete allowedPatch.width;
     delete allowedPatch.height;
@@ -214,7 +228,7 @@ export function getLayoutStats(layout: FloorplanLayout) {
       if (TABLE_TYPES.has(object.type)) {
         if (isGuestTable(object.type)) stats.guestTables += 1;
         stats.seats += object.seats ?? 0;
-      } else if (object.type === "chair") {
+      } else if (object.type === "chair" || object.type === "chair-row") {
         stats.seats += object.seats ?? 1;
       }
       return stats;
@@ -229,6 +243,16 @@ function touch(layout: FloorplanLayout, objects: EventObject[]): FloorplanLayout
 
 function constrainPhysicalFootprint(object: EventObject): EventObject {
   const definition = OBJECT_DEFINITIONS[object.type];
+  if (object.type === "chair-row") {
+    const seats = Math.max(2, Math.min(CHAIR_ROW_MAX_SEATS, Math.floor(object.seats ?? CHAIR_ROW_DEFAULT_SEATS)));
+    return {
+      ...object,
+      seats,
+      width: Math.max(getChairRowMinimumWidth(seats), object.width),
+      height: CHAIR_ROW_HEIGHT,
+      physicalDimensions: definition.physicalDimensions,
+    };
+  }
   if (definition.resizable) return object;
   const variantDefinition = getObjectVariant(object.type, object.variant);
   return {

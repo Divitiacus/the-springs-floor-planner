@@ -32,6 +32,10 @@ export type InventoryConfiguration = Partial<Record<InventoryItemType, Inventory
   defaultSeats?: Partial<Record<EventObjectType, number>>;
 };
 export type InventoryUsage = Record<InventoryItemType, number>;
+export type InventoryGrouping = {
+  defaultGroupId: string;
+  groupByLevelId: Readonly<Record<string, string>>;
+};
 
 export type InventoryCatalog = {
   scope: "location-shared" | "hall";
@@ -52,7 +56,11 @@ export type InventoryValidationResult =
   | { valid: true }
   | { valid: false; code: "table-limit" | "chair-limit" | "seat-limit"; message: string };
 
-export function getInventoryUsage(layout: FloorplanLayout): InventoryUsage {
+export function getInventoryUsage(
+  layout: FloorplanLayout,
+  grouping?: InventoryGrouping,
+  groupId?: string,
+): InventoryUsage {
   const usage: InventoryUsage = {
     "round-table-48": 0,
     "round-table-60": 0,
@@ -78,13 +86,17 @@ export function getInventoryUsage(layout: FloorplanLayout): InventoryUsage {
     chairs: 0,
   };
 
-  for (const object of layout.objects) {
+  const objects = grouping && groupId
+    ? layout.objects.filter((object) => getObjectInventoryGroup(object, grouping) === groupId)
+    : layout.objects;
+
+  for (const object of objects) {
     const inventoryType = getInventoryObjectType(object);
     if (inventoryType) {
       usage[inventoryType] += 1;
       if (TABLE_TYPES.has(object.type)) usage.chairs += object.seats ?? 0;
-    } else if (object.type === "chair") {
-      usage.chairs += 1;
+    } else if (object.type === "chair" || object.type === "chair-row") {
+      usage.chairs += object.seats ?? 1;
     }
   }
 
@@ -95,9 +107,23 @@ export function validateLayoutInventory(
   layout: FloorplanLayout,
   inventory: InventoryConfiguration,
   inventoryOwner = "This location",
+  grouping?: InventoryGrouping,
 ): InventoryValidationResult {
+  if (grouping) {
+    const groupIds = new Set([grouping.defaultGroupId, ...Object.values(grouping.groupByLevelId)]);
+    for (const groupId of groupIds) {
+      const groupedLayout = {
+        ...layout,
+        objects: layout.objects.filter((object) => getObjectInventoryGroup(object, grouping) === groupId),
+      };
+      const validation = validateLayoutInventory(groupedLayout, inventory, inventoryOwner);
+      if (!validation.valid) return validation;
+    }
+    return { valid: true };
+  }
+
   for (const object of layout.objects) {
-    if (!TABLE_TYPES.has(object.type)) continue;
+    if (object.seats === undefined) continue;
     const maximum = OBJECT_DEFINITIONS[object.type].maximumSeats;
     if (maximum !== undefined && (object.seats ?? 0) > maximum) {
       return {
@@ -130,6 +156,11 @@ export function validateLayoutInventory(
   }
 
   return { valid: true };
+}
+
+function getObjectInventoryGroup(object: EventObject, grouping: InventoryGrouping) {
+  const levelId = object.levelId ?? object.floorLevelId;
+  return levelId ? grouping.groupByLevelId[levelId] ?? grouping.defaultGroupId : grouping.defaultGroupId;
 }
 
 type DirectInventoryObjectType = Extract<Exclude<InventoryItemType, "chairs">, EventObjectType>;

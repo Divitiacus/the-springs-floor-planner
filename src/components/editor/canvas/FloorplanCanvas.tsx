@@ -12,7 +12,13 @@ import type {
   VenueFloorRegion,
   VenueTemplate,
 } from "@/domain/floorplan";
-import { OBJECT_DEFINITIONS, isGuestTable, TABLE_TYPES } from "@/domain/object-catalog";
+import {
+  CHAIR_ROW_HEIGHT,
+  getChairRowMinimumWidth,
+  OBJECT_DEFINITIONS,
+  isGuestTable,
+  TABLE_TYPES,
+} from "@/domain/object-catalog";
 import type { ServicePlan } from "@/domain/service-markers";
 import { DEFAULT_SEAT_COLOR, getSeatServiceColor, NO_ALCOHOL_COLOR } from "@/domain/service-markers";
 import { getSeatNumbering } from "@/domain/seat-numbering";
@@ -70,6 +76,7 @@ export function FloorplanCanvas({ layout, servicePlan, venue, selectedId, mode, 
 
   const selected = layout.objects.find((object) => object.id === selectedId);
   const resizable = selected ? OBJECT_DEFINITIONS[selected.type].resizable : false;
+  const isChairRowSelected = selected?.type === "chair-row";
   const position = stagePosition ?? {
     x: (size.width - venue.physicalWidthInches * fitScale) / 2,
     y: (size.height - venue.physicalHeightInches * fitScale) / 2,
@@ -153,14 +160,21 @@ export function FloorplanCanvas({ layout, servicePlan, venue, selectedId, mode, 
             rotateEnabled
             resizeEnabled={resizable}
             keepRatio={selected?.type.startsWith("round-table") ?? false}
-            enabledAnchors={resizable ? ["top-left", "top-right", "bottom-left", "bottom-right", "middle-left", "middle-right", "top-center", "bottom-center"] : []}
+            enabledAnchors={isChairRowSelected
+              ? ["middle-left", "middle-right"]
+              : resizable
+                ? ["top-left", "top-right", "bottom-left", "bottom-right", "middle-left", "middle-right", "top-center", "bottom-center"]
+                : []}
             anchorFill="#fffefa"
             anchorStroke="#294f3d"
             anchorSize={10}
             borderStroke="#294f3d"
             borderStrokeWidth={2}
             rotateAnchorOffset={24}
-            boundBoxFunc={(oldBox, newBox) => newBox.width < 24 || newBox.height < 24 ? oldBox : newBox}
+            boundBoxFunc={(oldBox, newBox) => {
+              const minimumWidth = isChairRowSelected ? getChairRowMinimumWidth(selected?.seats) : 24;
+              return newBox.width < minimumWidth || newBox.height < (isChairRowSelected ? CHAIR_ROW_HEIGHT : 24) ? oldBox : newBox;
+            }}
           />
         </Layer>
       </Stage>
@@ -273,9 +287,20 @@ function firstGridLineAfter(minimum: number, origin: number) {
 }
 
 function formatFeetAndInches(inches: number) {
-  const feet = Math.floor(inches / 12);
-  const remainder = Math.round(inches - feet * 12);
-  return remainder ? `${feet}′${remainder}″` : `${feet}′`;
+  let feet = Math.floor(inches / 12);
+  let remainder = Math.round((inches - feet * 12) * 2) / 2;
+
+  if (remainder === 12) {
+    feet += 1;
+    remainder = 0;
+  }
+
+  if (!remainder) {
+    return `${feet}′`;
+  }
+
+  const remainderLabel = Number.isInteger(remainder) ? String(remainder) : `${Math.floor(remainder)}½`;
+  return `${feet}′${remainderLabel}″`;
 }
 
 function FixedArchitectureNode({ element }: { element: FixedArchitectureElement }) {
@@ -495,6 +520,7 @@ function EventObjectNode({ object, servicePlan, firstSeatNumber, displaySeatCoun
   const isRound = object.physicalDimensions.shape === "circle";
   const isDance = object.type === "dance-floor";
   const isChair = object.type === "chair";
+  const isChairRow = object.type === "chair-row";
   const isHalfMoon = object.type === "half-moon-table";
   const chairNoAlcohol = isChair && object.seatNoAlcohol?.[0] === true;
   const chairServiceColor = isChair ? getSeatServiceColor(object, 0, servicePlan) : undefined;
@@ -525,7 +551,7 @@ function EventObjectNode({ object, servicePlan, firstSeatNumber, displaySeatCoun
           y: snap(node.y()),
           rotation: Math.round(node.rotation()),
           width: Math.max(20, object.width * node.scaleX()),
-          height: Math.max(20, object.height * node.scaleY()),
+          height: isChairRow ? CHAIR_ROW_HEIGHT : Math.max(20, object.height * node.scaleY()),
         };
         node.scaleX(1);
         node.scaleY(1);
@@ -533,7 +559,9 @@ function EventObjectNode({ object, servicePlan, firstSeatNumber, displaySeatCoun
       }}
     >
       {isChair ? <Rect x={-12} y={-12} width={24} height={24} fill="transparent" /> : null}
-      {isHalfMoon ? (
+      {isChairRow ? (
+        <ChairRow object={object} servicePlan={servicePlan} selected={selected} firstSeatNumber={firstSeatNumber} />
+      ) : isHalfMoon ? (
         <Path
           data={`M ${-object.width / 2} ${object.height / 2} A ${object.width / 2} ${object.height} 0 0 1 ${object.width / 2} ${object.height / 2} L ${-object.width / 2} ${object.height / 2} Z`}
           fill={fill}
@@ -565,7 +593,7 @@ function EventObjectNode({ object, servicePlan, firstSeatNumber, displaySeatCoun
           listening={false}
         />
       ) : null}
-      {!isChair ? (
+      {!isChair && !isChairRow ? (
         <>
           <Text x={-object.width / 2 + 5} y={-8} width={object.width - 10} align="center" text={object.label} fontSize={Math.min(14, Math.max(10, object.width / 9))} fontStyle="bold" fill="#33473b" ellipsis />
           {displaySeatCount !== undefined ? <Text x={-object.width / 2 + 5} y={isRound ? 10 : 3} width={object.width - 10} height={10} align="center" verticalAlign="middle" text={`${displaySeatCount} seats`} fontSize={9} fill="#79867e" /> : null}
@@ -616,6 +644,91 @@ function NumberedRoundSeat({ x, y, number, style }: { x: number; y: number; numb
       <Circle radius={6} {...style} />
       <Text x={-6} y={-4.5} width={12} height={9} align="center" verticalAlign="middle" text={String(number)} fontSize={6.5} fontStyle="bold" fill="#1f3328" />
     </Group>
+  );
+}
+
+function ChairRow({ object, servicePlan, selected, firstSeatNumber }: {
+  object: EventObject;
+  servicePlan: ServicePlan;
+  selected: boolean;
+  firstSeatNumber: number;
+}) {
+  const count = Math.max(2, Math.floor(object.seats ?? 10));
+  const cellWidth = object.width / count;
+  const cushionWidth = Math.max(8, cellWidth - 4);
+
+  return (
+    <>
+      <Rect
+        x={-object.width / 2}
+        y={-CHAIR_ROW_HEIGHT / 2}
+        width={object.width}
+        height={CHAIR_ROW_HEIGHT}
+        fill="rgba(255,255,255,0.001)"
+        stroke={selected ? "#294f3d" : undefined}
+        strokeWidth={selected ? 2 : 0}
+        dash={selected ? [6, 4] : undefined}
+        cornerRadius={3}
+      />
+      {Array.from({ length: count }, (_, index) => {
+        const x = -object.width / 2 + cellWidth * (index + 0.5);
+        const style = getSeatMarkerStyle(object, index, servicePlan);
+        return (
+          <Group key={index} x={x} listening={false}>
+            <Rect
+              x={-cellWidth / 2}
+              y={-CHAIR_ROW_HEIGHT / 2}
+              width={cellWidth}
+              height={CHAIR_ROW_HEIGHT}
+              fill="#f8f7f2"
+              stroke="#6f7b74"
+              strokeWidth={1}
+              cornerRadius={1.5}
+            />
+            <Line points={[-cellWidth / 2 + 2, -7, cellWidth / 2 - 2, -7]} stroke="#69766f" strokeWidth={2} />
+            <Rect
+              x={-cushionWidth / 2}
+              y={-3}
+              width={cushionWidth}
+              height={10}
+              cornerRadius={2}
+              {...style}
+            />
+            <Text
+              x={-cushionWidth / 2}
+              y={-1.5}
+              width={cushionWidth}
+              height={8}
+              align="center"
+              verticalAlign="middle"
+              text={String(firstSeatNumber + index)}
+              fontSize={Math.min(7, Math.max(5, cushionWidth / 2.2))}
+              fontStyle="bold"
+              fill="#1f3328"
+            />
+          </Group>
+        );
+      })}
+      <Text
+        x={-object.width / 2}
+        y={-CHAIR_ROW_HEIGHT / 2 - 17}
+        width={object.width}
+        align="center"
+        text={object.label}
+        fontSize={10}
+        fontStyle="bold"
+        fill="#33473b"
+      />
+      <Text
+        x={-object.width / 2}
+        y={CHAIR_ROW_HEIGHT / 2 + 4}
+        width={object.width}
+        align="center"
+        text={`${count} seats · ${Math.round(cellWidth)} in pitch`}
+        fontSize={8}
+        fill="#718078"
+      />
+    </>
   );
 }
 

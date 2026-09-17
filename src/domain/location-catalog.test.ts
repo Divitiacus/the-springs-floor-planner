@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isPositionOnFloor } from "@/domain/floor-regions";
+import { isPositionOnFloor, isRectangleFootprintOnFloor } from "@/domain/floor-regions";
 import {
   ANGLETON_INVENTORY,
   CYPRESS_CHATEAU_INVENTORY,
@@ -40,7 +40,7 @@ describe("location catalog", () => {
     ]);
   });
 
-  it("defines Cypress The Chateau as two independent, equally scaled floor levels", () => {
+  it("defines Cypress The Chateau with reception levels and a separate ceremony site", () => {
     const location = getLocationBySlug("cypress");
     const hall = getHallBySlug(location, "the-chateau");
     if (!location || !hall?.configuration) throw new Error("Cypress The Chateau configuration missing");
@@ -65,8 +65,9 @@ describe("location catalog", () => {
     expect(levels.map((level) => [level.id, level.slug, level.name])).toEqual([
       ["level-1-main-floor", "main-floor", "Level 1 — Main Floor"],
       ["level-2-balcony", "balcony", "Level 2 — Balcony"],
+      ["ceremony-site", "ceremony-site", "Ceremony Site"],
     ]);
-    expect(levels.every((level) => level.physicalWidthInches === 1840 && level.physicalHeightInches === 980)).toBe(true);
+    expect(levels.slice(0, 2).every((level) => level.physicalWidthInches === 1840 && level.physicalHeightInches === 980)).toBe(true);
 
     const mainFloor = levels.find((level) => level.id === "level-1-main-floor");
     if (!mainFloor) throw new Error("Cypress main-floor level missing");
@@ -140,6 +141,40 @@ describe("location catalog", () => {
     expect(isPositionOnFloor({ x: 900, y: 145 }, balcony.usableAreas ?? [], balcony.voidAreas ?? [])).toBe(true);
     expect(isPositionOnFloor({ x: 1100, y: 450 }, balcony.usableAreas ?? [], balcony.voidAreas ?? [])).toBe(false);
     expect(isPositionOnFloor({ x: 530, y: 365 }, balcony.usableAreas ?? [], balcony.voidAreas ?? [])).toBe(false);
+
+    const ceremonySite = levels.find((level) => level.id === "ceremony-site");
+    if (!ceremonySite) throw new Error("Cypress ceremony site missing");
+    expect(mainFloor.inventoryGroupId).toBe("reception");
+    expect(balcony.inventoryGroupId).toBe("reception");
+    expect(ceremonySite).toMatchObject({
+      inventoryGroupId: "ceremony",
+      physicalWidthInches: 960,
+      physicalHeightInches: 780,
+      planningBounds: { x: 95, y: 55, width: 769, height: 670.5 },
+      floorplanAsset: null,
+    });
+    expect(ceremonySite.usableAreas?.map((region) => region.id)).toEqual([
+      "chateau-ceremony-left-seating",
+      "chateau-ceremony-right-seating",
+    ]);
+    expect(ceremonySite.fixedArchitecturalElements.find((element) => element.id === "chateau-ceremony-platform")).toMatchObject({
+      kind: "path",
+      placementBehavior: "blocked",
+      elevation: "raised",
+    });
+    expect(ceremonySite.fixedArchitecturalElements.some((element) => element.label === "Wall Fountain")).toBe(false);
+    expect(ceremonySite.fixedArchitecturalElements.some((element) => element.id === "chateau-ceremony-center-aisle")).toBe(false);
+    expect(ceremonySite.usableAreas?.every((region) => region.shape.type === "polygon")).toBe(true);
+    expect(isPositionOnFloor({ x: 260, y: 150 }, ceremonySite.usableAreas ?? [], [])).toBe(true);
+    expect(isPositionOnFloor({ x: 380, y: 150 }, ceremonySite.usableAreas ?? [], [])).toBe(false);
+    expect(isPositionOnFloor({ x: 580, y: 150 }, ceremonySite.usableAreas ?? [], [])).toBe(false);
+    expect(isPositionOnFloor({ x: 700, y: 150 }, ceremonySite.usableAreas ?? [], [])).toBe(true);
+    expect(isPositionOnFloor({ x: 260, y: 630 }, ceremonySite.usableAreas ?? [], [])).toBe(true);
+    expect(isPositionOnFloor({ x: 480, y: 630 }, ceremonySite.usableAreas ?? [], [])).toBe(false);
+    expect(isPositionOnFloor({ x: 260, y: 320 }, ceremonySite.usableAreas ?? [], ceremonySite.voidAreas ?? [])).toBe(true);
+    expect(isPositionOnFloor({ x: 480, y: 320 }, ceremonySite.usableAreas ?? [], ceremonySite.voidAreas ?? [])).toBe(false);
+    expect(isRectangleFootprintOnFloor({ x: 293, y: 320 }, 180, 22, 0, ceremonySite.usableAreas ?? [], [])).toBe(true);
+    expect(isRectangleFootprintOnFloor({ x: 430, y: 320 }, 300, 22, 0, ceremonySite.usableAreas ?? [], [])).toBe(false);
   });
 
   it("defines Wallisville Farmhouse with stable routing, confirmed scale, and a 250-guest planning limit", () => {
@@ -787,18 +822,26 @@ describe("location catalog", () => {
     });
   });
 
-  it("defines Norman Aurora Grove with Westwood Ranch's inventory and curved stage steps", () => {
+  it("defines Norman Aurora Grove with independent inventory and curved stage steps", () => {
     const location = getLocationBySlug("norman");
     const hall = getHallBySlug(location, "aurora-grove");
     if (!location || !hall?.configuration) throw new Error("Norman Aurora Grove configuration missing");
 
     expect(location).toMatchObject({ id: "location_norman", slug: "norman", name: "Norman" });
     expect(hall).toMatchObject({ id: "hall_aurora_grove", slug: "aurora-grove", name: "Aurora Grove" });
-    expect(NORMAN_INVENTORY).toMatchObject({
-      scope: "hall",
-      limits: WEATHERFORD_WESTWOOD_RANCH_INVENTORY.limits,
+    expect(NORMAN_INVENTORY.scope).toBe("hall");
+    expect(NORMAN_INVENTORY.limits).toEqual({
+      "round-table-60": 40,
+      "rectangle-table-6": 8,
+      "rectangle-table-8": 10,
+      "parson-table-7": 6,
+      "sweetheart-table-32": 3,
+      "cocktail-table-32": 6,
+      chairs: 320,
     });
-    expect(resolveInventoryConfiguration(location, hall)).toEqual(WEATHERFORD_WESTWOOD_RANCH_INVENTORY.limits);
+    expect(resolveInventoryConfiguration(location, hall)).toEqual(NORMAN_INVENTORY.limits);
+    expect(NORMAN_INVENTORY.limits).not.toEqual(KATY_INVENTORY.limits);
+    expect(NORMAN_INVENTORY.limits).not.toEqual(WEATHERFORD_WESTWOOD_RANCH_INVENTORY.limits);
 
     const configuration = singleLevel(hall.configuration);
     const mainFloor = configuration.fixedArchitecturalElements.find(

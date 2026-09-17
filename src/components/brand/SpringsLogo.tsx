@@ -8,6 +8,7 @@ export function SpringsLogo({ size = 40 }: { size?: number }) {
       aria-hidden="true"
       width={size}
       height={size}
+      style={{ width: size, height: size }}
       className="shrink-0 rounded-full bg-white object-contain shadow-sm"
     />
   );

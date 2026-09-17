@@ -30,6 +30,16 @@ export type ObjectDefinition = {
   icon: "round" | "rectangle" | "heart" | "half-moon" | "music" | "bar" | "buffet" | "camera" | "dance" | "chair";
 };
 
+export const CHAIR_ROW_DEFAULT_SEATS = 10;
+export const CHAIR_ROW_MAX_SEATS = 40;
+export const CHAIR_ROW_DEFAULT_PITCH = 18;
+export const CHAIR_ROW_MIN_PITCH = 14;
+export const CHAIR_ROW_HEIGHT = 22;
+
+export function getChairRowMinimumWidth(seats: number | undefined) {
+  return Math.max(2, Math.min(CHAIR_ROW_MAX_SEATS, Math.floor(seats ?? CHAIR_ROW_DEFAULT_SEATS))) * CHAIR_ROW_MIN_PITCH;
+}
+
 export const OBJECT_CATALOG: ObjectDefinition[] = [
   { type: "round-table-48", name: "48-inch Round Table", shortLabel: "48\" Round", category: "Tables", width: 48, height: 48, defaultSeats: 6, maximumSeats: 6, inventoryLabel: "48-inch round tables", physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: 48 }, resizable: false, inventoryOnly: true, icon: "round" },
   { type: "round-table-60", name: "60-inch Round Table", shortLabel: "60\" Round", category: "Tables", width: 60, height: 60, defaultSeats: 8, maximumSeats: 10, inventoryLabel: "60-inch round tables", physicalDimensions: { status: "confirmed", shape: "circle", diameterInches: 60 }, resizable: false, icon: "round" },
@@ -90,6 +100,20 @@ export const OBJECT_CATALOG: ObjectDefinition[] = [
       { id: "16x16", name: "16' × 16' Dance Floor", shortLabel: "Dance Floor 16' × 16'", width: 192, height: 192, physicalDimensions: { status: "confirmed", shape: "area", widthInches: 192, depthInches: 192 } },
       { id: "20x20", name: "20' × 20' Dance Floor", shortLabel: "Dance Floor 20' × 20'", width: 240, height: 240, physicalDimensions: { status: "confirmed", shape: "area", widthInches: 240, depthInches: 240 } },
     ],
+  },
+  {
+    type: "chair-row",
+    name: "Chair Row",
+    shortLabel: "Chair Row",
+    category: "Event essentials",
+    width: CHAIR_ROW_DEFAULT_SEATS * CHAIR_ROW_DEFAULT_PITCH,
+    height: CHAIR_ROW_HEIGHT,
+    defaultSeats: CHAIR_ROW_DEFAULT_SEATS,
+    maximumSeats: CHAIR_ROW_MAX_SEATS,
+    inventoryLabel: "chairs in rows",
+    physicalDimensions: { status: "unconfigured", shape: "rectangle", widthInches: null, depthInches: null },
+    resizable: true,
+    icon: "chair",
   },
   { type: "chair", name: "Single Chair", shortLabel: "Chair", category: "Event essentials", width: 10, height: 7, defaultSeats: 1, maximumSeats: 1, inventoryLabel: "chairs", physicalDimensions: { status: "unconfigured", shape: "rectangle", widthInches: null, depthInches: null }, resizable: false, icon: "chair" },
 ];

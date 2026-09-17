@@ -24,6 +24,7 @@ export function createHallVenueTemplate(
     levelId: level.id,
     levelSlug: level.slug,
     levelName: level.name,
+    inventoryGroupId: level.inventoryGroupId,
     coordinateUnit: "inches",
     physicalWidthInches: level.physicalWidthInches,
     physicalHeightInches: level.physicalHeightInches,

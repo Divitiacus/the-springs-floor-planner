@@ -68,6 +68,8 @@ export function ObjectLibrary({ onAdd, inventory, usage }: Props) {
                         <span className="mt-0.5 block text-[10px] text-[#8a958e]">
                           {choice.definition.type === "chair"
                             ? "1 seat · matches table-chair size"
+                            : choice.definition.type === "chair-row"
+                              ? `${seatCount ?? 10} seats · adjustable row`
                             : seatCount
                               ? `${seatCount} seats · ${describePhysicalDimensions(choice.physicalDimensions)}`
                               : choice.definition.resizable

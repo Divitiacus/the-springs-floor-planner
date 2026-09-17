@@ -23,6 +23,7 @@ describe("floorplan object operations", () => {
 
     expect(libraryTypes).not.toContain("buffet");
     expect(libraryTypes).toContain("chair");
+    expect(libraryTypes).toContain("chair-row");
     expect(OBJECT_DEFINITIONS.buffet).toBeDefined();
     expect(OBJECT_DEFINITIONS.chair).toBeDefined();
     expect(OBJECT_DEFINITIONS["portable-bar"]).toMatchObject({
@@ -43,6 +44,26 @@ describe("floorplan object operations", () => {
       seats: 1,
     });
     expect(getLayoutStats(layout)).toEqual({ objectCount: 1, guestTables: 0, seats: 1 });
+  });
+
+  it("creates an adjustable chair row and refits its width when the seat count changes", () => {
+    const row = createEventObject("chair-row", { x: 220, y: 240 }, [], "row-1");
+    let layout = addObject(createEmptyLayout(), row);
+
+    expect(row).toMatchObject({
+      id: "row-1",
+      label: "Chair Row",
+      width: 180,
+      height: 22,
+      seats: 10,
+    });
+
+    layout = updateObject(layout, row.id, { seats: 12 });
+    expect(layout.objects[0]).toMatchObject({ seats: 12, width: 216, height: 22 });
+    expect(getLayoutStats(layout)).toEqual({ objectCount: 1, guestTables: 0, seats: 12 });
+
+    layout = updateObject(layout, row.id, { width: 100, height: 80 });
+    expect(layout.objects[0]).toMatchObject({ width: 168, height: 22 });
   });
 
   it("creates a catalog object with sensible table defaults", () => {
@@ -564,6 +585,28 @@ describe("persistence", () => {
       height: 7,
     });
     expect(getLayoutStats(reopened).seats).toBe(1);
+  });
+
+  it("round-trips an adjusted chair row through the compact editable file", () => {
+    const row = {
+      ...createEventObject("chair-row", { x: 260, y: 320 }, [], "ceremony-row"),
+      width: 196,
+      seats: 11,
+      levelId: "ceremony-site",
+    };
+    const layout = addObject(
+      { ...createEmptyLayout("hall_the_chateau_cypress"), name: "Ceremony Layout" },
+      row,
+    );
+    const reopened = deserializeFloorplan(serializePortableFloorplan(layout));
+
+    expect(reopened.objects[0]).toMatchObject({
+      type: "chair-row",
+      width: 196,
+      height: 22,
+      seats: 11,
+      levelId: "ceremony-site",
+    });
   });
 
   it("keeps each guest row tied to its exact object and seat", () => {
