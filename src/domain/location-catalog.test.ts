@@ -26,6 +26,7 @@ import {
   type SingleLevelHallConfiguration,
   VALLEY_VIEW_INVENTORY,
   WALLISVILLE_FARMHOUSE_INVENTORY,
+  WAXAHACHIE_INVENTORY,
   WEATHERFORD_PARKER_MANOR_INVENTORY,
   WEATHERFORD_WESTWOOD_RANCH_INVENTORY,
   WHITE_SPARROW_INVENTORY,
@@ -33,7 +34,7 @@ import {
 
 describe("location catalog", () => {
   it("defines Magnolia with exactly its two confirmed halls", () => {
-    expect(SPRINGS_LOCATIONS).toHaveLength(16);
+    expect(SPRINGS_LOCATIONS).toHaveLength(17);
     expect(SPRINGS_LOCATIONS[0]).toMatchObject({ name: "Magnolia", slug: "magnolia" });
     expect(SPRINGS_LOCATIONS[0].halls.map((hall) => hall.name)).toEqual([
       "Pinehaven Terrace",
@@ -209,6 +210,73 @@ describe("location catalog", () => {
     expect(isRectangleFootprintOnFloor({ x: 260, y: 250 }, 180, 22, 0, patio.usableAreas ?? [], [])).toBe(true);
     expect(isRectangleFootprintOnFloor({ x: 520, y: 250 }, 100, 22, 0, patio.usableAreas ?? [], [])).toBe(true);
     expect(isRectangleFootprintOnFloor({ x: 520, y: 330 }, 180, 22, 0, patio.usableAreas ?? [], [])).toBe(false);
+  });
+
+  it("defines Waxahachie with its confirmed 90-by-63-foot hall and independent inventory", () => {
+    const location = getLocationBySlug("waxahachie");
+    const hall = getHallBySlug(location, "waxahachie");
+    if (!location || !hall?.configuration) throw new Error("Waxahachie configuration missing");
+
+    expect(location).toMatchObject({ id: "location_waxahachie", name: "Waxahachie" });
+    expect(hall).toMatchObject({ id: "hall_waxahachie", name: "Waxahachie" });
+    expect(WAXAHACHIE_INVENTORY.limits).toEqual({
+      "round-table-72": 30,
+      "round-table-48": 4,
+      "rectangle-table-8": 8,
+      "rectangle-table-6": 4,
+      "sweetheart-table": 1,
+      "cocktail-table-32": 5,
+      chairs: 300,
+    });
+    expect(resolveInventoryConfiguration(location, hall)).toEqual(WAXAHACHIE_INVENTORY.limits);
+
+    const configuration = singleLevel(hall.configuration);
+    expect(configuration).toMatchObject({
+      physicalWidthInches: 1200,
+      physicalHeightInches: 876,
+      planningBounds: { x: 60, y: 60, width: 1080, height: 756 },
+      floorplanAsset: null,
+    });
+    expect(configuration.fixedArchitecturalElements.find((element) => element.id === "waxahachie-main-reception-floor")).toMatchObject({
+      role: "main-floor",
+      measurementStatus: "confirmed",
+      shape: { type: "rectangle", width: 1080, height: 756 },
+    });
+    expect(configuration.fixedArchitecturalElements.filter((element) => element.id.endsWith("pass-through") && element.kind === "path")).toHaveLength(2);
+    expect(configuration.fixedArchitecturalElements.some((element) => element.kind === "area" && (element.role === "bar" || element.role === "catering"))).toBe(false);
+    expect(configuration.fixedArchitecturalElements.find((element) => element.id === "waxahachie-vendor-kitchen-entrance-door")).toMatchObject({
+      x: 60,
+      y: 84,
+      width: 72,
+      rotation: 90,
+      swingDirection: "clockwise",
+    });
+    expect(configuration.fixedArchitecturalElements.filter((element) => element.id.startsWith("waxahachie-north-double-door-") && element.kind === "door")).toMatchObject([
+      { x: 744, width: 36, rotation: 0, swingDirection: "counterclockwise" },
+      { x: 816, width: 36, rotation: 180, swingDirection: "clockwise" },
+    ]);
+    const northPierXs = configuration.fixedArchitecturalElements.flatMap((element) =>
+      element.id.startsWith("waxahachie-north-wall-pier-") && element.kind === "area" && element.shape.type === "rectangle"
+        ? [element.shape.x]
+        : [],
+    );
+    const southPierXs = configuration.fixedArchitecturalElements.flatMap((element) =>
+      element.id.startsWith("waxahachie-south-wall-pier-") && element.kind === "area" && element.shape.type === "rectangle"
+        ? [element.shape.x]
+        : [],
+    );
+    expect(northPierXs).toEqual([200, 430, 664, 896, 1122]);
+    expect(southPierXs).toEqual(northPierXs);
+    expect(configuration.fixedArchitecturalElements.find((element) => element.id === "waxahachie-south-wall-west")).toMatchObject({
+      points: [508, 816, 60, 816],
+    });
+    expect(configuration.fixedArchitecturalElements.find((element) => element.id === "waxahachie-south-wall-east")).toMatchObject({
+      points: [1140, 816, 604, 816],
+    });
+    expect(configuration.fixedArchitecturalElements.find((element) => element.id === "waxahachie-courtyard-label")).toMatchObject({
+      x: 451,
+      width: 210,
+    });
   });
 
   it("defines Wallisville Farmhouse with stable routing, confirmed scale, and a 250-guest planning limit", () => {

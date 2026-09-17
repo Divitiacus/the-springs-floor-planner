@@ -207,6 +207,24 @@ describe("hall venue template", () => {
     });
   });
 
+  it("loads Waxahachie at the confirmed 90-by-63-foot scale", () => {
+    const location = getLocationBySlug("waxahachie");
+    const hall = getHallBySlug(location, "waxahachie");
+    if (!location || !hall) throw new Error("Waxahachie catalog entry missing");
+
+    const venue = createHallVenueTemplate(location, hall);
+    const table = createEventObject("round-table-72", { x: 600, y: 438 }, [], "waxahachie-scale");
+
+    expect(venue.id).toBe("location_waxahachie:hall_waxahachie");
+    expect(venue.name).toBe("Waxahachie");
+    expect(venue.hall).toEqual({ x: 60, y: 60, width: 1080, height: 756 });
+    expect(venue.physicalWidthInches).toBe(1200);
+    expect(venue.physicalHeightInches).toBe(876);
+    expect(venue.referenceAsset).toBeNull();
+    expect(venue.elements.every((element) => element.id.startsWith("waxahachie"))).toBe(true);
+    expect(table.width / venue.hall.width).toBe(1 / 15);
+  });
+
   it("loads Valley View without repeating its identical location and hall name", () => {
     const location = getLocationBySlug("valley-view");
     const hall = getHallBySlug(location, "valley-view");

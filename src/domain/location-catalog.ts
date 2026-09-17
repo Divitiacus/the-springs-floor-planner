@@ -28,6 +28,7 @@ import { createFarmhouseWallisvilleConfiguration } from "@/domain/venues/farmhou
 import { createTheChateauCypressConfiguration } from "@/domain/venues/the-chateau-cypress";
 import { createTuscanyHillConfiguration } from "@/domain/venues/tuscany-hill";
 import { createWhiteSparrowConfiguration } from "@/domain/venues/white-sparrow";
+import { createWaxahachieConfiguration } from "@/domain/venues/waxahachie";
 
 export type HallLevelConfiguration = {
   id: string;
@@ -450,6 +451,23 @@ export const WHITE_SPARROW_INVENTORY: InventoryCatalog = {
   ],
 };
 
+export const WAXAHACHIE_INVENTORY: InventoryCatalog = {
+  scope: "hall",
+  limits: {
+    "round-table-72": 30,
+    "round-table-48": 4,
+    "rectangle-table-8": 8,
+    "rectangle-table-6": 4,
+    "sweetheart-table": 1,
+    "cocktail-table-32": 5,
+    chairs: 300,
+  },
+  source: {
+    fileName: "user-confirmed",
+    note: "Waxahachie table quantities and 300-chair seating capacity are user-confirmed.",
+  },
+};
+
 export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
   {
     id: "location_magnolia",
@@ -548,6 +566,22 @@ export const SPRINGS_LOCATIONS: readonly LocationCatalogEntry[] = [
         configuration: {
           ...createTimberviewLodgeConfiguration(),
           inventory: ALVARADO_TIMBERVIEW_LODGE_INVENTORY,
+        },
+      },
+    ],
+  },
+  {
+    id: "location_waxahachie",
+    slug: "waxahachie",
+    name: "Waxahachie",
+    halls: [
+      {
+        id: "hall_waxahachie",
+        slug: "waxahachie",
+        name: "Waxahachie",
+        configuration: {
+          ...createWaxahachieConfiguration(),
+          inventory: WAXAHACHIE_INVENTORY,
         },
       },
     ],
