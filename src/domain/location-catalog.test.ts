@@ -734,6 +734,22 @@ describe("location catalog", () => {
     });
   });
 
+  it("uses Willowbrook Reserve's confirmed Edmond table counts", () => {
+    const location = getLocationBySlug("edmond");
+    const hall = getHallBySlug(location, "willowbrook-reserve");
+    if (!location || !hall) throw new Error("Willowbrook Reserve configuration missing");
+
+    expect(resolveInventoryConfiguration(location, hall)).toEqual({
+      "round-table-60": 40,
+      "rectangle-table-6": 8,
+      "rectangle-table-8": 10,
+      "sweetheart-table": 2,
+      "cocktail-table-32": 8,
+      chairs: 320,
+    });
+    expect(EDMOND_INVENTORY.source.note).toContain("Bistro/cocktail table diameter was not supplied");
+  });
+
   it("defines McKinney Havenstone Reserve with the Villa Tuscana footprint and inventory", () => {
     const location = getLocationBySlug("mckinney");
     const hall = getHallBySlug(location, "havenstone-reserve");

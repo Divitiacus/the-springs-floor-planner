@@ -206,10 +206,17 @@ export const TULSA_INVENTORY: InventoryCatalog = {
 
 export const EDMOND_INVENTORY: InventoryCatalog = {
   scope: "hall",
-  limits: { ...KATY_INVENTORY.limits },
+  limits: {
+    "round-table-60": 40,
+    "rectangle-table-6": 8,
+    "rectangle-table-8": 10,
+    "sweetheart-table": 2,
+    "cocktail-table-32": 8,
+    chairs: 320,
+  },
   source: {
     fileName: "user-confirmed",
-    note: "Willowbrook Reserve matches Stonecreek Reserve's table inventory and 320-chair guest capacity.",
+    note: "Willowbrook Reserve table quantities are user-confirmed. Bistro/cocktail table diameter was not supplied, so the 32-inch planner object is a provisional footprint. Its previously confirmed 320-chair guest capacity remains unchanged.",
   },
 };
 
