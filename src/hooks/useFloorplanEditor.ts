@@ -25,9 +25,16 @@ type EditorConfiguration = {
   inventory: InventoryConfiguration;
   inventoryOwner: string;
   inventoryGrouping?: InventoryGrouping;
+  browserPersistence?: boolean;
 };
 
-export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner, inventoryGrouping }: EditorConfiguration) {
+export function useFloorplanEditor({
+  venueTemplateId,
+  inventory,
+  inventoryOwner,
+  inventoryGrouping,
+  browserPersistence = true,
+}: EditorConfiguration) {
   const storageKey = `${STORAGE_KEY}:${venueTemplateId}`;
   const [history, setHistory] = useState(() => createHistory(createEmptyLayout(venueTemplateId)));
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -36,6 +43,12 @@ export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner,
   const layout = history.present;
 
   useEffect(() => {
+    if (!browserPersistence) {
+      setHistory(createHistory(createEmptyLayout(venueTemplateId)));
+      setSelectedId(null);
+      setReady(true);
+      return;
+    }
     const timeout = window.setTimeout(() => {
       try {
         const stored = localStorage.getItem(storageKey);
@@ -56,7 +69,7 @@ export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner,
       }
     }, 0);
     return () => window.clearTimeout(timeout);
-  }, [inventory, inventoryGrouping, inventoryOwner, storageKey]);
+  }, [browserPersistence, inventory, inventoryGrouping, inventoryOwner, storageKey, venueTemplateId]);
 
   useEffect(() => {
     if (!notice) return;
@@ -65,9 +78,9 @@ export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner,
   }, [notice]);
 
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || !browserPersistence) return;
     localStorage.setItem(storageKey, serializeFloorplan(layout));
-  }, [layout, ready, storageKey]);
+  }, [browserPersistence, layout, ready, storageKey]);
 
   const commit = useCallback((next: FloorplanLayout) => {
     setHistory((current) => commitHistory(current, next));
@@ -172,11 +185,11 @@ export function useFloorplanEditor({ venueTemplateId, inventory, inventoryOwner,
   const reset = useCallback(() => {
     if (!window.confirm("Reset this layout? All event objects will be removed.")) return;
     const fresh = createEmptyLayout(venueTemplateId);
-    localStorage.removeItem(storageKey);
+    if (browserPersistence) localStorage.removeItem(storageKey);
     setHistory(createHistory(fresh));
     setSelectedId(null);
     setNotice("Reset to the venue template");
-  }, [storageKey, venueTemplateId]);
+  }, [browserPersistence, storageKey, venueTemplateId]);
 
   const importLayout = useCallback((imported: FloorplanLayout) => {
     const normalized = normalizePhysicalFootprints(imported);
