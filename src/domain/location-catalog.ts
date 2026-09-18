@@ -872,3 +872,15 @@ export function getHallByName(location: LocationCatalogEntry | undefined, name: 
       )
     : undefined;
 }
+
+export function getLocationHallByVenueTemplateId(venueTemplateId: string | undefined) {
+  if (!venueTemplateId) return undefined;
+  for (const location of SPRINGS_LOCATIONS) {
+    for (const hall of location.halls) {
+      if (`${location.id}:${hall.id}` === venueTemplateId) {
+        return { location, hall };
+      }
+    }
+  }
+  return undefined;
+}
