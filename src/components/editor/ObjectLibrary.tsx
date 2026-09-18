@@ -28,7 +28,7 @@ type Props = {
 
 export function ObjectLibrary({ onAdd, inventory, usage }: Props) {
   return (
-    <aside className="subtle-scrollbar min-h-0 overflow-y-auto bg-[#fffefa] px-4 py-5">
+    <aside className="subtle-scrollbar min-h-0 overflow-y-auto overscroll-contain bg-[#fffefa] px-4 pt-5 pb-24 [scrollbar-gutter:stable]">
       <div className="mb-4">
         <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8a958e]">Object library</p>
         <h2 className="mt-1 text-sm font-bold text-[#25352c]">Add to floorplan</h2>
