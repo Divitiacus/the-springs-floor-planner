@@ -24,6 +24,8 @@ import { DEFAULT_SEAT_COLOR, getSeatServiceColor, NO_ALCOHOL_COLOR } from "@/dom
 import { getSeatNumbering } from "@/domain/seat-numbering";
 import type { EditorMode } from "@/components/editor/EditorToolbar";
 
+const RSVP_GOLD = "#b47a12";
+
 type Props = {
   layout: FloorplanLayout;
   servicePlan: ServicePlan;
@@ -559,6 +561,7 @@ function EventObjectNode({ object, servicePlan, firstSeatNumber, displaySeatCoun
   const isChairRow = object.type === "chair-row";
   const isHalfMoon = object.type === "half-moon-table";
   const chairNoAlcohol = isChair && object.seatNoAlcohol?.[0] === true;
+  const chairRsvpReceived = isChair && object.seatRsvpReceived?.[0] === true;
   const chairServiceColor = isChair ? getSeatServiceColor(object, 0, servicePlan) : undefined;
   const fill = isDance ? "#e6ded2" : isChair ? chairServiceColor ?? DEFAULT_SEAT_COLOR : isGuestTable(object.type) ? "#fffdf7" : "#dce8e0";
   const stroke = chairNoAlcohol ? NO_ALCOHOL_COLOR : selected ? "#294f3d" : isDance ? "#9d8e7b" : "#5e7768";
@@ -608,9 +611,9 @@ function EventObjectNode({ object, servicePlan, firstSeatNumber, displaySeatCoun
           shadowOpacity={0.16}
         />
       ) : isRound ? (
-        <Circle radius={object.width / 2} fill={fill} stroke={stroke} strokeWidth={selected ? 3 : 2} shadowColor="#405047" shadowBlur={selected ? 8 : 3} shadowOpacity={0.16} />
+        <Circle radius={object.width / 2} fill={fill} stroke={stroke} strokeWidth={selected ? 3 : 2} shadowColor={chairRsvpReceived ? RSVP_GOLD : "#405047"} shadowBlur={chairRsvpReceived ? 9 : selected ? 8 : 3} shadowOpacity={chairRsvpReceived ? 0.95 : 0.16} />
       ) : (
-        <Rect x={-object.width / 2} y={-object.height / 2} width={object.width} height={object.height} fill={fill} stroke={stroke} strokeWidth={chairNoAlcohol ? 3 : selected ? 2 : isChair ? 0 : 2} cornerRadius={isChair ? 2 : isDance ? 2 : 8} shadowColor="#405047" shadowBlur={selected ? 8 : isChair ? 0 : 3} shadowOpacity={0.14} />
+        <Rect x={-object.width / 2} y={-object.height / 2} width={object.width} height={object.height} fill={fill} stroke={stroke} strokeWidth={chairNoAlcohol ? 3 : selected ? 2 : isChair ? 0 : 2} cornerRadius={isChair ? 2 : isDance ? 2 : 8} shadowColor={chairRsvpReceived ? RSVP_GOLD : "#405047"} shadowBlur={chairRsvpReceived ? 9 : selected ? 8 : isChair ? 0 : 3} shadowOpacity={chairRsvpReceived ? 0.95 : 0.14} />
       )}
       {isDance ? <DanceGrid width={object.width} height={object.height} /> : null}
       {TABLE_TYPES.has(object.type) ? <SeatMarkers object={object} servicePlan={servicePlan} firstSeatNumber={firstSeatNumber} /> : null}
@@ -625,7 +628,7 @@ function EventObjectNode({ object, servicePlan, firstSeatNumber, displaySeatCoun
           text={String(firstSeatNumber)}
           fontSize={7}
           fontStyle="bold"
-          fill="#1f3328"
+          fill={chairRsvpReceived ? RSVP_GOLD : "#1f3328"}
           listening={false}
         />
       ) : null}
@@ -675,10 +678,11 @@ function SeatMarkers({ object, servicePlan, firstSeatNumber }: { object: EventOb
 type SeatMarkerStyle = ReturnType<typeof getSeatMarkerStyle>;
 
 function NumberedRoundSeat({ x, y, number, style }: { x: number; y: number; number: number; style: SeatMarkerStyle }) {
+  const { textFill, ...shapeStyle } = style;
   return (
     <Group x={x} y={y} listening={false}>
-      <Circle radius={6} {...style} />
-      <Text x={-6} y={-4.5} width={12} height={9} align="center" verticalAlign="middle" text={String(number)} fontSize={6.5} fontStyle="bold" fill="#1f3328" />
+      <Circle radius={6} {...shapeStyle} />
+      <Text x={-6} y={-4.5} width={12} height={9} align="center" verticalAlign="middle" text={String(number)} fontSize={6.5} fontStyle="bold" fill={textFill} />
     </Group>
   );
 }
@@ -709,6 +713,7 @@ function ChairRow({ object, servicePlan, selected, firstSeatNumber }: {
       {Array.from({ length: count }, (_, index) => {
         const x = -object.width / 2 + cellWidth * (index + 0.5);
         const style = getSeatMarkerStyle(object, index, servicePlan);
+        const { textFill, ...shapeStyle } = style;
         return (
           <Group key={index} x={x} listening={false}>
             <Rect
@@ -728,7 +733,7 @@ function ChairRow({ object, servicePlan, selected, firstSeatNumber }: {
               width={cushionWidth}
               height={10}
               cornerRadius={2}
-              {...style}
+              {...shapeStyle}
             />
             <Text
               x={-cushionWidth / 2}
@@ -740,7 +745,7 @@ function ChairRow({ object, servicePlan, selected, firstSeatNumber }: {
               text={String(firstSeatNumber + index)}
               fontSize={Math.min(7, Math.max(5, cushionWidth / 2.2))}
               fontStyle="bold"
-              fill="#1f3328"
+              fill={textFill}
             />
           </Group>
         );
@@ -769,20 +774,26 @@ function ChairRow({ object, servicePlan, selected, firstSeatNumber }: {
 }
 
 function NumberedRectSeat({ x, y, number, style }: { x: number; y: number; number: number; style: SeatMarkerStyle }) {
+  const { textFill, ...shapeStyle } = style;
   return (
     <Group x={x} y={y} listening={false}>
-      <Rect width={12} height={9} cornerRadius={2} {...style} />
-      <Text width={12} height={9} align="center" verticalAlign="middle" text={String(number)} fontSize={6.5} fontStyle="bold" fill="#1f3328" />
+      <Rect width={12} height={9} cornerRadius={2} {...shapeStyle} />
+      <Text width={12} height={9} align="center" verticalAlign="middle" text={String(number)} fontSize={6.5} fontStyle="bold" fill={textFill} />
     </Group>
   );
 }
 
 function getSeatMarkerStyle(object: EventObject, seatIndex: number, servicePlan: ServicePlan) {
   const noAlcohol = object.seatNoAlcohol?.[seatIndex] === true;
+  const rsvpReceived = object.seatRsvpReceived?.[seatIndex] === true;
   return {
     fill: getSeatServiceColor(object, seatIndex, servicePlan) ?? DEFAULT_SEAT_COLOR,
     stroke: noAlcohol ? NO_ALCOHOL_COLOR : undefined,
     strokeWidth: noAlcohol ? 2.5 : 0,
+    textFill: rsvpReceived ? RSVP_GOLD : "#1f3328",
+    shadowColor: rsvpReceived ? RSVP_GOLD : undefined,
+    shadowBlur: rsvpReceived ? 8 : 0,
+    shadowOpacity: rsvpReceived ? 0.95 : 0,
   };
 }
 

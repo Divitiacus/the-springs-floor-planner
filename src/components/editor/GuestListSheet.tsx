@@ -149,29 +149,30 @@ export function GuestListSheet({ objects, servicePlan, eventName, venueName, onP
               </thead>
               {tableGroups.map((group, groupIndex) => {
                 const isExpanded = expandedTableKeys.has(group.key);
-                const isFullyRsvped = group.rsvpGuests > 0 && group.awaitingGuests === 0;
+                const hasAnyRsvp = group.rsvpGuests > 0;
+                const isFullyRsvped = group.rows.length > 0 && group.rsvpGuests === group.rows.length;
                 return (
                   <tbody key={group.key}>
-                    <tr className="guest-list-table-summary border-t border-[#cfd9d2] bg-[#f4f7f4]">
+                    <tr className={`guest-list-table-summary border-t ${isFullyRsvped ? "border-[#d7bb78] bg-[#fbf3df]" : "border-[#cfd9d2] bg-[#f4f7f4]"}`}>
                       <td colSpan={6} className="p-0">
                         <button
                           type="button"
                           aria-expanded={isExpanded}
                           aria-label={`${group.label}, ${group.rsvpGuests} RSVP'd, ${group.awaitingGuests} awaiting`}
-                          className="flex w-full items-center justify-between gap-4 px-4 py-3 text-left hover:bg-[#eaf1ec] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#537563]"
+                          className={`flex w-full items-center justify-between gap-4 px-4 py-3 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#8b641c] ${isFullyRsvped ? "shadow-[inset_4px_0_0_#b4842f] hover:bg-[#f7ebce]" : "hover:bg-[#eaf1ec]"}`}
                           onClick={() => setExpandedTableKeys((current) => toggleTableKey(current, group.key))}
                         >
                           <span className="flex min-w-0 items-center gap-3">
-                            <span className="guest-list-table-toggle-icon grid size-7 shrink-0 place-items-center rounded-full border border-[#c9d6ce] bg-white text-[#486353]">
+                            <span className={`guest-list-table-toggle-icon grid size-7 shrink-0 place-items-center rounded-full border bg-white ${isFullyRsvped ? "border-[#c89a3c] text-[#9a6a18]" : "border-[#c9d6ce] text-[#486353]"}`}>
                               {isExpanded ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
                             </span>
                             <span>
-                              <span className={`block text-sm font-extrabold ${isFullyRsvped ? "text-[#b07a1e]" : "text-[#31473b]"}`}>{group.label}</span>
+                              <span className={`block text-sm font-extrabold ${hasAnyRsvp ? "text-[#9a6a18]" : "text-[#31473b]"}`}>{group.label}</span>
                               <span className="mt-0.5 block text-[10px] font-semibold text-[#869189]">{group.rows.length} {group.rows.length === 1 ? "seat" : "seats"} · {group.namedGuests} named</span>
                             </span>
                           </span>
                           <span className="flex shrink-0 items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.08em]">
-                            <span className="rounded-full bg-[#e2f0e7] px-3 py-1.5 text-[#397054]">{group.rsvpGuests} RSVP’d</span>
+                            <span className={`rounded-full px-3 py-1.5 ${isFullyRsvped ? "bg-[#d6ad52] text-[#4f390d] shadow-sm ring-1 ring-[#b9892f]" : "bg-[#e2f0e7] text-[#397054]"}`}>{isFullyRsvped ? `All ${group.rsvpGuests} RSVP’d` : `${group.rsvpGuests} RSVP’d`}</span>
                             <span className={`rounded-full px-3 py-1.5 ${group.awaitingGuests ? "bg-[#f6ead5] text-[#946717]" : "bg-[#ebefec] text-[#758079]"}`}>{group.awaitingGuests} awaiting</span>
                           </span>
                         </button>
