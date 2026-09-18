@@ -30,6 +30,11 @@ type Props = {
   portalBridge?: boolean;
 };
 
+const CLIENT_PORTAL_ORIGIN = (
+  process.env.NEXT_PUBLIC_CLIENT_PORTAL_ORIGIN ??
+  "https://the-springs-event-operations-hub.vercel.app"
+).replace(/\/+$/u, "");
+
 export function FloorPlanner({
   venue,
   levelVenues,
@@ -214,6 +219,7 @@ export function FloorPlanner({
     const receivePortalPlan = (event: MessageEvent) => {
       if (
         event.source !== window.parent ||
+        event.origin !== CLIENT_PORTAL_ORIGIN ||
         !event.data ||
         typeof event.data !== "object" ||
         event.data.type !== "springs-portal:load-floorplan"
@@ -255,7 +261,10 @@ export function FloorPlanner({
     };
 
     window.addEventListener("message", receivePortalPlan);
-    window.parent.postMessage({ type: "springs-floorplanner:ready" }, "*");
+    window.parent.postMessage(
+      { type: "springs-floorplanner:ready" },
+      CLIENT_PORTAL_ORIGIN,
+    );
     return () => window.removeEventListener("message", receivePortalPlan);
   }, [editor.importLayout, editor.ready, portalBridge, venue.id, venue.name]);
 
@@ -265,6 +274,7 @@ export function FloorPlanner({
     const receivePortalSaveRequest = (event: MessageEvent) => {
       if (
         event.source !== window.parent ||
+        event.origin !== CLIENT_PORTAL_ORIGIN ||
         !event.data ||
         typeof event.data !== "object" ||
         event.data.type !== "springs-portal:request-save"
