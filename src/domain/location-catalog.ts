@@ -851,6 +851,36 @@ export function getLocationBySlug(slug: string | undefined) {
   return SPRINGS_LOCATIONS.find((location) => location.slug === slug);
 }
 
+export function getLocationByName(name: string | undefined) {
+  const normalized = name?.trim().toLocaleLowerCase("en-US");
+  return normalized
+    ? SPRINGS_LOCATIONS.find(
+        (location) => location.name.toLocaleLowerCase("en-US") === normalized,
+      )
+    : undefined;
+}
+
 export function getHallBySlug(location: LocationCatalogEntry | undefined, slug: string | undefined) {
   return location?.halls.find((hall) => hall.slug === slug);
+}
+
+export function getHallByName(location: LocationCatalogEntry | undefined, name: string | undefined) {
+  const normalized = name?.trim().toLocaleLowerCase("en-US");
+  return normalized
+    ? location?.halls.find(
+        (hall) => hall.name.toLocaleLowerCase("en-US") === normalized,
+      )
+    : undefined;
+}
+
+export function getLocationHallByVenueTemplateId(venueTemplateId: string | undefined) {
+  if (!venueTemplateId) return undefined;
+  for (const location of SPRINGS_LOCATIONS) {
+    for (const hall of location.halls) {
+      if (`${location.id}:${hall.id}` === venueTemplateId) {
+        return { location, hall };
+      }
+    }
+  }
+  return undefined;
 }

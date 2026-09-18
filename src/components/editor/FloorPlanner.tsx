@@ -8,7 +8,7 @@ import type { VenueTemplate } from "@/domain/floorplan";
 import type { InventoryConfiguration, InventoryGrouping } from "@/domain/inventory";
 import { getInventoryUsage } from "@/domain/inventory";
 import { isPositionOnFloor, isRectangleFootprintOnFloor } from "@/domain/floor-regions";
-import { getLayoutStats } from "@/domain/layout-operations";
+import { createEmptyLayout, getLayoutStats } from "@/domain/layout-operations";
 import { CHAIR_ROW_DEFAULT_PITCH, CHAIR_ROW_MAX_SEATS, OBJECT_DEFINITIONS } from "@/domain/object-catalog";
 import { deserializeFloorplan, serializePortableFloorplan } from "@/domain/persistence";
 import { buildServicePlan } from "@/domain/service-markers";
@@ -27,9 +27,16 @@ type Props = {
   levelVenues?: VenueTemplate[];
   locationName: string;
   inventory: InventoryConfiguration;
+  portalBridge?: boolean;
 };
 
-export function FloorPlanner({ venue, levelVenues, locationName, inventory }: Props) {
+export function FloorPlanner({
+  venue,
+  levelVenues,
+  locationName,
+  inventory,
+  portalBridge = false,
+}: Props) {
   const availableLevels = useMemo(() => levelVenues?.length ? levelVenues : [venue], [levelVenues, venue]);
   const isMultiLevel = availableLevels.length > 1;
   const defaultLevelId = venue.levelId;
@@ -52,6 +59,7 @@ export function FloorPlanner({ venue, levelVenues, locationName, inventory }: Pr
     inventory,
     inventoryOwner: locationName,
     inventoryGrouping,
+    browserPersistence: !portalBridge,
   });
   const [activeLevelId, setActiveLevelId] = useState(defaultLevelId);
   const activeVenue = availableLevels.find((candidate) => candidate.levelId === activeLevelId) ?? venue;
@@ -73,6 +81,7 @@ export function FloorPlanner({ venue, levelVenues, locationName, inventory }: Pr
   const [detailsObjectId, setDetailsObjectId] = useState<string | null>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const portalParentOriginRef = useRef<string | null>(null);
   const addObject = editor.add;
   const objectCount = activeLayout.objects.length;
   const selectedId = activeLayout.objects.some((object) => object.id === editor.selectedId) ? editor.selectedId : null;
@@ -199,6 +208,77 @@ export function FloorPlanner({ venue, levelVenues, locationName, inventory }: Pr
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [duplicateObject, redo, removeObject, selectedId, undo]);
 
+  useEffect(() => {
+    if (!portalBridge || !editor.ready) return;
+
+    const receivePortalPlan = (event: MessageEvent) => {
+      if (
+        event.source !== window.parent ||
+        !event.data ||
+        typeof event.data !== "object" ||
+        event.data.type !== "springs-portal:load-floorplan"
+      ) {
+        return;
+      }
+      portalParentOriginRef.current = event.origin;
+      const message = event.data as {
+        type: "springs-portal:load-floorplan";
+        payload?: unknown;
+        defaultName?: unknown;
+      };
+      try {
+        if (message.payload) {
+          const imported = deserializeFloorplan(JSON.stringify(message.payload));
+          if (imported.venueTemplateId !== venue.id) {
+            throw new Error(
+              `This saved plan belongs to a different hall. Open ${venue.name} plans here.`,
+            );
+          }
+          editor.importLayout(imported);
+        } else {
+          const defaultName = typeof message.defaultName === "string"
+            ? message.defaultName.trim().slice(0, 80)
+            : "";
+          editor.importLayout({
+            ...createEmptyLayout(venue.id),
+            name: defaultName,
+          });
+        }
+        setNameRequired(false);
+      } catch (error) {
+        window.alert(
+          error instanceof Error
+            ? error.message
+            : "Unable to open this Event floor plan.",
+        );
+      }
+    };
+
+    window.addEventListener("message", receivePortalPlan);
+    window.parent.postMessage({ type: "springs-floorplanner:ready" }, "*");
+    return () => window.removeEventListener("message", receivePortalPlan);
+  }, [editor.importLayout, editor.ready, portalBridge, venue.id, venue.name]);
+
+  const saveToPortal = (markFinal: boolean) => {
+    const eventName = requireEventName();
+    if (!eventName) return;
+    const parentOrigin = portalParentOriginRef.current;
+    if (!portalBridge || !parentOrigin || window.parent === window) {
+      editor.showNotice("Return to the Client Portal to save this plan to your Event.");
+      return;
+    }
+    const payload = JSON.parse(serializePortableFloorplan(editor.layout)) as unknown;
+    window.parent.postMessage(
+      {
+        type: "springs-floorplanner:save",
+        payload,
+        markFinal,
+      },
+      parentOrigin,
+    );
+    editor.showNotice(markFinal ? "Sending Final plan to your Event…" : "Sending plan to your Event…");
+  };
+
   const saveEditablePlan = () => {
     const eventName = requireEventName();
     if (!eventName) return;
@@ -305,6 +385,25 @@ export function FloorPlanner({ venue, levelVenues, locationName, inventory }: Pr
               Save / Print <ChevronDown className="transition-transform group-open:rotate-180" size={14} />
             </summary>
             <div className="absolute right-0 top-11 z-50 w-72 overflow-hidden rounded-xl border border-[#d7ddd8] bg-white p-1.5 shadow-xl">
+              {portalBridge ? (
+                <>
+                  <button className="flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-[#f3f6f3]" onClick={() => saveToPortal(false)}>
+                    <Download className="mt-0.5 shrink-0 text-[#456351]" size={16} />
+                    <span>
+                      <span className="block text-xs font-bold text-[#35463c]">Save to Event</span>
+                      <span className="mt-0.5 block text-[10px] leading-4 text-[#7b877f]">Update this Client Portal floor plan slot.</span>
+                    </span>
+                  </button>
+                  <button className="flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-[#fff8df]" onClick={() => saveToPortal(true)}>
+                    <Download className="mt-0.5 shrink-0 text-[#8b641c]" size={16} />
+                    <span>
+                      <span className="block text-xs font-bold text-[#6d501b]">Save as Final</span>
+                      <span className="mt-0.5 block text-[10px] leading-4 text-[#8c7957]">Make this the Event's one Final floor plan.</span>
+                    </span>
+                  </button>
+                  <div className="my-1 border-t border-[#e4e8e4]" />
+                </>
+              ) : null}
               <button className="flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-[#f3f6f3]" onClick={saveEditablePlan}>
                 <Download className="mt-0.5 shrink-0 text-[#456351]" size={16} />
                 <span>
@@ -319,7 +418,11 @@ export function FloorPlanner({ venue, levelVenues, locationName, inventory }: Pr
                   <span className="mt-0.5 block text-[10px] leading-4 text-[#7b877f]">Create a final copy for printing or uploading to Operations Hub.</span>
                 </span>
               </button>
-              <p className="border-t border-[#e4e8e4] px-3 pb-1 pt-2 text-[10px] leading-4 text-[#849088]">Changes are also recovered automatically in this browser.</p>
+              <p className="border-t border-[#e4e8e4] px-3 pb-1 pt-2 text-[10px] leading-4 text-[#849088]">
+                {portalBridge
+                  ? "Event saves are kept in your five Client Portal slots. You can still download your own copy."
+                  : "Changes are also recovered automatically in this browser."}
+              </p>
             </div>
           </details>
         </div>

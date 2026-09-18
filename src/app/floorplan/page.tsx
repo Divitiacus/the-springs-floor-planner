@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { getHallBySlug, getLocationBySlug, resolveInventoryConfiguration } from "@/domain/location-catalog";
+import {
+  getHallByName,
+  getHallBySlug,
+  getLocationByName,
+  getLocationBySlug,
+  resolveInventoryConfiguration,
+} from "@/domain/location-catalog";
 import { createHallVenueTemplates } from "@/domain/hall-venue";
 import { FloorPlanner } from "@/components/editor/FloorPlanner";
 
@@ -12,14 +18,20 @@ export const metadata: Metadata = {
 type SearchParams = Promise<{
   location?: string | string[];
   hall?: string | string[];
+  locationName?: string | string[];
+  hallName?: string | string[];
+  embedded?: string | string[];
 }>;
 
 export default async function FloorplanPage({ searchParams }: { searchParams: SearchParams }) {
   const query = await searchParams;
   const locationSlug = singleValue(query.location);
   const hallSlug = singleValue(query.hall);
-  const location = getLocationBySlug(locationSlug);
-  const hall = getHallBySlug(location, hallSlug);
+  const locationName = singleValue(query.locationName);
+  const hallName = singleValue(query.hallName);
+  const portalBridge = singleValue(query.embedded) === "portal";
+  const location = getLocationBySlug(locationSlug) ?? getLocationByName(locationName);
+  const hall = getHallBySlug(location, hallSlug) ?? getHallByName(location, hallName);
 
   if (location && hall?.configuration) {
     const levelVenues = createHallVenueTemplates(location, hall);
@@ -29,6 +41,7 @@ export default async function FloorplanPage({ searchParams }: { searchParams: Se
         levelVenues={levelVenues}
         locationName={location.name}
         inventory={resolveInventoryConfiguration(location, hall)}
+        portalBridge={portalBridge}
       />
     );
   }
